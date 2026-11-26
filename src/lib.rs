@@ -4,7 +4,7 @@
 //! > ⚠️ **Experimental** — early stage; expect breaking API changes at any time.
 //!
 //! - **Reads everything, writes AP242** — any mainstream AP comes in, legacy
-//!   included; only AP242 edition 2 (IS) goes out.
+//!   included; only AP242 edition 4 (IS) goes out.
 //! - **Lean** — one universal schema model instead of a per-schema
 //!   implementation; the supported entity set is curated to what real STEP
 //!   files actually use.
@@ -27,10 +27,10 @@
 //! matrix](https://github.com/elgar328/step-io/blob/main/docs/entities.md)
 //! lists exactly what is read and written.
 //!
-//! Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
-//! it in 2014, and every modern tool reads it. When edition 3 reaches IS
-//! and takes over, the output moves up with it: one output schema,
-//! always the current one.
+//! Output is AP242 edition 4 (ISO 10303-242:2025, the current IS) only —
+//! AP203 and AP214 were merged into AP242 in 2014. When a later edition
+//! takes over, the output moves up with it: one output schema, always the
+//! current one.
 //!
 //! Most of the pipeline is generated from the schemas rather than written
 //! by hand — no drift, little to maintain.
@@ -98,11 +98,51 @@
 //! # Writing STEP
 //!
 //! The write side is strict by construction. Its foundation is [`Ap242Author`],
-//! a generated low-level layer with one constructor per AP242 entity (exposed
-//! as [`StepBuilder::author`]); every argument is validated at insertion
-//! against the AP242 edition 2 schema — its types, aggregate sizes, references
-//! and rules for combining types, though not its `WHERE` rules — so there is
-//! no loss report to check afterwards.
+//! a generated low-level layer with one constructor per AP242 entity step-io
+//! models that is not `ABSTRACT` (exposed as [`StepBuilder::author`]); every
+//! argument is validated at insertion against the AP242 edition 4 schema —
+//! its types, aggregate sizes, references, rules for combining types, and the
+//! `WHERE` rules that limit which types an attribute, each of its elements, or
+//! each element of a set it holds references, whether for every instance or
+//! by the instance's own type (not those on one indexed element, on two
+//! attributes together or on a path through another entity, nor its other
+//! `WHERE` rules) — so there is no loss report to check afterwards.
+//!
+//! Some of the model's reference types are wider than AP242 edition 4 allows.
+//! The model reads every edition, so an attribute a subtype narrows
+//! (`SELF\supertype.attribute : narrower;`) only from AP242 on, or a SELECT
+//! with members AP242 dropped, takes the wider type; and it does not hold an
+//! attribute to a `WHERE` rule such as
+//! `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)`. There a
+//! constructor takes a narrower type and stores it as the model's, so a
+//! reference AP242 does not allow does not compile:
+//!
+//! ```
+//! # use step_io::{Ap242Author, model as m};
+//! # fn f(a: &mut Ap242Author, shape: m::ProductDefinitionShapeId, rep: m::ShapeRepresentationId) {
+//! a.add_shape_definition_representation(
+//!     m::PropertyDefinitionRef::ProductDefinitionShape(shape),
+//!     m::ShapeRepresentationRef::ShapeRepresentation(rep),
+//! );
+//! # }
+//! ```
+//!
+//! ```compile_fail,E0308
+//! # use step_io::{Ap242Author, model as m};
+//! # fn f(a: &mut Ap242Author, aspect: m::ShapeAspectId, rep: m::ShapeRepresentationId) {
+//! // AP214 lets a shape aspect have a shape representation; AP242 does not.
+//! a.add_shape_definition_representation(
+//!     m::RepresentedDefinitionRef::ShapeAspect(aspect),
+//!     m::ShapeRepresentationRef::ShapeRepresentation(rep),
+//! );
+//! # }
+//! ```
+//!
+//! Where an argument's type cannot rule it out — a complex instance's parts,
+//! the struct a self-referencing constructor takes — the check runs on
+//! insertion and returns [`AuthorError::NarrowedReference`]. A reference to
+//! an entity type AP242 does not have at all compiles where the model's type
+//! names it, and is refused on insertion with [`AuthorError::NotAp242`].
 //!
 //! [`StepBuilder`] is the convenience layer on top, covering what exports
 //! touch most: parts and b-rep topology (vertex → edge → face → solid, over
@@ -219,3 +259,275 @@ pub use parser::entity::{Error, ParseWarning};
 pub use parser::lexer::{LexError, LexErrorKind};
 pub use parser::schema::{ApFamily, SchemaId, Stage};
 pub use refgraph::RefGraph;
+
+/// Compile-time checks of the AP242 edition 4 argument types and
+/// constructors, most paired with a version that compiles, so a
+/// `compile_fail` fails for its reason.
+///
+/// AP242's `approved_item` drops `PRODUCT_DEFINITION`, which AP203 allows:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, approval: m::ApprovalId, product: m::ProductId) {
+/// let _ = a.add_cc_design_approval(
+///     m::ApprovalRef::Approval(approval),
+///     vec![m::Ap242ApprovedItemRef::Product(product)],
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, approval: m::ApprovalId, pd: m::ProductDefinitionId) {
+/// let _ = a.add_cc_design_approval(
+///     m::ApprovalRef::Approval(approval),
+///     vec![m::Ap242ApprovedItemRef::ProductDefinition(pd)],
+/// );
+/// # }
+/// ```
+///
+/// AP242's `styled_item_target` leaves out a descriptive item, which AP214
+/// lets a styled item style:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, point: m::CartesianPointId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::CartesianPoint(point),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, note: m::DescriptiveRepresentationItemId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::DescriptiveRepresentationItem(note),
+/// );
+/// # }
+/// ```
+///
+/// `STYLED_ITEM.WR3` lets a styled item style only a mapped item, a
+/// geometric item, or a set of them; edition 4 applies this to a
+/// context-dependent over-riding styled item too:
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, shell: m::ClosedShellId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::ClosedShell(shell),
+/// );
+/// # }
+/// ```
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, face: m::AdvancedFaceId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::SetRepresentationItem(vec![
+///         m::Ap242StyledItemItemSetRepresentationItemRef::AdvancedFace(face),
+///     ]),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, shell: m::ClosedShellId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::SetRepresentationItem(vec![
+///         m::Ap242StyledItemItemSetRepresentationItemRef::ClosedShell(shell),
+///     ]),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, shell: m::ClosedShellId,
+/// #      styled: m::StyledItemId, face: m::AdvancedFaceId) {
+/// let _ = a.add_context_dependent_over_riding_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::ClosedShell(shell),
+///     m::StyledItemRef::StyledItem(styled),
+///     vec![m::StyleContextSelectRef::AdvancedFace(face)],
+/// );
+/// # }
+/// ```
+///
+/// An over-riding styled item references the styled item it overrides, so it
+/// has a self-referencing constructor; AP242's `styled_item_target` leaves
+/// out styled items, so a plain styled item, whose only reference to one
+/// would be its `item`, has none:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentRef, point: m::CartesianPointId) {
+/// let name = a.text("");
+/// let _ = a.add_over_riding_styled_item_cyclic(|id| m::OverRidingStyledItem {
+///     name,
+///     styles: vec![style],
+///     item: m::StyledItemTargetOrRepresentationItemRef::CartesianPoint(point),
+///     over_ridden_style: m::StyledItemRef::OverRidingStyledItem(id),
+/// });
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentRef, point: m::CartesianPointId) {
+/// let name = a.text("");
+/// let _ = a.add_styled_item_cyclic(|_| m::StyledItem {
+///     name,
+///     styles: vec![style],
+///     item: m::StyledItemTargetOrRepresentationItemRef::CartesianPoint(point),
+/// });
+/// # }
+/// ```
+///
+/// `ADVANCED_FACE.WR1` lets a face lie only on an elementary, B-spline or
+/// swept surface:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, bounds: Vec<m::FaceBoundRef>, plane: m::PlaneId) {
+/// let _ = a.add_advanced_face(
+///     "",
+///     bounds,
+///     m::Ap242AdvancedFaceGeometrySelectRef::Plane(plane),
+///     true,
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, bounds: Vec<m::FaceBoundRef>, offset: m::OffsetSurfaceId) {
+/// let _ = a.add_advanced_face(
+///     "",
+///     bounds,
+///     m::Ap242AdvancedFaceGeometrySelectRef::OffsetSurface(offset),
+///     true,
+/// );
+/// # }
+/// ```
+///
+/// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` lets each item be one of the
+/// types it lists. Edition 4 asks for exactly one, though it lists
+/// supertypes with their subtypes (a cartesian point is also a `point`, a
+/// line a `curve`, a circle a `curve` and a `conic`, a plane a `surface` and
+/// an `elementary_surface`), which would leave out a cartesian point, a line,
+/// a circle or a plane; this is a known issue of the edition, and the rule is
+/// read as asking for at least one. A mapped item is not listed:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, point: m::CartesianPointId, ctx: m::GeometricRepresentationContextId) {
+/// let _ = a.add_constructive_geometry_representation(
+///     "",
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(point)],
+///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, item: m::MappedItemId, ctx: m::GeometricRepresentationContextId) {
+/// let _ = a.add_constructive_geometry_representation(
+///     "",
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::MappedItem(item)],
+///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
+/// );
+/// # }
+/// ```
+///
+/// `LENGTH_MEASURE_WITH_UNIT.WR1` asks for a length unit:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, value: m::MeasureValue, unit: m::LengthUnitId) {
+/// let _ = a.add_length_measure_with_unit(value, m::Ap242LengthUnitRef::LengthUnit(unit));
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, value: m::MeasureValue, unit: m::MassUnitId) {
+/// let _ = a.add_length_measure_with_unit(value, m::Ap242LengthUnitRef::MassUnit(unit));
+/// # }
+/// ```
+///
+/// AP242's `datum_or_common_datum` takes datum reference elements as a list
+/// of two or more (`common_datum_list`), not one alone:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, pds: m::ProductDefinitionShapeRef, e: m::DatumReferenceElementId, g: m::DatumReferenceElementId) {
+/// let _ = a.add_datum_reference_compartment(
+///     "",
+///     None,
+///     pds,
+///     m::Logical::False,
+///     m::Ap242DatumOrCommonDatumRef::CommonDatumList(vec![
+///         m::DatumReferenceElementRef::DatumReferenceElement(e),
+///         m::DatumReferenceElementRef::DatumReferenceElement(g),
+///     ]),
+///     None,
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, pds: m::ProductDefinitionShapeRef, e: m::DatumReferenceElementId) {
+/// let _ = a.add_datum_reference_compartment(
+///     "",
+///     None,
+///     pds,
+///     m::Logical::False,
+///     m::Ap242DatumOrCommonDatumRef::DatumReferenceElement(e),
+///     None,
+/// );
+/// # }
+/// ```
+///
+/// An entity AP242 declares `ABSTRACT` has no constructor of its own; a
+/// subtype's constructor makes one:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, aspect: m::ShapeAspectId) {
+/// let _ = a.add_position_tolerance(
+///     "",
+///     None,
+///     None,
+///     m::GeometricToleranceTargetRef::ShapeAspect(aspect),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, aspect: m::ShapeAspectId) {
+/// let _ = a.add_geometric_tolerance(
+///     "",
+///     None,
+///     None,
+///     m::GeometricToleranceTargetRef::ShapeAspect(aspect),
+/// );
+/// # }
+/// ```
+#[cfg(doctest)]
+mod ap242_narrowed_arguments {}

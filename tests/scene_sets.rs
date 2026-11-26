@@ -75,3 +75,28 @@ fn geometric_sets_list_their_elements_and_reach_their_part() {
     assert!(wires.color().is_none() && wires.is_visible());
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
+
+/// A rational B-spline curve, a complex instance, is a curve element.
+#[test]
+fn a_complex_curve_in_a_set_is_a_curve() {
+    let text = part_with_sets().replace(
+        "#9010 = GEOMETRIC_CURVE_SET('wires',(#9003,#9007,#9002));",
+        "#9012=(BOUNDED_CURVE()B_SPLINE_CURVE(2,(#9000,#9001,#9002),.UNSPECIFIED.,.F.,.F.)\
+         B_SPLINE_CURVE_WITH_KNOTS((3,3),(0.,1.),.UNSPECIFIED.)CURVE()\
+         GEOMETRIC_REPRESENTATION_ITEM()RATIONAL_B_SPLINE_CURVE((1.,0.5,1.))\
+         REPRESENTATION_ITEM(''));\n\
+         #9010 = GEOMETRIC_CURVE_SET('wires',(#9003,#9007,#9012));",
+    );
+    let (model, report) = read(text.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let wires = scene
+        .all_geometric_sets()
+        .find(|s| s.name() == "wires")
+        .expect("wires");
+    let SetElement::Curve(curve) = wires.elements().nth(2).expect("a third element") else {
+        panic!("a curve")
+    };
+    assert_eq!(curve.to_nurbs().expect("converts").weights, [1., 0.5, 1.]);
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

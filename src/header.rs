@@ -4,7 +4,8 @@
 //! what the file contains; `FILE_NAME` records where it came from — file
 //! name, timestamp, authors, organizations, the STEP processor, and the
 //! originating CAD system; `FILE_SCHEMA` names the schema. [`FileHeader`]
-//! models all three and lives on the [`StepModel`]: reading surfaces the
+//! models all three, bar `FILE_DESCRIPTION.implementation_level`, which is
+//! written as `'2;1'`, and lives on the [`StepModel`]: reading surfaces the
 //! source file's header as [`StepModel::header`], and authoring fills it
 //! through [`StepBuilder::header_mut`](crate::StepBuilder::header_mut) for
 //! the written file.

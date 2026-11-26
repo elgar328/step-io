@@ -39,11 +39,9 @@ static UNIVERSAL_APD: ApdInfo = ApdInfo {
 /// ([`StepModel::header`], `FILE_SCHEMA` included) plus every entity,
 /// verbatim.
 ///
-/// An authored model ([`crate::StepBuilder`] / [`crate::Ap242Author`]) is
-/// AP242 by construction and carries the AP242 schema identity, so the
-/// output is a conforming AP242 file. A model that came from
-/// [`read`](crate::read) re-serializes faithfully under its *source* schema
-/// — step-io does not convert between APs.
+/// An authored model ([`crate::StepBuilder`] / [`crate::Ap242Author`])
+/// carries the AP242 schema identity and holds only AP242 entities, checked
+/// as [`Ap242Author`](crate::Ap242Author) describes.
 ///
 /// The text goes to `out` as it is written, in chunks of 64 KiB, and `out`
 /// is flushed at the end, so a [`File`](std::fs::File) needs no

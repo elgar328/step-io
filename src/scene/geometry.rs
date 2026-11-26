@@ -12,7 +12,6 @@
 
 use crate::Orientation;
 use crate::RefGraph;
-use crate::StepModel;
 use crate::scene::{Ctx, Scene};
 // Alias the generated model module: bare supertype structs (`Face`, `Surface`,
 // `Curve`, `Edge`, `Vertex`, `Point`, `Loop`) would shadow our handle names, so we
@@ -25,7 +24,8 @@ use crate::generated::model as m;
 /// handle (e.g. `solid.faces()`) is unprefixed and scoped to that element.
 /// `Scene::root_definitions` is unprefixed too: it filters the definitions
 /// rather than listing a type. A move from a handle to any number of other
-/// handles returns an iterator, to at most one an `Option`; computed data (a
+/// handles returns an iterator, a move to at most one an `Option`, and a move
+/// to exactly one the handle itself (`face.surface()`); computed data (a
 /// mesh's points, the warnings so far) comes as a `Vec`.
 impl Scene<'_> {
     /// Every b-rep solid in the model — `MANIFOLD_SOLID_BREP` and
@@ -86,16 +86,36 @@ impl Scene<'_> {
         })
     }
 
-    /// Every geometric point in the model (`CARTESIAN_POINT`).
+    /// Every geometric point in the model: each `CARTESIAN_POINT`, each of its
+    /// subtypes `APLL_POINT` and `APLL_POINT_WITH_SURFACE` (the points of a
+    /// PMI annotation's leader lines), and each complex instance with a
+    /// `CARTESIAN_POINT` part.
     pub fn all_points(&self) -> impl Iterator<Item = Point<'_>> + '_ {
         let cx = self.ctx();
-        cx.model
+        let model = cx.model;
+        let point = move |which| Point { cx, which };
+        let cartesian = model
             .cartesian_point_arena
             .indices()
-            .map(move |i| Point {
-                cx,
-                id: m::CartesianPointId(i),
-            })
+            .map(move |i| point(PointImpl::Cartesian(m::CartesianPointId(i))));
+        let apll = model
+            .apll_point_arena
+            .indices()
+            .map(move |i| point(PointImpl::Apll(m::ApllPointId(i))));
+        let apll_with_surface = model
+            .apll_point_with_surface_arena
+            .indices()
+            .map(move |i| point(PointImpl::ApllWithSurface(m::ApllPointWithSurfaceId(i))));
+        let complex = model
+            .complex_entity_arena
+            .indices()
+            .map(m::ComplexEntityId)
+            .filter(move |&id| complex_point_coords(model, id).is_some())
+            .map(move |id| point(PointImpl::Complex(id)));
+        cartesian
+            .chain(apll)
+            .chain(apll_with_surface)
+            .chain(complex)
     }
 }
 
@@ -196,7 +216,7 @@ impl<'m> Solid<'m> {
 
     /// The solid's outer shell and the way the solid uses it: `Reversed` when
     /// the shell is reached through an `ORIENTED_CLOSED_SHELL` with `.F.`
-    /// (wrappers compose). `None` for a shell this layer cannot resolve (a
+    /// (wrappers compose). `None` for a shell the scene cannot resolve (a
     /// complex instance, reported in [`Scene::warnings`]).
     pub fn outer(&self) -> Option<(Shell<'m>, Orientation)> {
         let this = self.about();
@@ -307,8 +327,9 @@ impl<'m> Shell<'m> {
     /// The faces of this shell, as stored (each with its own
     /// [`orientation`](Face::orientation)).
     pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + use<'m> {
-        let cx = self.cx;
-        self.parts()
+        let this = self.about();
+        let cx = this.cx;
+        this.parts()
             .1
             .iter()
             .filter_map(move |fr| Face::from_ref(cx, fr))
@@ -513,8 +534,14 @@ impl<'m> Face<'m> {
                 cx,
                 which: FaceImpl::Surface(*i),
             }),
-            // Bare `Face` carries no geometry; complex faces are out of scope.
-            m::FaceRef::Face(_) | m::FaceRef::Complex(_) => None,
+            m::FaceRef::Face(_) => {
+                cx.warn("a bare FACE has no surface geometry; not read".to_owned());
+                None
+            }
+            m::FaceRef::Complex(_) => {
+                cx.warn("face is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -564,8 +591,9 @@ impl<'m> Face<'m> {
 
     /// The boundary loops trimming this face.
     pub fn bounds(&self) -> impl Iterator<Item = Bound<'m>> + 'm {
-        let cx = self.cx;
-        self.parts()
+        let this = self.about();
+        let cx = this.cx;
+        this.parts()
             .1
             .iter()
             .filter_map(move |br| Bound::from_ref(cx, br))
@@ -605,11 +633,11 @@ impl<'m> Face<'m> {
     /// [`Surface::to_nurbs`]. An *unbounded* surface (plane, cylinder, cone,
     /// linear extrusion, a surface of revolution over a line, an offset of a
     /// plane, cylinder or cone — see [`Surface::to_nurbs`] for which offsets
-    /// convert) is sized to the
-    /// control points of its boundary edges' NURBS forms and to the vertices
-    /// of its vertex loops — a guaranteed cover of the boundary; a cone
-    /// bounded at one level reaches its apex — and is the untrimmed base patch
-    /// (the edge loops trim it separately).
+    /// convert) is sized to the control points of its boundary edges' NURBS
+    /// forms and to the vertices of its vertex loops — a guaranteed cover of
+    /// the boundary where every edge converts (one that does not is covered by
+    /// its two vertices only); a cone bounded at one level reaches its apex —
+    /// and is the untrimmed base patch (the edge loops trim it separately).
     /// `None` if the kind is unsupported or the bounds are degenerate, or for a
     /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
     /// not match its control points.
@@ -633,7 +661,20 @@ impl<'m> Face<'m> {
                 &pts,
             ),
             SurfaceKind::LinearExtrusion(s) => {
-                let profile = Curve::from_curve_ref(cx, &s.swept_curve).to_nurbs()?;
+                let curve = Curve::from_curve_ref(cx, &s.swept_curve);
+                // An unbounded line profile is bounded by the face's points.
+                let profile = if let CurveKind::Line(line) = curve.kind() {
+                    crate::scene::nurbs::extruded_line_segment(cx, line, &s.extrusion_axis, &pts)?
+                } else {
+                    let profile = curve.to_nurbs();
+                    if profile.is_none() && is_open_conic(&curve) {
+                        cx.warn(format!(
+                            "SURFACE_OF_LINEAR_EXTRUSION face.to_nurbs: profile {} is unbounded",
+                            Ctx::keyword(curve.key())
+                        ));
+                    }
+                    profile?
+                };
                 crate::scene::nurbs::extrude_patch(cx, &profile, &s.extrusion_axis, &pts)
             }
             // Bounded profiles were already handled whole by the surface-level
@@ -641,7 +682,14 @@ impl<'m> Face<'m> {
             // (a lathe-style cylinder/cone/hyperboloid), bounded here by the
             // face's vertices.
             SurfaceKind::Revolution(s) => {
-                let CurveKind::Line(line) = Curve::from_curve_ref(cx, &s.swept_curve).kind() else {
+                let curve = Curve::from_curve_ref(cx, &s.swept_curve);
+                let CurveKind::Line(line) = curve.kind() else {
+                    if is_open_conic(&curve) {
+                        cx.warn(format!(
+                            "SURFACE_OF_REVOLUTION face.to_nurbs: profile {} is unbounded",
+                            Ctx::keyword(curve.key())
+                        ));
+                    }
                     return None;
                 };
                 let frame = crate::scene::nurbs::axis1_frame(cx, &s.axis_position)?;
@@ -732,6 +780,8 @@ pub struct Surface<'m> {
 
 /// The concrete surface geometry. Common kinds are typed; everything else is
 /// `Other(keyword)` (the surface still exists — it is surfaced, not dropped).
+/// A complex instance is `Other("COMPLEX")`: a rational B-spline surface
+/// arrives this way, and [`Surface::to_nurbs`] still converts it.
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum SurfaceKind<'m> {
@@ -774,7 +824,8 @@ impl<'m> Surface<'m> {
     /// return `None` here — use [`Face::to_nurbs`] instead, which has the
     /// bounds. A B-spline whose
     /// degree is outside 1–25 or whose knot multiplicities do not match its
-    /// control points is `None` too.
+    /// control points is `None` too, and so is a bare `B_SPLINE_SURFACE` or
+    /// `RATIONAL_B_SPLINE_SURFACE` instance, which has no knots.
     ///
     /// An offset converts only over a plane, cylinder, cone, sphere or torus,
     /// and only where it keeps the surface's sense: not past a cylinder's axis or
@@ -848,7 +899,27 @@ impl<'m> Surface<'m> {
                     crate::scene::nurbs::KnotFamily::Bezier,
                 )
             }
-            _ => None,
+            // Open surfaces: unbounded without a face (see above).
+            m::SurfaceRef::Plane(_)
+            | m::SurfaceRef::CylindricalSurface(_)
+            | m::SurfaceRef::ConicalSurface(_)
+            | m::SurfaceRef::SurfaceOfLinearExtrusion(_) => None,
+            // The knots are on a subtype; a bare instance has none.
+            m::SurfaceRef::BSplineSurface(_) | m::SurfaceRef::RationalBSplineSurface(_) => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no knots to convert"
+                ));
+                None
+            }
+            // A bare supertype instance carries no geometry to convert.
+            _ => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no geometry to convert"
+                ));
+                None
+            }
         }
     }
 
@@ -948,7 +1019,10 @@ impl<'m> Bound<'m> {
                 cx,
                 which: BoundImpl::Outer(*i),
             }),
-            m::FaceBoundRef::Complex(_) => None,
+            m::FaceBoundRef::Complex(_) => {
+                cx.warn("face bound is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -1004,7 +1078,7 @@ impl<'m> Bound<'m> {
             .into_iter()
             .flat_map(|el| el.edge_list.iter())
             .filter_map(move |oer| {
-                let oe = resolve_oriented_edge(cx.model, oer)?;
+                let oe = resolve_oriented_edge(cx, oer)?;
                 Some((
                     Edge::from_edge_ref(cx, &oe.edge_element)?,
                     Orientation::from_flag(oe.orientation),
@@ -1015,12 +1089,13 @@ impl<'m> Bound<'m> {
     /// The one vertex of a `VERTEX_LOOP` boundary — a face that closes to a
     /// point, such as a cone at its apex. `None` for any other loop.
     pub fn vertex(&self) -> Option<Vertex<'m>> {
-        let m::LoopRef::VertexLoop(i) = self.loop_ref() else {
+        let this = self.about();
+        let m::LoopRef::VertexLoop(i) = this.loop_ref() else {
             return None;
         };
         Vertex::from_ref(
-            self.cx,
-            &self.cx.model.vertex_loop_arena.get(i.0).loop_vertex,
+            this.cx,
+            &this.cx.model.vertex_loop_arena.get(i.0).loop_vertex,
         )
     }
 }
@@ -1046,8 +1121,18 @@ impl<'m> Edge<'m> {
     fn from_edge_ref(cx: Ctx<'m>, r: &m::EdgeRef) -> Option<Self> {
         match r {
             m::EdgeRef::EdgeCurve(i) => Some(Edge { cx, id: *i }),
-            // Bare `Edge`, nested `OrientedEdge`, and complex edges are out of scope.
-            m::EdgeRef::Edge(_) | m::EdgeRef::OrientedEdge(_) | m::EdgeRef::Complex(_) => None,
+            m::EdgeRef::Edge(_) => {
+                cx.warn("a bare EDGE has no curve; not read".to_owned());
+                None
+            }
+            m::EdgeRef::OrientedEdge(_) => {
+                cx.warn("an ORIENTED_EDGE's edge is another ORIENTED_EDGE; not read".to_owned());
+                None
+            }
+            m::EdgeRef::Complex(_) => {
+                cx.warn("edge is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -1062,11 +1147,13 @@ impl<'m> Edge<'m> {
     }
 
     pub fn start(&self) -> Option<Vertex<'m>> {
-        Vertex::from_ref(self.cx, &self.raw().edge_start)
+        let this = self.about();
+        Vertex::from_ref(this.cx, &this.raw().edge_start)
     }
 
     pub fn end(&self) -> Option<Vertex<'m>> {
-        Vertex::from_ref(self.cx, &self.raw().edge_end)
+        let this = self.about();
+        Vertex::from_ref(this.cx, &this.raw().edge_end)
     }
 
     /// The underlying (unbounded) curve this edge lies on.
@@ -1090,14 +1177,16 @@ impl<'m> Edge<'m> {
     }
 
     /// The line width of this edge's style (`CURVE_STYLE.curve_width`, a raw
-    /// measure value), if any.
+    /// measure value), if any; `None` for a width given as text
+    /// (`DESCRIPTIVE_MEASURE`).
     pub fn width(&self) -> Option<f64> {
         let this = self.about();
         crate::scene::presentation::curve_width_of(this.cx, this.key())
     }
 
-    /// The line font of this edge's style (`CURVE_STYLE.curve_font`) — a
-    /// pre-defined font name such as `continuous` or `dashed` — if any.
+    /// The name of this edge's line font (`CURVE_STYLE.curve_font`) — a
+    /// pre-defined name such as `continuous` or `dashed`, or a
+    /// `CURVE_STYLE_FONT`'s own name — if any.
     pub fn line_font(&self) -> Option<&'m str> {
         let this = self.about();
         crate::scene::presentation::curve_font_of(this.cx, this.key())
@@ -1120,7 +1209,9 @@ impl<'m> Edge<'m> {
     /// converts the *whole* curve — here an unbounded line becomes the finite
     /// segment, a circle the arc between the vertices, a parabola or hyperbola
     /// the exact span between them, and an edge whose vertices coincide (a
-    /// closed edge) the whole closed curve. `None` for a closed edge on a line,
+    /// closed edge) the whole closed curve, in the edge's direction but
+    /// starting at the curve's parameter origin, which need not be the vertex.
+    /// `None` for a closed edge on a line,
     /// parabola or hyperbola, and for a B-spline whose degree is outside 1–25
     /// or whose knot multiplicities do not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
@@ -1149,7 +1240,8 @@ pub struct Curve<'m> {
 }
 
 /// The concrete curve geometry. Common kinds are typed; everything else is
-/// `Other(keyword)`.
+/// `Other(keyword)`. A complex instance is `Other("COMPLEX")`: a rational
+/// B-spline curve arrives this way, and [`Curve::to_nurbs`] still converts it.
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum CurveKind<'m> {
@@ -1175,8 +1267,8 @@ pub enum CurveKind<'m> {
 
 // The curve reference is one id per curve subtype. An id-based cursor (like
 // `Face`) keeps `Curve` `Copy` and lets it be built from an arena id — needed to
-// reach a curve through a feature's `GEOMETRIC_ITEM_SPECIFIC_USAGE`, where only
-// the id is available. This table generates the cursor enum, `key`, and the two
+// reach a curve a feature's usage (GISU or IIRU) identifies, where only the id
+// is available. This table generates the cursor enum, `key`, and the two
 // constructors; `kind` is hand-written below.
 macro_rules! curve_impl {
     ($( $V:ident, $id:ident );+ $(;)?) => {
@@ -1211,25 +1303,50 @@ macro_rules! curve_impl {
             ) -> Option<Self> {
                 let which = match r {
                     $( m::GeometricSetSelectRef::$V(i) => CurveImpl::$V(*i), )+
+                    m::GeometricSetSelectRef::Complex(i) if is_complex_curve(cx.model, *i) => {
+                        CurveImpl::Complex(*i)
+                    }
                     _ => return None,
                 };
                 Some(Curve { cx, which })
             }
 
-            /// A curve reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item
-            /// (used by `pmi` feature geometry); `None` for a non-curve item.
+            /// A curve a feature's usage identifies (used by `pmi` feature
+            /// geometry); `None` for a non-curve item.
             pub(crate) fn from_model_item(
                 cx: Ctx<'m>,
                 r: &m::GeometricModelItemRef,
             ) -> Option<Self> {
                 let which = match r {
                     $( m::GeometricModelItemRef::$V(i) => CurveImpl::$V(*i), )+
+                    m::GeometricModelItemRef::Complex(i) if is_complex_curve(cx.model, *i) => {
+                        CurveImpl::Complex(*i)
+                    }
                     _ => return None,
                 };
                 Some(Curve { cx, which })
             }
         }
     };
+}
+
+/// Whether a curve is a parabola or hyperbola, which no single NURBS covers.
+fn is_open_conic(curve: &Curve<'_>) -> bool {
+    matches!(
+        curve.kind(),
+        CurveKind::Parabola(_) | CurveKind::Hyperbola(_)
+    )
+}
+
+/// Whether a complex instance is a curve (has a `CURVE` part), such as a
+/// rational B-spline curve.
+fn is_complex_curve(model: &m::StepModel, id: m::ComplexEntityId) -> bool {
+    model
+        .complex_entity_arena
+        .get(id.0)
+        .parts
+        .iter()
+        .any(|p| matches!(p, m::PartialEntity::Curve))
 }
 
 curve_impl! {
@@ -1266,14 +1383,16 @@ impl<'m> Curve<'m> {
     }
 
     /// The line width of this curve's style (`CURVE_STYLE.curve_width`, a raw
-    /// measure value), if any.
+    /// measure value), if any; `None` for a width given as text
+    /// (`DESCRIPTIVE_MEASURE`).
     pub fn width(&self) -> Option<f64> {
         let this = self.about();
         crate::scene::presentation::curve_width_of(this.cx, this.key())
     }
 
-    /// The line-font name of this curve's style (`CURVE_STYLE.curve_font`, a line
-    /// pattern like `continuous` / `dashed`), if any.
+    /// The name of this curve's line font (`CURVE_STYLE.curve_font`) — a
+    /// pre-defined name such as `continuous` or `dashed`, or a
+    /// `CURVE_STYLE_FONT`'s own name — if any.
     pub fn line_font(&self) -> Option<&'m str> {
         let this = self.about();
         crate::scene::presentation::curve_font_of(this.cx, this.key())
@@ -1299,7 +1418,8 @@ impl<'m> Curve<'m> {
     /// that needs bounds it alone lacks — an unbounded line, parabola or
     /// hyperbola; use [`Edge::to_nurbs`] there, or trim it — and for a B-spline
     /// whose degree is outside 1–25 or whose knot multiplicities do not match
-    /// its control points. A trimmed parabola or hyperbola converts exactly; a
+    /// its control points, or a bare `B_SPLINE_CURVE` or
+    /// `RATIONAL_B_SPLINE_CURVE` instance, which has no knots. A trimmed parabola or hyperbola converts exactly; a
     /// trim given as a point is followed rather than its parameter, which
     /// writers disagree on for a parabola.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
@@ -1378,7 +1498,31 @@ impl<'m> Curve<'m> {
                 cx,
                 &cx.model.intersection_curve_arena.get(i.0).curve_3d,
             ),
-            _ => None,
+            // Unbounded: an edge or a trim bounds them (see above).
+            CurveImpl::Line(_) | CurveImpl::Parabola(_) | CurveImpl::Hyperbola(_) => None,
+            CurveImpl::Pcurve(_) | CurveImpl::BoundedPcurve(_) => {
+                cx.warn(format!(
+                    "{}.to_nurbs: a curve in a surface's parameter space is not converted",
+                    crate::scene::Ctx::keyword(this.key())
+                ));
+                None
+            }
+            // The knots are on a subtype; a bare instance has none.
+            CurveImpl::BSplineCurve(_) | CurveImpl::RationalBSplineCurve(_) => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no knots to convert"
+                ));
+                None
+            }
+            // A bare supertype instance carries no geometry to convert.
+            _ => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no geometry to convert"
+                ));
+                None
+            }
         }
     }
 
@@ -1457,7 +1601,14 @@ impl<'m> Vertex<'m> {
     fn from_ref(cx: Ctx<'m>, r: &m::VertexRef) -> Option<Self> {
         match r {
             m::VertexRef::VertexPoint(i) => Some(Vertex { cx, id: *i }),
-            m::VertexRef::Vertex(_) | m::VertexRef::Complex(_) => None,
+            m::VertexRef::Vertex(_) => {
+                cx.warn("a bare VERTEX has no point; not read".to_owned());
+                None
+            }
+            m::VertexRef::Complex(_) => {
+                cx.warn("vertex is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -1466,24 +1617,27 @@ impl<'m> Vertex<'m> {
         m::EntityKey::VertexPoint(self.id)
     }
 
-    /// The vertex's geometric point (only `CARTESIAN_POINT` is resolved here).
+    /// The vertex's geometric point: a `CARTESIAN_POINT`, an `APLL_POINT`
+    /// (with or without surface), or a complex instance with a
+    /// `CARTESIAN_POINT` part. A bare `POINT`, or a complex one without that
+    /// part, has no coordinates and is reported in
+    /// [`Scene::warnings`](crate::scene::Scene::warnings).
     pub fn point(&self) -> Option<Point<'m>> {
-        let r = &self
+        let this = self.about();
+        let r = &this
             .cx
             .model
             .vertex_point_arena
-            .get(self.id.0)
+            .get(this.id.0)
             .vertex_geometry;
-        match r {
-            m::PointRef::CartesianPoint(i) => Some(Point {
-                cx: self.cx,
-                id: *i,
-            }),
-            m::PointRef::ApllPoint(_)
-            | m::PointRef::ApllPointWithSurface(_)
-            | m::PointRef::Point(_)
-            | m::PointRef::Complex(_) => None,
+        let point = Point::from_key(this.cx, r.entity_key());
+        if point.is_none() {
+            this.cx.warn(format!(
+                "vertex point is a {} without coordinates; not read",
+                Ctx::keyword(r.entity_key())
+            ));
         }
+        point
     }
 
     /// The edges that begin or end at this vertex (reverse: an `EDGE_CURVE` whose
@@ -1504,23 +1658,70 @@ impl<'m> Vertex<'m> {
     }
 }
 
-/// A geometric point (`CARTESIAN_POINT`).
+/// A geometric point: a `CARTESIAN_POINT`, one of its subtypes `APLL_POINT`
+/// and `APLL_POINT_WITH_SURFACE`, or a complex instance with a
+/// `CARTESIAN_POINT` part.
 #[derive(Clone, Copy)]
 pub struct Point<'m> {
     cx: Ctx<'m>,
-    id: m::CartesianPointId,
+    which: PointImpl,
+}
+
+#[derive(Clone, Copy)]
+enum PointImpl {
+    Cartesian(m::CartesianPointId),
+    Apll(m::ApllPointId),
+    ApllWithSurface(m::ApllPointWithSurfaceId),
+    /// Constructed only for a complex instance with a `CARTESIAN_POINT` part.
+    Complex(m::ComplexEntityId),
+}
+
+/// The coordinates in a complex instance's `CARTESIAN_POINT` part, if it has one.
+fn complex_point_coords(model: &m::StepModel, id: m::ComplexEntityId) -> Option<&[f64]> {
+    model
+        .complex_entity_arena
+        .get(id.0)
+        .parts
+        .iter()
+        .find_map(|p| match p {
+            m::PartialEntity::CartesianPoint { coordinates } => Some(&coordinates[..]),
+            _ => None,
+        })
 }
 
 impl<'m> Point<'m> {
-    /// Construct a point handle from a `CARTESIAN_POINT` id — used by other scene
-    /// modules (e.g. `pmi` feature geometry) to bridge into geometry.
+    /// A point handle for a `CARTESIAN_POINT` id — used by other scene modules
+    /// (e.g. `pmi` feature geometry) to bridge into geometry.
     pub(crate) fn from_id(cx: Ctx<'m>, id: m::CartesianPointId) -> Self {
-        Point { cx, id }
+        Point {
+            cx,
+            which: PointImpl::Cartesian(id),
+        }
+    }
+
+    /// A point handle for a reference to an entity that is a point, if it is
+    /// one this handle covers; `None` (without a warning) otherwise.
+    pub(crate) fn from_key(cx: Ctx<'m>, key: m::EntityKey) -> Option<Self> {
+        let which = match key {
+            m::EntityKey::CartesianPoint(i) => PointImpl::Cartesian(i),
+            m::EntityKey::ApllPoint(i) => PointImpl::Apll(i),
+            m::EntityKey::ApllPointWithSurface(i) => PointImpl::ApllWithSurface(i),
+            m::EntityKey::ComplexEntity(i) if complex_point_coords(cx.model, i).is_some() => {
+                PointImpl::Complex(i)
+            }
+            _ => return None,
+        };
+        Some(Point { cx, which })
     }
 
     /// This point's global identity (a `Copy` key for maps / deduplication).
     pub fn key(&self) -> m::EntityKey {
-        m::EntityKey::CartesianPoint(self.id)
+        match self.which {
+            PointImpl::Cartesian(i) => m::EntityKey::CartesianPoint(i),
+            PointImpl::Apll(i) => m::EntityKey::ApllPoint(i),
+            PointImpl::ApllWithSurface(i) => m::EntityKey::ApllPointWithSurface(i),
+            PointImpl::Complex(i) => m::EntityKey::ComplexEntity(i),
+        }
     }
 
     /// The coordinates as a 3-vector, missing components padded with `0.0` —
@@ -1536,12 +1737,15 @@ impl<'m> Point<'m> {
 
     /// The point's coordinates as written (`x, y[, z]`).
     pub fn coords(&self) -> &'m [f64] {
-        &self
-            .cx
-            .model
-            .cartesian_point_arena
-            .get(self.id.0)
-            .coordinates
+        let model = self.cx.model;
+        match self.which {
+            PointImpl::Cartesian(i) => &model.cartesian_point_arena.get(i.0).coordinates,
+            PointImpl::Apll(i) => &model.apll_point_arena.get(i.0).coordinates,
+            PointImpl::ApllWithSurface(i) => {
+                &model.apll_point_with_surface_arena.get(i.0).coordinates
+            }
+            PointImpl::Complex(i) => complex_point_coords(model, i).unwrap_or(&[]),
+        }
     }
 
     /// The marker colour of this point's style (`POINT_STYLE.marker_colour`),
@@ -1628,7 +1832,7 @@ fn resolve_closed_shell(
 }
 
 /// [`resolve_closed_shell`] from an `ORIENTED_CLOSED_SHELL`.
-fn resolve_oriented_closed_shell<'m>(
+pub(crate) fn resolve_oriented_closed_shell<'m>(
     cx: Ctx<'m>,
     mut oc: &'m m::OrientedClosedShell,
 ) -> Option<(m::ClosedShellId, Orientation)> {
@@ -1653,7 +1857,7 @@ fn resolve_oriented_closed_shell<'m>(
 }
 
 /// Resolve a `LoopRef` to an `EdgeLoop` (only edge loops carry edges; a vertex
-/// loop is reached through [`Bound::vertex`]). Loops this layer does not read
+/// loop is reached through [`Bound::vertex`]). Loops the scene does not read
 /// are reported.
 fn resolve_edge_loop<'m>(cx: Ctx<'m>, r: &m::LoopRef) -> Option<&'m m::EdgeLoop> {
     let what = match r {
@@ -1668,13 +1872,13 @@ fn resolve_edge_loop<'m>(cx: Ctx<'m>, r: &m::LoopRef) -> Option<&'m m::EdgeLoop>
 }
 
 /// Resolve an `OrientedEdgeRef` to an `OrientedEdge`.
-fn resolve_oriented_edge<'m>(
-    model: &'m StepModel,
-    r: &m::OrientedEdgeRef,
-) -> Option<&'m m::OrientedEdge> {
+fn resolve_oriented_edge<'m>(cx: Ctx<'m>, r: &m::OrientedEdgeRef) -> Option<&'m m::OrientedEdge> {
     match r {
-        m::OrientedEdgeRef::OrientedEdge(i) => Some(model.oriented_edge_arena.get(i.0)),
-        m::OrientedEdgeRef::Complex(_) => None,
+        m::OrientedEdgeRef::OrientedEdge(i) => Some(cx.model.oriented_edge_arena.get(i.0)),
+        m::OrientedEdgeRef::Complex(_) => {
+            cx.warn("oriented edge is a complex instance; not read".to_owned());
+            None
+        }
     }
 }
 
@@ -1687,5 +1891,6 @@ about_by_key!(
     Shell,
     Solid,
     Surface,
-    SurfaceModel
+    SurfaceModel,
+    Vertex
 );

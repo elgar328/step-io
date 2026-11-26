@@ -1,9 +1,9 @@
 //! Presentation — the colour, transparency, layer, and visibility of a shape.
 //!
 //! These surface as accessors on the geometry handles: `.color()`,
-//! `.transparency()`, `.layer()`, and `.is_visible()`. A style the reader
+//! `.transparency()`, `.layer()`, and `.is_visible()`. A style the scene
 //! cannot follow to a value — a complex style, or an unknown pre-defined
-//! colour name — is recorded via [`Scene::warnings`](crate::scene::Scene)
+//! colour name — is recorded via [`Scene::warnings`](crate::scene::Scene::warnings)
 //! rather than skipped silently.
 
 use crate::generated::model as m;
@@ -17,22 +17,191 @@ pub struct Rgb {
     pub blue: f64,
 }
 
+/// A styled item that styles a target: its key, its style assignments, and
+/// the styled item it overrides if it is an `OVER_RIDING_STYLED_ITEM`.
+#[derive(Clone, Copy)]
+struct Styling<'m> {
+    key: m::EntityKey,
+    styles: &'m [m::PresentationStyleAssignmentRef],
+    overrides: Option<m::EntityKey>,
+}
+
+/// Every styled item that styles `target` through its `item` — the item
+/// itself, or an element of the set it is: `STYLED_ITEM`, its annotation and
+/// over-riding subtypes, and a complex instance with a `STYLED_ITEM` part. A
+/// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` is left out: it applies only in
+/// its assembly context.
+fn stylings<'m>(cx: Ctx<'m>, target: m::EntityKey) -> Vec<Styling<'m>> {
+    let model = cx.model;
+    let mut out = Vec::new();
+    for &key in cx.ref_graph().referrers(target) {
+        let plain = |styles: &'m [m::PresentationStyleAssignmentRef]| Styling {
+            key,
+            styles,
+            overrides: None,
+        };
+        // These reach a geometric target only through `item`; the others are
+        // checked against it, as they may reach it through another attribute.
+        let styling = match key {
+            m::EntityKey::StyledItem(i) => plain(&model.styled_item_arena.get(i.0).styles),
+            m::EntityKey::OverRidingStyledItem(i) => {
+                let o = model.over_riding_styled_item_arena.get(i.0);
+                Styling {
+                    key,
+                    styles: &o.styles,
+                    overrides: Some(o.over_ridden_style.entity_key()),
+                }
+            }
+            m::EntityKey::AnnotationOccurrence(i) => {
+                plain(&model.annotation_occurrence_arena.get(i.0).styles)
+            }
+            m::EntityKey::DraughtingAnnotationOccurrence(i) => {
+                plain(&model.draughting_annotation_occurrence_arena.get(i.0).styles)
+            }
+            m::EntityKey::AnnotationCurveOccurrence(i) => {
+                plain(&model.annotation_curve_occurrence_arena.get(i.0).styles)
+            }
+            m::EntityKey::AnnotationSymbolOccurrence(i) => {
+                plain(&model.annotation_symbol_occurrence_arena.get(i.0).styles)
+            }
+            m::EntityKey::AnnotationTextOccurrence(i) => {
+                plain(&model.annotation_text_occurrence_arena.get(i.0).styles)
+            }
+            m::EntityKey::AnnotationPlaceholderOccurrence(i) => plain(
+                &model
+                    .annotation_placeholder_occurrence_arena
+                    .get(i.0)
+                    .styles,
+            ),
+            m::EntityKey::ExternalImagePlacementInCallout(i) => plain(
+                &model
+                    .external_image_placement_in_callout_arena
+                    .get(i.0)
+                    .styles,
+            ),
+            m::EntityKey::LeaderCurve(i) => plain(&model.leader_curve_arena.get(i.0).styles),
+            m::EntityKey::LeaderTerminator(i) => {
+                plain(&model.leader_terminator_arena.get(i.0).styles)
+            }
+            m::EntityKey::TerminatorSymbol(i) => {
+                plain(&model.terminator_symbol_arena.get(i.0).styles)
+            }
+            m::EntityKey::TessellatedAnnotationOccurrence(i) => plain(
+                &model
+                    .tessellated_annotation_occurrence_arena
+                    .get(i.0)
+                    .styles,
+            ),
+            m::EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                let a = model
+                    .annotation_placeholder_occurrence_with_leader_line_arena
+                    .get(i.0);
+                if a.item.entity_key() != target {
+                    continue;
+                }
+                plain(&a.styles)
+            }
+            m::EntityKey::AnnotationPlane(i) => {
+                let a = model.annotation_plane_arena.get(i.0);
+                if a.item.entity_key() != target {
+                    continue;
+                }
+                plain(&a.styles)
+            }
+            m::EntityKey::ComplexEntity(i) => {
+                let Some(styling) = complex_styling(model, i, target) else {
+                    continue;
+                };
+                styling
+            }
+            _ => continue,
+        };
+        out.push(styling);
+    }
+    out
+}
+
+/// A complex instance as a [`Styling`] of `target`, if it has a `STYLED_ITEM`
+/// part, is not context-dependent, and does not reach `target` as a leader
+/// line rather than as what it styles.
+fn complex_styling(
+    model: &m::StepModel,
+    id: m::ComplexEntityId,
+    target: m::EntityKey,
+) -> Option<Styling<'_>> {
+    let mut styles = None;
+    let mut overrides = None;
+    for p in &model.complex_entity_arena.get(id.0).parts {
+        match p {
+            m::PartialEntity::StyledItem { styles: s, .. } => styles = Some(s.as_slice()),
+            m::PartialEntity::OverRidingStyledItem { over_ridden_style } => {
+                overrides = Some(over_ridden_style.entity_key());
+            }
+            m::PartialEntity::ContextDependentOverRidingStyledItem { .. } => return None,
+            m::PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line }
+                if leader_line.iter().any(|l| l.entity_key() == target) =>
+            {
+                return None;
+            }
+            _ => {}
+        }
+    }
+    Some(Styling {
+        key: m::EntityKey::ComplexEntity(id),
+        styles: styles?,
+        overrides,
+    })
+}
+
+/// The styled items whose styles apply to `target`: those no other styled
+/// item on `target` overrides (`OVER_RIDING_STYLED_ITEM.over_ridden_style`),
+/// over-riding ones first, then in referrer order (by entity type, then file
+/// order). An item whose chain of overrides leads back to itself is in a
+/// cycle: the cycle is reported and the overrides inside it are set aside, so
+/// its items apply unless an item outside the cycle overrides them.
+fn stylings_in_effect<'m>(cx: Ctx<'m>, target: m::EntityKey) -> Vec<Styling<'m>> {
+    let all = stylings(cx, target);
+    let overrides_of =
+        |key: m::EntityKey| all.iter().find(|s| s.key == key).and_then(|s| s.overrides);
+    // A cycle through `s` is at most `all.len()` overrides long.
+    let in_cycle = |s: &Styling<'_>| {
+        let mut at = s.overrides;
+        for _ in 0..all.len() {
+            match at {
+                Some(key) if key == s.key => return true,
+                Some(key) => at = overrides_of(key),
+                None => return false,
+            }
+        }
+        false
+    };
+    let cyclic: Vec<bool> = all.iter().map(in_cycle).collect();
+    if cyclic.contains(&true) {
+        cx.warn(
+            "styled items override each other in a cycle; those overrides are set aside".to_owned(),
+        );
+    }
+    let overridden: Vec<m::EntityKey> = all
+        .iter()
+        .zip(&cyclic)
+        .filter(|&(_, &c)| !c)
+        .filter_map(|(s, _)| s.overrides)
+        .collect();
+    let mut winners: Vec<Styling<'m>> = all
+        .iter()
+        .copied()
+        .filter(|s| !overridden.contains(&s.key))
+        .collect();
+    winners.sort_by_key(|s| s.overrides.is_none());
+    winners
+}
+
 /// The colour styled onto the entity `target` (a face, solid, shell, surface
 /// model or mesh), if any.
 pub(crate) fn colour_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<Rgb> {
-    let rg = cx.ref_graph();
-    for r in rg.referrers(target) {
-        // A STYLED_ITEM references `target` only through its `item` field, so any
-        // styled item referring to `target` styles it.
-        let m::EntityKey::StyledItem(sid) = r else {
-            continue;
-        };
-        let si = cx.model.styled_item_arena.get(sid.0);
-        if let Some(rgb) = si.styles.iter().find_map(|psa| psa_colour(cx, psa)) {
-            return Some(rgb);
-        }
-    }
-    None
+    stylings_in_effect(cx, target)
+        .iter()
+        .find_map(|s| s.styles.iter().find_map(|psa| psa_colour(cx, psa)))
 }
 
 fn psa_colour(cx: Ctx<'_>, r: &m::PresentationStyleAssignmentRef) -> Option<Rgb> {
@@ -162,12 +331,23 @@ fn colour_to_rgb(cx: Ctx<'_>, r: &m::ColourRef) -> Option<Rgb> {
                 None
             })
         }
+        m::ColourRef::PreDefinedColour(i) => {
+            let name = cx
+                .model
+                .text(cx.model.pre_defined_colour_arena.get(i.0).name);
+            predefined_rgb(name).or_else(|| {
+                cx.warn(format!("unknown pre-defined colour: {name}"));
+                None
+            })
+        }
         m::ColourRef::Complex(_) => {
             cx.warn("complex colour".to_owned());
             None
         }
-        // Bare COLOUR / colour specification / other pre-defined colour.
-        _ => None,
+        m::ColourRef::Colour(_) | m::ColourRef::ColourSpecification(_) => {
+            cx.warn("a bare COLOUR or COLOUR_SPECIFICATION carries no RGB value".to_owned());
+            None
+        }
     }
 }
 
@@ -191,8 +371,8 @@ fn predefined_rgb(name: &str) -> Option<Rgb> {
 // Transparency
 // ---------------------------------------------------------------------------
 
-/// Reverse-walk from `target` (a face or solid) to each surface-style element
-/// applied to it — `STYLED_ITEM` → presentation-style assignment →
+/// Reverse-walk from `target` (a geometry or mesh handle's entity) to each
+/// surface-style element applied to it — `STYLED_ITEM` → presentation-style assignment →
 /// `SURFACE_STYLE_USAGE` → `SURFACE_SIDE_STYLE` → element — running `leaf` on
 /// each and returning its first `Some`. Shared by any per-element surface-style
 /// query (currently transparency).
@@ -201,13 +381,8 @@ fn surface_elements_of<T>(
     target: m::EntityKey,
     leaf: impl Fn(Ctx<'_>, &m::SurfaceStyleElementSelectRef) -> Option<T>,
 ) -> Option<T> {
-    let rg = cx.ref_graph();
-    for r in rg.referrers(target) {
-        let m::EntityKey::StyledItem(sid) = r else {
-            continue;
-        };
-        let si = cx.model.styled_item_arena.get(sid.0);
-        for psa in &si.styles {
+    for styling in stylings_in_effect(cx, target) {
+        for psa in styling.styles {
             let styles: &[m::PresentationStyleSelectRef] = match psa {
                 m::PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
                     &cx.model.presentation_style_assignment_arena.get(i.0).styles
@@ -221,8 +396,13 @@ fn surface_elements_of<T>(
                 }
             };
             for style in styles {
-                let m::PresentationStyleSelectRef::SurfaceStyleUsage(i) = style else {
-                    continue;
+                let i = match style {
+                    m::PresentationStyleSelectRef::SurfaceStyleUsage(i) => i,
+                    m::PresentationStyleSelectRef::Complex(_) => {
+                        cx.warn("complex presentation style".to_owned());
+                        continue;
+                    }
+                    _ => continue,
                 };
                 let side = &cx.model.surface_style_usage_arena.get(i.0).style;
                 let elements: &[m::SurfaceStyleElementSelectRef] = match side {
@@ -248,8 +428,13 @@ fn surface_elements_of<T>(
 /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`'s `SURFACE_STYLE_TRANSPARENT`
 /// property (the only place transparency lives).
 fn element_transparency(cx: Ctx<'_>, r: &m::SurfaceStyleElementSelectRef) -> Option<f64> {
-    let m::SurfaceStyleElementSelectRef::SurfaceStyleRenderingWithProperties(i) = r else {
-        return None;
+    let i = match r {
+        m::SurfaceStyleElementSelectRef::SurfaceStyleRenderingWithProperties(i) => i,
+        m::SurfaceStyleElementSelectRef::Complex(_) => {
+            cx.warn("complex surface style element".to_owned());
+            return None;
+        }
+        _ => return None,
     };
     cx.model
         .surface_style_rendering_with_properties_arena
@@ -263,12 +448,17 @@ fn element_transparency(cx: Ctx<'_>, r: &m::SurfaceStyleElementSelectRef) -> Opt
                     .get(t.0)
                     .transparency,
             ),
-            _ => None,
+            m::RenderingPropertiesSelectRef::Complex(_) => {
+                cx.warn("complex rendering property".to_owned());
+                None
+            }
+            m::RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(_) => None,
         })
 }
 
-/// The transparency styled onto `target` (a face or solid), if any. Raw STEP
-/// value: `0.0` = opaque, `1.0` = fully transparent.
+/// The transparency styled onto `target` (a geometry or mesh handle's
+/// entity), if any. Raw STEP value: `0.0` = opaque, `1.0` = fully
+/// transparent.
 pub(crate) fn transparency_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<f64> {
     surface_elements_of(cx, target, element_transparency)
 }
@@ -281,16 +471,11 @@ pub(crate) fn transparency_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<f64> 
 // (88% / 97%), not directly. So both queries consider `target`'s "presentation
 // delegates" = the target itself plus the styled items that reference it.
 
-/// The styled items that style `target`.
-fn styled_items_of(cx: Ctx<'_>, target: m::EntityKey) -> Vec<m::StyledItemId> {
-    cx.ref_graph()
-        .referrers(target)
-        .iter()
-        .filter_map(|r| match r {
-            m::EntityKey::StyledItem(sid) => Some(*sid),
-            _ => None,
-        })
-        .collect()
+/// The styled items that style `target`, over-riding ones included: a layer
+/// or an `INVISIBILITY` names a styled item, not a style, so no override
+/// applies here.
+fn styled_items_of(cx: Ctx<'_>, target: m::EntityKey) -> Vec<m::EntityKey> {
+    stylings(cx, target).into_iter().map(|s| s.key).collect()
 }
 
 /// The layers `target` belongs to — assignments that contain it directly or
@@ -305,8 +490,8 @@ fn layers_of(cx: Ctx<'_>, target: m::EntityKey) -> Vec<m::PresentationLayerAssig
             _ => None,
         })
         .collect();
-    for sid in styled_items_of(cx, target) {
-        for r in rg.referrers(m::EntityKey::StyledItem(sid)) {
+    for styled in styled_items_of(cx, target) {
+        for r in rg.referrers(styled) {
             if let m::EntityKey::PresentationLayerAssignment(pid) = r {
                 out.push(*pid);
             }
@@ -337,7 +522,7 @@ pub(crate) fn layer_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&str> {
 pub(crate) fn is_visible(cx: Ctx<'_>, target: m::EntityKey) -> bool {
     let styled_hidden = styled_items_of(cx, target)
         .into_iter()
-        .any(|sid| referred_by_invisibility(cx, m::EntityKey::StyledItem(sid)));
+        .any(|styled| referred_by_invisibility(cx, styled));
     let layer_hidden = layers_of(cx, target)
         .into_iter()
         .any(|pid| referred_by_invisibility(cx, m::EntityKey::PresentationLayerAssignment(pid)));
@@ -360,12 +545,8 @@ fn each_presentation_style<'m, T>(
     target: m::EntityKey,
     leaf: impl Fn(Ctx<'m>, &'m m::PresentationStyleSelectRef) -> Option<T>,
 ) -> Option<T> {
-    let rg = cx.ref_graph();
-    for r in rg.referrers(target) {
-        let m::EntityKey::StyledItem(sid) = r else {
-            continue;
-        };
-        for psa in &cx.model.styled_item_arena.get(sid.0).styles {
+    for styling in stylings_in_effect(cx, target) {
+        for psa in styling.styles {
             let styles: &[m::PresentationStyleSelectRef] = match psa {
                 m::PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
                     &cx.model.presentation_style_assignment_arena.get(i.0).styles
@@ -390,6 +571,10 @@ fn each_presentation_style<'m, T>(
 fn curve_style_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&m::CurveStyle> {
     each_presentation_style(cx, target, |cx, s| match s {
         m::PresentationStyleSelectRef::CurveStyle(i) => Some(cx.model.curve_style_arena.get(i.0)),
+        m::PresentationStyleSelectRef::Complex(_) => {
+            cx.warn("complex presentation style".to_owned());
+            None
+        }
         _ => None,
     })
 }
@@ -401,6 +586,12 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
         m::SizeSelectRef::LengthMeasureWithUnit(i) => {
             &cx.model
                 .length_measure_with_unit_arena
+                .get(i.0)
+                .value_component
+        }
+        m::SizeSelectRef::PositiveLengthMeasureWithUnit(i) => {
+            &cx.model
+                .positive_length_measure_with_unit_arena
                 .get(i.0)
                 .value_component
         }
@@ -416,6 +607,12 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
         m::SizeSelectRef::PlaneAngleMeasureWithUnit(i) => {
             &cx.model
                 .plane_angle_measure_with_unit_arena
+                .get(i.0)
+                .value_component
+        }
+        m::SizeSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+            &cx.model
+                .positive_plane_angle_measure_with_unit_arena
                 .get(i.0)
                 .value_component
         }
@@ -437,7 +634,14 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
                 .get(i.0)
                 .value_component
         }
-        m::SizeSelectRef::DescriptiveMeasure(_) | m::SizeSelectRef::Complex(_) => return None,
+        m::SizeSelectRef::DescriptiveMeasure(_) => return None,
+        m::SizeSelectRef::Complex(cuid) => {
+            let Some((value, _)) = crate::scene::units::complex_measure(cx.model, *cuid) else {
+                cx.warn("size is a complex instance without a MEASURE_WITH_UNIT part".to_owned());
+                return None;
+            };
+            value
+        }
     };
     Some(value.value.as_f64())
 }
@@ -495,6 +699,10 @@ pub(crate) fn curve_font_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&str> {
 pub(crate) fn point_colour_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<Rgb> {
     let style = each_presentation_style(cx, target, |cx, s| match s {
         m::PresentationStyleSelectRef::PointStyle(i) => Some(cx.model.point_style_arena.get(i.0)),
+        m::PresentationStyleSelectRef::Complex(_) => {
+            cx.warn("complex presentation style".to_owned());
+            None
+        }
         _ => None,
     })?;
     colour_to_rgb(cx, style.marker_colour.as_ref()?)

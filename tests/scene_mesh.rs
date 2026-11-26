@@ -49,6 +49,52 @@ const MESHES: &str = "\
 #81=TESSELLATED_SHELL('group B',(#12),$);\n\
 #82=TESSELLATED_SHELL('group C',(#15),#49);\n";
 
+/// A tessellated shell may link its closed shell through an
+/// `ORIENTED_CLOSED_SHELL`; the group still reaches the solid.
+#[test]
+fn a_mesh_group_reaches_its_solid_through_an_oriented_shell() {
+    let meshes = MESHES.replace(
+        "#82=TESSELLATED_SHELL('group C',(#15),#49);",
+        "#83=ORIENTED_CLOSED_SHELL('',*,#49,.F.);\n#82=TESSELLATED_SHELL('group C',(#15),#83);",
+    );
+    let src = format!("{HEADER}{meshes}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let group = scene
+        .all_mesh_groups()
+        .find(|g| g.name() == "group C")
+        .expect("group C");
+    assert_eq!(group.solid().expect("the solid").name(), "the part");
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// A `pnindex` entry outside the coordinate list leaves the mesh without
+/// points or triangles, with one warning on the mesh, rather than shifting the
+/// vertices after it; its per-vertex normals still count against `pnindex`.
+#[test]
+fn a_bad_point_index_gives_no_points() {
+    let meshes = MESHES.replace(
+        "#14=COMPLEX_TRIANGULATED_FACE('picked',#13,3,(),$,(1,3,5),((1,2,3)),());",
+        "#14=COMPLEX_TRIANGULATED_FACE('picked',#13,3,((0.,0.,1.),(0.,0.,1.),(0.,0.,1.)),$,(1,9,5),((1,2,3)),());",
+    );
+    let src = format!("{HEADER}{meshes}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let picked = scene
+        .all_meshes()
+        .find(|m| m.name() == "picked")
+        .expect("picked");
+    assert_eq!(picked.points(), Vec::<[f64; 3]>::new());
+    assert_eq!(picked.triangles(), Vec::<[usize; 3]>::new());
+    assert!(matches!(picked.normals(), MeshNormals::PerVertex(n) if n.len() == 3));
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "{warnings:?}");
+    assert_eq!(warnings[0].entity, Some(picked.key()));
+    assert!(warnings[0].message.contains("point index out of range"));
+}
+
 #[test]
 fn meshes_expose_points_triangles_and_normals() {
     let src = format!("{HEADER}{MESHES}{FOOTER}");

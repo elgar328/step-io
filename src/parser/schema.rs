@@ -163,11 +163,16 @@ fn classify_one(upper: &str) -> Option<(ApFamily, Option<u8>, Stage)> {
                 // AP242: the module (ISO/TS 10303-442) version is non-linear
                 // with the AP242 edition, and the `1 0` prefix does not mark
                 // the stage — so map version → (edition, stage) explicitly.
+                // Edition 4 (2025) is module version 7; versions 5 and 6 come
+                // between editions 3 and 4 and are taken as edition 4 of an
+                // unknown stage.
                 let (ed, stage) = match version {
                     1 => (Some(1), Stage::Is),
                     2 => (Some(2), Stage::Dis),
                     3 => (Some(2), Stage::Is),
                     4 => (Some(3), Stage::Is),
+                    5 | 6 => (Some(4), Stage::Unknown),
+                    7 => (Some(4), Stage::Is),
                     _ => (None, Stage::Unknown),
                 };
                 return Some((ApFamily::Ap242, ed, stage));
@@ -295,6 +300,9 @@ mod tests {
             (2, Some(2), Stage::Dis),
             (3, Some(2), Stage::Is),
             (4, Some(3), Stage::Is),
+            (5, Some(4), Stage::Unknown),
+            (6, Some(4), Stage::Unknown),
+            (7, Some(4), Stage::Is),
         ];
         for (v, ed, st) in cases {
             let s = id(&format!(
@@ -310,8 +318,8 @@ mod tests {
 
     #[test]
     fn ap242_unknown_version_falls_back_by_name() {
-        // ed4-style: unknown module version → recognised as AP242, edition unknown.
-        let s = id("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 5 1 4 }");
+        // Unknown module version → recognised as AP242, edition unknown.
+        let s = id("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 8 1 4 }");
         assert_eq!(
             (s.family, s.edition, s.stage),
             (ApFamily::Ap242, None, Stage::Unknown)
@@ -392,6 +400,16 @@ mod tests {
             id("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }")
                 .to_string(),
             "AP242 ed2 (IS)"
+        );
+        assert_eq!(
+            id("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 7 1 4 }")
+                .to_string(),
+            "AP242 ed4 (IS)"
+        );
+        assert_eq!(
+            id("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 5 1 4 }")
+                .to_string(),
+            "AP242 ed4"
         );
         assert_eq!(id("AUTOMOTIVE_DESIGN").to_string(), "AP214");
         assert_eq!(

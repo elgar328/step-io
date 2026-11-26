@@ -3,7 +3,8 @@
 //!
 //! The lexer strips the quotes and undoes `''`; [`decode`] does the rest.
 //! [`encode`] writes printable ASCII as itself and every other character as a
-//! `\X2\` or `\X4\` run, so `decode(encode(s))` gives back `s` for any string.
+//! `\X2\` or `\X4\` run, so decoding what `encode` writes, once the lexer
+//! has stripped it, gives back `s` for any string.
 
 use std::fmt::Write as _;
 

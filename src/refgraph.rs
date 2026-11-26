@@ -89,8 +89,10 @@ impl StepModel {
 }
 
 impl RefGraph {
-    /// The entities that reference `target` (empty if none). Order is the model's
-    /// entity-walk order.
+    /// The entities that reference `target` (empty if none), in the model's
+    /// entity-walk order. An entity that references `target` more than once,
+    /// such as a closed edge from a vertex to itself, is listed once per
+    /// reference.
     #[must_use]
     pub fn referrers(&self, target: EntityKey) -> &[EntityKey] {
         let (kind, i) = target.kind_index();

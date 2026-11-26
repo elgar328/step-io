@@ -29,7 +29,8 @@ impl Scene<'_> {
         })
     }
 
-    /// Every product definition (`PRODUCT_DEFINITION`) in the model.
+    /// Every product definition (`PRODUCT_DEFINITION` and its
+    /// `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` subtype) in the model.
     pub fn all_product_definitions(&self) -> impl Iterator<Item = ProductDef<'_>> + '_ {
         let cx = self.ctx();
         let plain = cx
@@ -52,20 +53,13 @@ impl Scene<'_> {
     }
 
     /// The assembly roots: definitions no `NEXT_ASSEMBLY_USAGE_OCCURRENCE`
-    /// uses as a child (`related`). Start an assembly walk here — a single
+    /// uses as a child (`related`), directly or through a
+    /// `PRODUCT_DEFINITION_OCCURRENCE`. Start an assembly walk here — a single
     /// part file simply yields all of its definitions.
     pub fn root_definitions(&self) -> impl Iterator<Item = ProductDef<'_>> + '_ {
         let cx = self.ctx();
-        let rg = cx.ref_graph();
-        self.all_product_definitions().filter(move |def| {
-            !rg.referrers(def.key()).iter().any(|r| {
-                let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r else {
-                    return false;
-                };
-                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                pdor_is(&nauo.related_product_definition, def.key())
-            })
-        })
+        self.all_product_definitions()
+            .filter(move |def| usages_of(cx, def.key(), Side::Related).is_empty())
     }
 }
 
@@ -260,10 +254,11 @@ impl<'m> Version<'m> {
     }
 
     /// The product this is a version of (`of_product`); `None` for a complex
-    /// product.
+    /// product (reported in [`Scene::warnings`](crate::scene::Scene::warnings)).
     pub fn product(&self) -> Option<Product<'m>> {
-        let model = self.cx.model;
-        let of_product = match self.which {
+        let this = self.about();
+        let model = this.cx.model;
+        let of_product = match this.which {
             FormImpl::Plain(i) => &model.product_definition_formation_arena.get(i.0).of_product,
             FormImpl::WithSource(i) => {
                 &model
@@ -272,13 +267,7 @@ impl<'m> Version<'m> {
                     .of_product
             }
         };
-        match of_product {
-            m::ProductRef::Product(id) => Some(Product {
-                cx: self.cx,
-                id: *id,
-            }),
-            m::ProductRef::Complex(_) => None,
-        }
+        product_of(this.cx, of_product)
     }
 
     /// The version description, if any.
@@ -305,8 +294,9 @@ impl<'m> Version<'m> {
 // ProductDef
 // ---------------------------------------------------------------------------
 
-/// A product definition (`PRODUCT_DEFINITION`) — a view of a product that owns
-/// shape and participates in the assembly tree.
+/// A product definition (`PRODUCT_DEFINITION`, or its
+/// `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` subtype) — a view of a
+/// product that owns shape and participates in the assembly tree.
 #[derive(Clone, Copy)]
 pub struct ProductDef<'m> {
     cx: Ctx<'m>,
@@ -391,8 +381,9 @@ impl<'m> ProductDef<'m> {
 
     /// The product this definition belongs to (forward: `formation → of_product`).
     pub fn product(&self) -> Option<Product<'m>> {
-        let model = self.cx.model;
-        let of_product: &m::ProductRef = match self.core().formation {
+        let this = self.about();
+        let model = this.cx.model;
+        let of_product: &m::ProductRef = match this.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
                 &model.product_definition_formation_arena.get(i.0).of_product
             }
@@ -402,34 +393,24 @@ impl<'m> ProductDef<'m> {
                     .get(i.0)
                     .of_product
             }
-            m::ProductDefinitionFormationRef::Complex(_) => return None,
+            m::ProductDefinitionFormationRef::Complex(_) => {
+                this.cx.warn(COMPLEX_FORMATION.to_owned());
+                return None;
+            }
         };
-        match of_product {
-            m::ProductRef::Product(pid) => Some(Product {
-                cx: self.cx,
-                id: *pid,
-            }),
-            m::ProductRef::Complex(_) => None,
-        }
+        product_of(this.cx, of_product)
     }
 
     /// The component occurrences directly under this definition — each a usage
     /// (`NAUO`) carrying the child definition *and* its placement transform
-    /// (reverse: a `NAUO` whose `relating` is this definition).
+    /// (reverse: a `NAUO` whose `relating` is this definition, directly or
+    /// through a `PRODUCT_DEFINITION_OCCURRENCE` of it — a usage under one
+    /// occurrence of a sub-assembly then shows under the definition itself).
     pub fn occurrences(&self) -> impl Iterator<Item = Occurrence<'m>> + 'm {
         let cx = self.cx;
-        let rg = cx.ref_graph();
-        let me = self.key();
-        let mut out: Vec<Occurrence<'m>> = Vec::new();
-        for r in rg.referrers(me) {
-            if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r {
-                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                if pdor_is(&nauo.relating_product_definition, me) {
-                    out.push(Occurrence { cx, id: *nid });
-                }
-            }
-        }
-        out.into_iter()
+        usages_of(cx, self.key(), Side::Relating)
+            .into_iter()
+            .map(move |id| Occurrence { cx, id })
     }
 
     /// Component definitions directly under this one in the assembly tree — the
@@ -439,23 +420,16 @@ impl<'m> ProductDef<'m> {
     }
 
     /// Assembly definitions this one is a component of (reverse: a `NAUO` whose
-    /// `related` is this definition → its `relating`).
+    /// `related` is this definition, directly or through a
+    /// `PRODUCT_DEFINITION_OCCURRENCE` of it → its `relating`).
     pub fn parents(&self) -> impl Iterator<Item = ProductDef<'m>> + 'm {
-        let cx = self.cx;
-        let rg = cx.ref_graph();
-        let me = self.key();
-        let mut out: Vec<ProductDef<'m>> = Vec::new();
-        for r in rg.referrers(me) {
-            if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r {
-                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                if pdor_is(&nauo.related_product_definition, me) {
-                    if let Some(d) = pdor_to_def(cx, &nauo.relating_product_definition) {
-                        out.push(d);
-                    }
-                }
-            }
-        }
-        out.into_iter()
+        let cx = self.about().cx;
+        usages_of(cx, self.key(), Side::Related)
+            .into_iter()
+            .filter_map(move |id| {
+                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(id.0);
+                pdor_to_def(cx, &nauo.relating_product_definition)
+            })
     }
 
     /// The b-rep solids of this definition's shape — the bridge into the geometry
@@ -465,7 +439,9 @@ impl<'m> ProductDef<'m> {
     /// `BREP_WITH_VOIDS`. When the geometry
     /// lives in a separate representation bridged by a plain
     /// `SHAPE_REPRESENTATION_RELATIONSHIP` (the common AP242 assembly layout), the
-    /// equivalence bridge is followed to collect those solids too.
+    /// equivalence bridge is followed to collect those solids too. A
+    /// relationship a `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` uses places a
+    /// component in its assembly rather than bridging, and is not followed.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
         let mut seen: HashSet<m::EntityKey> = HashSet::new();
@@ -503,7 +479,7 @@ impl<'m> ProductDef<'m> {
     /// bridged to them, in order. An item shared by two representations comes
     /// twice.
     fn shape_items(&self) -> Vec<&'m m::RepresentationItemRef> {
-        let cx = self.cx;
+        let cx = self.about().cx;
         let mut out = Vec::new();
         // Shared across every representation reached: guards relationship cycles
         // and keeps a shape-equivalence bridge from re-collecting a rep.
@@ -514,9 +490,12 @@ impl<'m> ProductDef<'m> {
         out
     }
 
-    /// The shape features of this part (`SHAPE_ASPECT`s whose `of_shape`
-    /// resolves to this definition). The model-wide [`Scene::all_features`] filtered
-    /// to this part.
+    /// The shape features of this part (`SHAPE_ASPECT`s, and complex instances
+    /// with a `SHAPE_ASPECT` part, whose `of_shape` resolves to this
+    /// definition). The model-wide [`Scene::all_features`] filtered to this
+    /// part. A feature on an occurrence's shape (the
+    /// `PRODUCT_DEFINITION_SHAPE` of a `NEXT_ASSEMBLY_USAGE_OCCURRENCE`) belongs
+    /// to no part here.
     pub fn features(&self) -> impl Iterator<Item = pmi::Feature<'m>> + 'm {
         pmi::features_of(self.cx, self.key()).into_iter()
     }
@@ -527,8 +506,9 @@ impl<'m> ProductDef<'m> {
         pmi::dimensions_of(this.cx, this.key()).into_iter()
     }
 
-    /// The geometric tolerances of this part (those whose target — a feature or
-    /// the whole part — is on it).
+    /// The geometric tolerances of this part: those whose target is on it — a
+    /// feature, the whole part, or a dimension or shape-aspect relationship
+    /// with a feature on it (as for [`dimensions`](Self::dimensions)).
     pub fn tolerances(&self) -> impl Iterator<Item = pmi::Tolerance<'m>> + 'm {
         pmi::tolerances_of(self.cx, self.key()).into_iter()
     }
@@ -539,14 +519,19 @@ impl<'m> ProductDef<'m> {
     }
 
     /// The version this part is a definition of — its
-    /// `PRODUCT_DEFINITION_FORMATION`. `None` for a complex formation.
+    /// `PRODUCT_DEFINITION_FORMATION`. `None` for a complex formation
+    /// (reported in [`Scene::warnings`](crate::scene::Scene::warnings)).
     pub fn version(&self) -> Option<Version<'m>> {
-        let which = match self.core().formation {
+        let this = self.about();
+        let which = match this.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => FormImpl::Plain(*i),
             m::ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 FormImpl::WithSource(*i)
             }
-            m::ProductDefinitionFormationRef::Complex(_) => return None,
+            m::ProductDefinitionFormationRef::Complex(_) => {
+                this.cx.warn(COMPLEX_FORMATION.to_owned());
+                return None;
+            }
         };
         Some(Version { cx: self.cx, which })
     }
@@ -615,7 +600,13 @@ impl<'m> ProductDef<'m> {
             let which = match dref {
                 m::DocumentRef::Document(i) => DocImpl::Document(*i),
                 m::DocumentRef::DocumentFile(i) => DocImpl::DocumentFile(*i),
-                m::DocumentRef::Complex(_) => continue,
+                m::DocumentRef::Complex(_) => {
+                    self.cx.warn(
+                        "a documentation_ids entry is a complex instance; document left unread"
+                            .to_owned(),
+                    );
+                    continue;
+                }
             };
             let doc = Document {
                 cx: self.cx,
@@ -1058,42 +1049,13 @@ pub struct Transform {
     pub to: Placement,
 }
 
-// Small vector helpers for the frame math (local on purpose: the nurbs module
-// keeps its own private set, and a shared math module would be more coupling
-// than these one-liners are worth).
-fn vdot(a: [f64; 3], b: [f64; 3]) -> f64 {
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-fn vsub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-}
-fn vscale(a: [f64; 3], s: f64) -> [f64; 3] {
-    [a[0] * s, a[1] * s, a[2] * s]
-}
-fn vcross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0],
-    ]
-}
-fn vnorm(a: [f64; 3]) -> Option<[f64; 3]> {
-    let n = vdot(a, a).sqrt();
-    (n >= 1e-12).then(|| vscale(a, 1.0 / n))
-}
-
 impl Placement {
     /// The orthonormal frame `(x, y, z)` this placement defines: z is the
     /// axis, x is the reference direction projected orthogonal to z (the STEP
     /// derivation), y completes the right-handed set. `None` for a degenerate
-    /// placement (a zero axis, or a reference direction parallel to the axis).
+    /// placement (see [`Transform::matrix`]).
     fn frame(&self) -> Option<([f64; 3], [f64; 3], [f64; 3])> {
-        let z = vnorm(self.axis)?;
-        let x = vnorm(vsub(
-            self.ref_direction,
-            vscale(z, vdot(self.ref_direction, z)),
-        ))?;
-        Some((x, vcross(z, x), z))
+        crate::scene::nurbs::orthonormal_frame(self.axis, self.ref_direction)
     }
 }
 
@@ -1104,9 +1066,11 @@ impl Transform {
     ///
     /// Convention: `m[row][col]`, points map as column vectors `p' = M · p`,
     /// and the last row is `[0, 0, 0, 1]` (STEP placements carry rotation and
-    /// translation only). `None` if either placement is degenerate (a zero
-    /// axis, or a reference direction parallel to the axis) — the matrix is
-    /// not fabricated from bad frames.
+    /// translation only). `None` if either placement is degenerate — a zero
+    /// or non-finite axis or reference direction, or a reference direction
+    /// parallel to the axis: their cross product, computed in floating point
+    /// from the values as written up to a power-of-two scale, is zero. The
+    /// matrix is not fabricated from bad frames.
     // Matrix index arithmetic reads clearest with explicit indices.
     #[allow(clippy::needless_range_loop)]
     pub fn matrix(&self) -> Option<[[f64; 4]; 4]> {
@@ -1153,14 +1117,15 @@ impl<'m> Occurrence<'m> {
 
     /// The component definition this occurrence places (forward: `related`).
     pub fn definition(&self) -> Option<ProductDef<'m>> {
-        pdor_to_def(self.cx, &self.raw().related_product_definition)
+        let this = self.about();
+        pdor_to_def(this.cx, &this.raw().related_product_definition)
     }
 
     /// The component's placement transform in the assembly, if present (reverse:
     /// a `PRODUCT_DEFINITION_SHAPE` defined by this NAUO → a
     /// `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` → its transformation operator's
     /// two `AXIS2_PLACEMENT_3D` frames). A transform item that is not an
-    /// `AXIS2_PLACEMENT_3D` is reported via [`Scene::warnings`](crate::scene::Scene)
+    /// `AXIS2_PLACEMENT_3D` is reported via [`Scene::warnings`](crate::scene::Scene::warnings)
     /// and yields `None` rather than a silently wrong frame.
     ///
     /// `from` is the frame in the component's shape and `to` the frame in the
@@ -1169,7 +1134,7 @@ impl<'m> Occurrence<'m> {
     /// (as some exporters write it). The order is decided by matching `rep_1`
     /// and `rep_2` against both definitions' shape representations; a
     /// relationship matching neither order is read component-first and
-    /// reported via [`Scene::warnings`](crate::scene::Scene).
+    /// reported via [`Scene::warnings`](crate::scene::Scene::warnings).
     pub fn transform(&self) -> Option<Transform> {
         let this = self.about();
         let cx = this.cx;
@@ -1302,7 +1267,7 @@ impl<'m> MappedInstance<'m> {
     /// geometry is defined relative to `from` (the map's origin) and placed at
     /// `to` (this item's target). A frame that is not an `AXIS2_PLACEMENT_3D`
     /// (a camera origin, a 2D drawing target) is reported via
-    /// [`Scene::warnings`](crate::scene::Scene) and yields `None`.
+    /// [`Scene::warnings`](crate::scene::Scene::warnings) and yields `None`.
     pub fn transform(&self) -> Option<Transform> {
         let this = self.about();
         let cx = this.cx;
@@ -1313,64 +1278,105 @@ impl<'m> MappedInstance<'m> {
     }
 
     /// The b-rep solids of the source representation — the geometry this
-    /// instance stamps. A non-shape source (a presentation view) has none.
+    /// instance stamps — and of the representations it is bridged to by a
+    /// plain `SHAPE_REPRESENTATION_RELATIONSHIP`, as for
+    /// [`ProductDef::solids`]: a relationship a
+    /// `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` uses is not followed. A
+    /// non-shape source (a presentation view) has none.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| item_solid(cx, it))
+            .filter(move |s| seen.insert(s.key()))
     }
 
-    /// The surface models of the source representation.
+    /// The surface models of the source representation, found as
+    /// [`solids`](Self::solids) are.
     pub fn surface_models(&self) -> impl Iterator<Item = SurfaceModel<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| item_surface_model(cx, it))
+            .filter(move |s| seen.insert(s.key()))
     }
 
-    /// The geometric sets of the source representation.
+    /// The geometric sets of the source representation, found as
+    /// [`solids`](Self::solids) are.
     pub fn geometric_sets(&self) -> impl Iterator<Item = GeometricSet<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| GeometricSet::from_item(cx, it))
+            .filter(move |s| seen.insert(s.key()))
     }
 
-    /// Nested mapped items inside the source representation — one level of an
-    /// assembly chain; walk them to traverse the instance tree.
+    /// Nested mapped items inside the source representation (and those it is
+    /// bridged to, as for [`solids`](Self::solids)) — one level of an assembly
+    /// chain; walk them to traverse the instance tree.
     pub fn mapped_children(&self) -> impl Iterator<Item = MappedInstance<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let me = self.id;
+        let mut seen: HashSet<m::MappedItemId> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| match it {
-                m::RepresentationItemRef::MappedItem(id) => Some(MappedInstance { cx, id: *id }),
+                m::RepresentationItemRef::MappedItem(id) if *id != me && seen.insert(*id) => {
+                    Some(MappedInstance { cx, id: *id })
+                }
                 _ => None,
             })
     }
-}
 
-/// The `items` of a shape representation (see [`shape_rep_items`]) — what a
-/// mapped item stamps; other representation kinds carry no shape items.
-fn rep_items<'m>(cx: Ctx<'m>, r: &m::RepresentationRef) -> Option<&'m [m::RepresentationItemRef]> {
-    shape_rep_items(cx, r).map(|(_, items)| items)
+    /// The items of the source representation and of those bridged to it.
+    fn source_items(&self) -> Vec<&'m m::RepresentationItemRef> {
+        let this = self.about();
+        let mut out = Vec::new();
+        if let Some(map) = this.map() {
+            let mut visited: HashSet<m::EntityKey> = HashSet::new();
+            collect_shape_items(this.cx, &map.mapped_representation, &mut out, &mut visited);
+        }
+        out
+    }
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/// The warning for a complex `PRODUCT_DEFINITION_FORMATION`.
+const COMPLEX_FORMATION: &str = "product definition formation is a complex instance; not read";
+
+/// The product a formation is a version of; a complex product is reported.
+fn product_of<'m>(cx: Ctx<'m>, r: &m::ProductRef) -> Option<Product<'m>> {
+    match r {
+        m::ProductRef::Product(id) => Some(Product { cx, id: *id }),
+        m::ProductRef::Complex(_) => {
+            cx.warn("product is a complex instance; not read".to_owned());
+            None
+        }
+    }
+}
+
+/// The STEP keyword of a transformation operator, for a warning.
+fn op_keyword(op: &m::TransformationRef) -> &'static str {
+    match op {
+        m::TransformationRef::ItemDefinedTransformation(i) => {
+            Ctx::keyword(m::EntityKey::ItemDefinedTransformation(*i))
+        }
+        m::TransformationRef::FunctionallyDefinedTransformation(i) => {
+            Ctx::keyword(m::EntityKey::FunctionallyDefinedTransformation(*i))
+        }
+        m::TransformationRef::SetItemDefinedTransformation(_) => "SET_ITEM_DEFINED_TRANSFORMATION",
+        m::TransformationRef::ListItemDefinedTransformation(_) => {
+            "LIST_ITEM_DEFINED_TRANSFORMATION"
+        }
+        m::TransformationRef::Complex(_) => "COMPLEX",
+    }
+}
 
 /// The item-defined transformation behind a context-dependent shape
 /// representation: its `representation_relation` is the complex
@@ -1395,6 +1401,10 @@ fn idt_of_cdsr<'m>(
         _ => None,
     })?;
     let m::TransformationRef::ItemDefinedTransformation(id) = op else {
+        cx.warn(format!(
+            "placement transformation is a {}, not an ITEM_DEFINED_TRANSFORMATION; not followed",
+            op_keyword(op)
+        ));
         return None;
     };
     let reps = parts.iter().find_map(|p| match p {
@@ -1416,28 +1426,20 @@ fn resolve_placement(cx: Ctx<'_>, item: &m::RepresentationItemRef) -> Option<Pla
         return None;
     };
     let a = cx.model.axis2_placement3d_arena.get(id.0);
+    let axis = a.axis.as_ref().map_or([0.0, 0.0, 1.0], |d| dir3(cx, d));
     Some(Placement {
         origin: point3(cx, &a.location),
-        axis: a.axis.as_ref().map_or([0.0, 0.0, 1.0], |d| dir3(cx, d)),
-        ref_direction: a
-            .ref_direction
-            .as_ref()
-            .map_or([1.0, 0.0, 0.0], |d| dir3(cx, d)),
+        axis,
+        ref_direction: a.ref_direction.as_ref().map_or_else(
+            || crate::scene::nurbs::default_ref_direction(axis),
+            |d| dir3(cx, d),
+        ),
     })
 }
 
 /// A cartesian point's coordinates as a 3-vector (missing components are 0).
 fn point3(cx: Ctx<'_>, r: &m::CartesianPointRef) -> [f64; 3] {
-    if let m::CartesianPointRef::CartesianPoint(id) = r {
-        let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-        [
-            c.first().copied().unwrap_or(0.0),
-            c.get(1).copied().unwrap_or(0.0),
-            c.get(2).copied().unwrap_or(0.0),
-        ]
-    } else {
-        [0.0; 3]
-    }
+    crate::scene::nurbs::point_coords(cx, r).unwrap_or([0.0; 3])
 }
 
 /// A direction's ratios as a 3-vector (missing components are 0).
@@ -1450,22 +1452,57 @@ fn dir3(cx: Ctx<'_>, r: &m::DirectionRef) -> [f64; 3] {
             c.get(2).copied().unwrap_or(0.0),
         ]
     } else {
+        cx.warn("direction is a complex instance; not read".to_owned());
         [0.0; 3]
     }
 }
 
-/// Whether a `ProductDefinitionOrReferenceRef` points at exactly this definition
-/// (plain or `..._WITH_ASSOCIATED_DOCUMENTS`).
-fn pdor_is(r: &m::ProductDefinitionOrReferenceRef, key: m::EntityKey) -> bool {
-    match r {
-        m::ProductDefinitionOrReferenceRef::ProductDefinition(i) => {
-            m::EntityKey::ProductDefinition(*i) == key
+/// Which end of a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` a definition is on.
+#[derive(Clone, Copy)]
+enum Side {
+    /// The assembly (`relating_product_definition`).
+    Relating,
+    /// The component (`related_product_definition`).
+    Related,
+}
+
+/// The `NEXT_ASSEMBLY_USAGE_OCCURRENCE`s with the definition `def` on `side`,
+/// named directly or through a `PRODUCT_DEFINITION_OCCURRENCE` whose
+/// `definition` it is (as AP242 edition 4 may write an assembly).
+fn usages_of(cx: Ctx<'_>, def: m::EntityKey, side: Side) -> Vec<m::NextAssemblyUsageOccurrenceId> {
+    let rg = cx.ref_graph();
+    let model = cx.model;
+    let end = |nid: m::NextAssemblyUsageOccurrenceId| {
+        let nauo = model.next_assembly_usage_occurrence_arena.get(nid.0);
+        match side {
+            Side::Relating => &nauo.relating_product_definition,
+            Side::Related => &nauo.related_product_definition,
         }
-        m::ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
-            m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i) == key
+    };
+    let mut out = Vec::new();
+    for &r in rg.referrers(def) {
+        match r {
+            // A usage with `def` at both ends is a referrer twice.
+            m::EntityKey::NextAssemblyUsageOccurrence(nid) => {
+                if end(nid).entity_key() == def && !out.contains(&nid) {
+                    out.push(nid);
+                }
+            }
+            m::EntityKey::ProductDefinitionOccurrence(pid) => {
+                let pdo = m::EntityKey::ProductDefinitionOccurrence(pid);
+                for &u in rg.referrers(pdo) {
+                    let m::EntityKey::NextAssemblyUsageOccurrence(nid) = u else {
+                        continue;
+                    };
+                    if end(nid).entity_key() == pdo && !out.contains(&nid) {
+                        out.push(nid);
+                    }
+                }
+            }
+            _ => {}
         }
-        _ => false,
     }
+    out
 }
 
 /// Resolve a `ProductDefinitionOrReferenceRef` to a definition handle (plain or
@@ -1482,7 +1519,40 @@ fn pdor_to_def<'m>(cx: Ctx<'m>, r: &m::ProductDefinitionOrReferenceRef) -> Optio
                 m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i),
             )
         }
-        _ => None,
+        m::ProductDefinitionOrReferenceRef::ProductDefinitionOccurrence(i) => {
+            // One step: only a specified occurrence (not modeled) may name
+            // another occurrence as its definition.
+            let pdo = cx.model.product_definition_occurrence_arena.get(i.0);
+            match &pdo.definition {
+                Some(
+                    d @ (m::ProductDefinitionOrReferenceRef::ProductDefinition(_)
+                    | m::ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(
+                        _,
+                    )),
+                ) => pdor_to_def(cx, d),
+                Some(other) => {
+                    cx.warn(format!(
+                        "PRODUCT_DEFINITION_OCCURRENCE names a {}, not a product definition; \
+                         not followed",
+                        Ctx::keyword(other.entity_key())
+                    ));
+                    None
+                }
+                None => {
+                    cx.warn(
+                        "PRODUCT_DEFINITION_OCCURRENCE has no definition; not followed".to_owned(),
+                    );
+                    None
+                }
+            }
+        }
+        other => {
+            cx.warn(format!(
+                "assembly usage names a {}, not a product definition; not followed",
+                Ctx::keyword(other.entity_key())
+            ));
+            None
+        }
     }
 }
 
@@ -1528,7 +1598,7 @@ fn def_shape_reps(cx: Ctx<'_>, def: m::EntityKey) -> Vec<&m::RepresentationRef> 
     out
 }
 
-/// The key and `items` of a shape representation this layer reads geometry
+/// The key and `items` of a shape representation the scene reads geometry
 /// from: a plain, advanced b-rep, manifold surface, or geometrically bounded
 /// surface or wireframe `SHAPE_REPRESENTATION`.
 fn shape_rep_items<'m>(
@@ -1569,6 +1639,13 @@ fn shape_rep_items<'m>(
                 .get(i.0)
                 .items,
         ),
+        m::RepresentationRef::Complex(_) => {
+            cx.warn(
+                "shape representation is a complex instance; its items are not read".to_owned(),
+            );
+            return None;
+        }
+        // Representations that hold no solids, surface models or sets.
         _ => return None,
     })
 }
@@ -1600,6 +1677,15 @@ fn collect_shape_items<'m>(
         let m::EntityKey::ShapeRepresentationRelationship(srr_id) = referrer else {
             continue;
         };
+        // A relationship a CONTEXT_DEPENDENT_SHAPE_REPRESENTATION uses relates
+        // a component to its assembly, not one shape to an equivalent one.
+        let used_by_cdsr = rg
+            .referrers(*referrer)
+            .iter()
+            .any(|r| matches!(r, m::EntityKey::ContextDependentShapeRepresentation(_)));
+        if used_by_cdsr {
+            continue;
+        }
         let srr = cx
             .model
             .shape_representation_relationship_arena
@@ -1612,8 +1698,12 @@ fn collect_shape_items<'m>(
         } else {
             continue;
         };
-        if let Ok(other_ref) = m::RepresentationRef::from_any(other) {
-            collect_shape_items(cx, &other_ref, out, visited);
+        match m::RepresentationRef::from_any(other) {
+            Ok(other_ref) => collect_shape_items(cx, &other_ref, out, visited),
+            Err(_) => cx.warn(format!(
+                "SHAPE_REPRESENTATION_RELATIONSHIP: the other end is a {}; not followed",
+                Ctx::keyword(other)
+            )),
         }
     }
 }
@@ -1788,7 +1878,9 @@ fn set_date(cx: Ctx<'_>, d: &mut ApprovalDate, r: &m::DateRef) {
     match r {
         m::DateRef::CalendarDate(i) => set_calendar(cx, d, *i),
         m::DateRef::Date(i) => d.year = Some(cx.model.date_arena.get(i.0).year_component),
-        m::DateRef::Complex(_) => {}
+        m::DateRef::Complex(_) => {
+            cx.warn("date is a complex instance; date left unread".to_owned());
+        }
     }
 }
 
@@ -2065,4 +2157,11 @@ impl<'m> SecurityClassification<'m> {
     }
 }
 
-about_by_key!(Approval, MappedInstance, Occurrence, Product, ProductDef);
+about_by_key!(
+    Approval,
+    MappedInstance,
+    Occurrence,
+    Product,
+    ProductDef,
+    Version
+);

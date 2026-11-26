@@ -95,6 +95,115 @@ fn wrong_type_ref_drops_only_offender() {
     );
 }
 
+/// A complex instance fits a slot only through one of its parts. A unit slot
+/// takes the complex millimetre `#1` but not the complex context `#2`, which
+/// is dropped from `#4` as a wrong-type reference, the same as a simple
+/// entity of the wrong type would be.
+#[test]
+fn wrong_type_complex_ref_drops_only_offender() {
+    let r = read_body(
+        "#1=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)PARAMETRIC_REPRESENTATION_CONTEXT()\
+         REPRESENTATION_CONTEXT('',''));\n\
+         #3=MEASURE_WITH_UNIT(LENGTH_MEASURE(1.),#1);\n\
+         #4=MEASURE_WITH_UNIT(LENGTH_MEASURE(1.),#2);\n",
+    );
+    assert_eq!(dropped_kind(&r, 4), Some(&DropKind::NonstandardReference));
+    for id in 1..=3 {
+        assert!(dropped_kind(&r, id).is_none(), "#{id} must survive: {r:?}");
+    }
+}
+
+/// Every edition narrows a presentation's context to a geometric one
+/// (`SELF\representation.context_of_items : geometric_representation_context`).
+/// `#4` names a plain context and is dropped as a wrong-type reference; `#3`,
+/// over a geometric context, is kept.
+#[test]
+fn narrowed_attribute_drops_a_wider_reference() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)REPRESENTATION_CONTEXT('',''));\n\
+         #3=PRESENTATION_VIEW('',(#1),#2);\n\
+         #5=REPRESENTATION_CONTEXT('','');\n\
+         #4=PRESENTATION_VIEW('',(#1),#5);\n",
+    );
+    assert_eq!(dropped_kind(&r, 4), Some(&DropKind::NonstandardReference));
+    assert!(dropped_kind(&r, 3).is_none(), "#3 must survive: {r:?}");
+}
+
+/// The same narrowing made by one part of a complex instance holds for the
+/// attribute another part declares: `PRESENTATION_REPRESENTATION` narrows
+/// `REPRESENTATION.context_of_items`, so `#4` over a plain context is dropped
+/// and `#3` over a geometric one is kept.
+#[test]
+fn narrowing_by_one_complex_part_holds_for_another() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)REPRESENTATION_CONTEXT('',''));\n\
+         #3=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#2));\n\
+         #5=REPRESENTATION_CONTEXT('','');\n\
+         #4=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#5));\n",
+    );
+    assert_eq!(dropped_kind(&r, 4), Some(&DropKind::NonstandardReference));
+    assert!(dropped_kind(&r, 3).is_none(), "#3 must survive: {r:?}");
+}
+
+/// AP214 lets a shape definition representation describe a shape aspect
+/// directly; only AP242 narrows `definition` to a property definition. Reading
+/// accepts what any edition allows, so the aspect form is kept.
+#[test]
+fn older_edition_form_of_a_narrowed_attribute_is_kept() {
+    let r = read_body(
+        "#1=APPLICATION_CONTEXT('test');\n\
+         #2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+         #10=PRODUCT('p','Part','',(#2));\n\
+         #11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+         #12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+         #13=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+         #20=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #36=REPRESENTATION_CONTEXT('','3D');\n\
+         #37=SHAPE_REPRESENTATION('',(#20),#36);\n\
+         #40=SHAPE_ASPECT('hole','',#13,.T.);\n\
+         #50=SHAPE_DEFINITION_REPRESENTATION(#40,#37);\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+}
+
+/// AP203 and AP214 let a styled item style any representation item; AP242
+/// types it as a `styled_item_target`, which a descriptive item is not.
+/// Reading accepts what any edition allows, so the AP214 form is kept.
+#[test]
+fn older_edition_declaration_of_an_attribute_is_kept() {
+    let r = read_body(
+        "#1=DESCRIPTIVE_REPRESENTATION_ITEM('note','text');\n\
+         #2=COLOUR_RGB('',0.8,0.2,0.1);\n\
+         #3=FILL_AREA_STYLE_COLOUR('',#2);\n\
+         #4=FILL_AREA_STYLE('',(#3));\n\
+         #5=SURFACE_STYLE_FILL_AREA(#4);\n\
+         #6=SURFACE_SIDE_STYLE('',(#5));\n\
+         #7=SURFACE_STYLE_USAGE(.BOTH.,#6);\n\
+         #8=PRESENTATION_STYLE_ASSIGNMENT((#7));\n\
+         #9=STYLED_ITEM('',(#8),#1);\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+}
+
+/// AP242 edition 1 narrowed a tessellated shape representation's items to
+/// tessellated items; edition 2 dropped that. A PMI drawing model that is also
+/// a tessellated shape representation, holding a non-tessellated item as
+/// edition 2 allows, is kept.
+#[test]
+fn a_narrowing_only_one_edition_made_is_not_enforced() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)REPRESENTATION_CONTEXT('',''));\n\
+         #3=(DRAUGHTING_MODEL()REPRESENTATION('',(#1),#2)SHAPE_REPRESENTATION()\
+         TESSELLATED_SHAPE_REPRESENTATION());\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+}
+
 /// A fully valid body drops nothing and keeps everything.
 #[test]
 fn valid_body_keeps_all() {

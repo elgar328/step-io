@@ -1,9 +1,10 @@
-//! Opt-in NURBS (rational B-spline) views over analytic STEP curves.
+//! Opt-in NURBS (rational B-spline) views over analytic STEP curves and
+//! surfaces.
 //!
 //! The faithful model keeps curves in their original form (see
 //! [`Curve::kind`](crate::scene::geometry::Curve::kind)); `to_nurbs()` derives a
 //! single rational-B-spline representation on demand — e.g. for a geometry
-//! kernel that wants every curve as a NURBS. This is a *derived view*: it is
+//! kernel that wants every curve and surface as a NURBS. This is a *derived view*: it is
 //! computed from the original entity and never written back.
 
 // Vector math reads best with the conventional short axis/scale names (x, y, z,
@@ -22,7 +23,8 @@ use crate::scene::Ctx;
 pub struct NurbsCurve {
     /// Polynomial degree (order − 1).
     pub degree: usize,
-    /// Control points in world coordinates.
+    /// Control points in the representation's own coordinates and the file's
+    /// length unit (no placement applied).
     pub control_points: Vec<[f64; 3]>,
     /// One weight per control point (all `1.0` for a non-rational curve).
     pub weights: Vec<f64>,
@@ -41,7 +43,8 @@ pub struct NurbsSurface {
     pub degree_u: usize,
     /// Polynomial degree in v.
     pub degree_v: usize,
-    /// Control points in world coordinates, indexed `[u][v]`.
+    /// Control points in the representation's own coordinates and the file's
+    /// length unit (no placement applied), indexed `[u][v]`.
     pub control_points: Vec<Vec<[f64; 3]>>,
     /// One weight per control point, indexed `[u][v]`.
     pub weights: Vec<Vec<f64>>,
@@ -72,28 +75,137 @@ fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         a[0] * b[1] - a[1] * b[0],
     ]
 }
-/// Unit vector, or `None` for a (near-)zero-length input.
+/// The reference direction STEP takes for an `AXIS2_PLACEMENT_3D` that omits
+/// one (`first_proj_axis`): `[0, 1, 0]` when the normalised axis is `[1, 0, 0]`
+/// or `[-1, 0, 0]`, else `[1, 0, 0]`.
+#[allow(clippy::float_cmp)] // the standard compares the normalised axis exactly
+pub(crate) fn default_ref_direction(axis: [f64; 3]) -> [f64; 3] {
+    match normalize(axis) {
+        Some([x, y, z]) if x.abs() == 1.0 && y == 0.0 && z == 0.0 => [0.0, 1.0, 0.0],
+        _ => [1.0, 0.0, 0.0],
+    }
+}
+
+/// Unit vector, or `None` for a zero vector or one with a non-finite
+/// component. Dividing by the largest component first keeps a tiny or huge
+/// vector from underflowing or overflowing.
 fn normalize(a: [f64; 3]) -> Option<[f64; 3]> {
-    let n = dot(a, a).sqrt();
-    (n >= 1e-12).then(|| scale(a, 1.0 / n))
+    if !a.iter().all(|c| c.is_finite()) {
+        return None;
+    }
+    let m = a[0].abs().max(a[1].abs()).max(a[2].abs());
+    if m == 0.0 {
+        return None;
+    }
+    let b = [a[0] / m, a[1] / m, a[2] / m];
+    let n = dot(b, b).sqrt();
+    Some([b[0] / n, b[1] / n, b[2] / n])
+}
+
+/// `a` scaled by a power of two that brings its largest component into
+/// `[1, 2)`. The scaling is exact while the results stay normal, so products of
+/// scaled vectors round as the products of the written ones do. A zero or
+/// non-finite vector comes back unchanged.
+fn pow2_scaled(a: [f64; 3]) -> [f64; 3] {
+    // 2^k for k in -1022..=1023, built from its exponent bits.
+    let pow2 = |k: i32| f64::from_bits(u64::from((k + 1023).unsigned_abs()) << 52);
+    let mut a = a;
+    let mut m = a[0].abs().max(a[1].abs()).max(a[2].abs());
+    if m == 0.0 || !m.is_finite() {
+        return a;
+    }
+    if m < f64::MIN_POSITIVE {
+        a = scale(a, pow2(64));
+        m *= pow2(64);
+    }
+    // The unbiased exponent of `m`, which is now normal and positive.
+    let e = i32::from(u16::try_from(m.to_bits() >> 52).unwrap_or(1023)) - 1023;
+    if e == 1023 {
+        // 2^-1023 is subnormal: apply it in two exact steps.
+        scale(scale(a, pow2(-1022)), 0.5)
+    } else {
+        scale(a, pow2(-e))
+    }
+}
+
+/// The orthonormal axes `(x, y, z)` of a placement with axis `axis` and
+/// reference direction `ref_direction`, as written (STEP's derivation: z is
+/// the axis, x the reference direction projected orthogonal to it, y = z × x).
+/// `None` for a zero or non-finite axis or reference direction, or a reference
+/// direction parallel to the axis: their cross product, computed in floating
+/// point from the values as written up to a power-of-two scale, is zero.
+pub(crate) fn orthonormal_frame(
+    axis: [f64; 3],
+    ref_direction: [f64; 3],
+) -> Option<([f64; 3], [f64; 3], [f64; 3])> {
+    let (a, r) = (pow2_scaled(axis), pow2_scaled(ref_direction));
+    let z = normalize(a)?;
+    // (a × r) × a is r − (r·â)â scaled by |a|²: the projection, without the
+    // cancellation that would round a small x away.
+    let x = normalize(cross(cross(a, r), a))?;
+    Some((x, cross(z, x), z))
 }
 
 // --- reference resolution ---
 
-fn point_coords(cx: Ctx<'_>, r: &m::CartesianPointRef) -> Option<[f64; 3]> {
-    let m::CartesianPointRef::CartesianPoint(id) = r else {
-        return None;
+pub(crate) fn point_coords(cx: Ctx<'_>, r: &m::CartesianPointRef) -> Option<[f64; 3]> {
+    let c: &[f64] = match r {
+        m::CartesianPointRef::CartesianPoint(id) => {
+            &cx.model.cartesian_point_arena.get(id.0).coordinates
+        }
+        m::CartesianPointRef::ApllPoint(id) => &cx.model.apll_point_arena.get(id.0).coordinates,
+        m::CartesianPointRef::ApllPointWithSurface(id) => {
+            &cx.model.apll_point_with_surface_arena.get(id.0).coordinates
+        }
+        m::CartesianPointRef::Complex(id) => complex_point(cx, *id)?,
     };
-    let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-    Some([
+    Some(xyz(c))
+}
+
+/// The coordinates of a complex instance's `CARTESIAN_POINT` part.
+fn complex_point(cx: Ctx<'_>, id: m::ComplexEntityId) -> Option<&[f64]> {
+    let coords = cx
+        .model
+        .complex_entity_arena
+        .get(id.0)
+        .parts
+        .iter()
+        .find_map(|p| match p {
+            m::PartialEntity::CartesianPoint { coordinates } => Some(&coordinates[..]),
+            _ => None,
+        });
+    if coords.is_none() {
+        cx.warn("point is a complex instance without a cartesian point".to_owned());
+    }
+    coords
+}
+
+/// Coordinates as a 3-vector, missing components padded with `0.0`.
+fn xyz(c: &[f64]) -> [f64; 3] {
+    [
         c.first().copied().unwrap_or(0.0),
         c.get(1).copied().unwrap_or(0.0),
         c.get(2).copied().unwrap_or(0.0),
-    ])
+    ]
+}
+
+/// The point a trim names, if it names one rather than a parameter.
+fn trim_point(cx: Ctx<'_>, s: &m::TrimmingSelectRef) -> Option<[f64; 3]> {
+    let r = match s {
+        m::TrimmingSelectRef::CartesianPoint(id) => m::CartesianPointRef::CartesianPoint(*id),
+        m::TrimmingSelectRef::ApllPoint(id) => m::CartesianPointRef::ApllPoint(*id),
+        m::TrimmingSelectRef::ApllPointWithSurface(id) => {
+            m::CartesianPointRef::ApllPointWithSurface(*id)
+        }
+        m::TrimmingSelectRef::Complex(id) => m::CartesianPointRef::Complex(*id),
+        m::TrimmingSelectRef::ParameterValue(_) => return None,
+    };
+    point_coords(cx, &r)
 }
 
 fn dir_ratios(cx: Ctx<'_>, r: &m::DirectionRef) -> Option<[f64; 3]> {
     let m::DirectionRef::Direction(id) = r else {
+        cx.warn("direction is a complex instance; not read".to_owned());
         return None;
     };
     let d = &cx.model.direction_arena.get(id.0).direction_ratios;
@@ -132,36 +244,51 @@ type Frame = ([f64; 3], [f64; 3], [f64; 3], [f64; 3]);
 type KnotsRef<'a> = (&'a [f64], &'a [i64]);
 
 /// The orthonormal local frame of an `AXIS2_PLACEMENT_3D` (z is the axis /
-/// revolution direction). `None` for a degenerate frame.
+/// revolution direction). `None` for a degenerate frame, which is reported.
 fn frame_of(cx: Ctx<'_>, id: m::Axis2Placement3dId) -> Option<Frame> {
     let p = cx.model.axis2_placement3d_arena.get(id.0);
     let center = point_coords(cx, &p.location)?;
-    let z = match &p.axis {
-        Some(a) => normalize(dir_ratios(cx, a)?)?,
+    let axis = match &p.axis {
+        Some(a) => dir_ratios(cx, a)?,
         None => [0.0, 0.0, 1.0],
     };
-    let x0 = match &p.ref_direction {
+    let ref_direction = match &p.ref_direction {
         Some(d) => dir_ratios(cx, d)?,
-        None => [1.0, 0.0, 0.0],
+        None => default_ref_direction(axis),
     };
-    // STEP derives x by projecting ref_direction orthogonal to the axis.
-    let x = normalize(sub(x0, scale(z, dot(x0, z))))?;
-    let y = cross(z, x);
+    let Some((x, y, z)) = orthonormal_frame(axis, ref_direction) else {
+        cx.warn(
+            "AXIS2_PLACEMENT_3D is degenerate (a zero axis, or a reference direction that is \
+             zero or parallel to it)"
+                .to_owned(),
+        );
+        return None;
+    };
     Some((center, x, y, z))
 }
 
 /// The frame of a curve's placement (2D parameter-space placements return
 /// `None`).
 fn placement_frame_3d(cx: Ctx<'_>, r: &m::Axis2PlacementRef) -> Option<Frame> {
-    let m::Axis2PlacementRef::Axis2Placement3d(id) = r else {
-        return None;
-    };
-    frame_of(cx, *id)
+    match r {
+        m::Axis2PlacementRef::Axis2Placement3d(id) => frame_of(cx, *id),
+        m::Axis2PlacementRef::Complex(_) => {
+            cx.warn("placement is a complex instance".to_owned());
+            None
+        }
+        m::Axis2PlacementRef::Axis2Placement2d(_) => {
+            cx.warn("placement is an AXIS2_PLACEMENT_2D, not a 3D frame".to_owned());
+            None
+        }
+    }
 }
 
 /// The frame of a surface's placement (always 3D).
 fn frame_of_3dref(cx: Ctx<'_>, r: &m::Axis2Placement3dRef) -> Option<Frame> {
-    let m::Axis2Placement3dRef::Axis2Placement3d(id) = r;
+    let m::Axis2Placement3dRef::Axis2Placement3d(id) = r else {
+        cx.warn("placement is a complex instance".to_owned());
+        return None;
+    };
     frame_of(cx, *id)
 }
 
@@ -169,20 +296,28 @@ fn frame_of_3dref(cx: Ctx<'_>, r: &m::Axis2Placement3dRef) -> Option<Frame> {
 /// no reference direction, so x/y are an arbitrary perpendicular pair — a full
 /// revolution makes the u-origin choice immaterial.
 pub(crate) fn axis1_frame(cx: Ctx<'_>, r: &m::Axis1PlacementRef) -> Option<Frame> {
-    let m::Axis1PlacementRef::Axis1Placement(id) = r;
+    let m::Axis1PlacementRef::Axis1Placement(id) = r else {
+        cx.warn("axis placement is a complex instance".to_owned());
+        return None;
+    };
     let p = cx.model.axis1_placement_arena.get(id.0);
     let center = point_coords(cx, &p.location)?;
-    let z = match &p.axis {
-        Some(a) => normalize(dir_ratios(cx, a)?)?,
+    let axis = match &p.axis {
+        Some(a) => dir_ratios(cx, a)?,
         None => [0.0, 0.0, 1.0],
+    };
+    let Some(z) = normalize(axis) else {
+        cx.warn("AXIS1_PLACEMENT is degenerate (a zero axis)".to_owned());
+        return None;
     };
     let x0 = if z[0].abs() < 0.9 {
         [1.0, 0.0, 0.0]
     } else {
         [0.0, 1.0, 0.0]
     };
-    let x = normalize(sub(x0, scale(z, dot(x0, z))))?;
-    Some((center, x, cross(z, x), z))
+    // x0 is never parallel to the axis, so this does not fail.
+    let (x, y, z) = orthonormal_frame(axis, x0)?;
+    Some((center, x, y, z))
 }
 
 /// A full circle/ellipse as a degree-2 rational B-spline (four 90° arcs, nine
@@ -202,21 +337,13 @@ fn conic_nurbs(center: [f64; 3], x: [f64; 3], y: [f64; 3], a: f64, b: f64) -> Nu
 }
 
 pub(crate) fn circle_to_nurbs(cx: Ctx<'_>, c: &m::Circle) -> Option<NurbsCurve> {
-    if let Some((center, x, y, _)) = placement_frame_3d(cx, &c.position) {
-        Some(conic_nurbs(center, x, y, c.radius, c.radius))
-    } else {
-        cx.warn("CIRCLE.to_nurbs: unsupported (2D or degenerate) placement".to_owned());
-        None
-    }
+    let (center, x, y, _) = placement_frame_3d(cx, &c.position)?;
+    Some(conic_nurbs(center, x, y, c.radius, c.radius))
 }
 
 pub(crate) fn ellipse_to_nurbs(cx: Ctx<'_>, e: &m::Ellipse) -> Option<NurbsCurve> {
-    if let Some((center, x, y, _)) = placement_frame_3d(cx, &e.position) {
-        Some(conic_nurbs(center, x, y, e.semi_axis_1, e.semi_axis_2))
-    } else {
-        cx.warn("ELLIPSE.to_nurbs: unsupported (2D or degenerate) placement".to_owned());
-        None
-    }
+    let (center, x, y, _) = placement_frame_3d(cx, &e.position)?;
+    Some(conic_nurbs(center, x, y, e.semi_axis_1, e.semi_axis_2))
 }
 
 /// The highest B-spline degree converted — OCCT's
@@ -320,8 +447,9 @@ pub(crate) enum KnotFamily {
 }
 
 /// The standard knot vector of a knot family as `(knot values, multiplicities)`
-/// — the same OCCT synthesizes. Uniform: integers `0..n+d`, all multiplicity 1
-/// (unclamped). Quasi-uniform: integers `0..n−d`, clamped ends (`d+1`).
+/// — the same one OCCT synthesizes. Uniform: integers `0..=n+d`, all
+/// multiplicity 1 (unclamped). Quasi-uniform: integers `0..=n−d`, clamped
+/// ends (`d+1`).
 /// Bézier: piecewise, interior multiplicity `d` — requires `n = k·d + 1`
 /// control points (`None` otherwise, as for too few control points).
 #[allow(clippy::cast_precision_loss)] // knot indices are far below 2^52
@@ -406,20 +534,23 @@ pub(crate) fn polyline_to_nurbs(cx: Ctx<'_>, p: &m::Polyline) -> Option<NurbsCur
 /// Assemble a rational (or plain) B-spline curve from a complex instance's
 /// parts: `B_SPLINE_CURVE` (degree + control points), knots from a
 /// `B_SPLINE_CURVE_WITH_KNOTS` part or derived from a uniform-family marker
-/// part, and an optional `RATIONAL_B_SPLINE_CURVE` (weights). `None` if the
-/// complex is neither.
+/// part, and an optional `RATIONAL_B_SPLINE_CURVE` (weights). `None` if it has
+/// no `B_SPLINE_CURVE` part or no knots, explicit or derived.
 pub(crate) fn complex_bspline_curve_to_nurbs(
     cx: Ctx<'_>,
     parts: &[m::PartialEntity],
 ) -> Option<NurbsCurve> {
-    let (degree, cp) = parts.iter().find_map(|p| match p {
+    let Some((degree, cp)) = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineCurve {
             degree,
             control_points_list,
             ..
         } => Some((*degree, control_points_list)),
         _ => None,
-    })?;
+    }) else {
+        cx.warn("complex curve has no B_SPLINE_CURVE part; not converted".to_owned());
+        return None;
+    };
     let explicit = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineCurveWithKnots {
             knots,
@@ -432,13 +563,23 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
     let (knots, mults): (&[f64], &[i64]) = if let Some((k, m)) = explicit {
         (k, m)
     } else {
-        let family = parts.iter().find_map(|p| match p {
+        let Some(family) = parts.iter().find_map(|p| match p {
             m::PartialEntity::UniformCurve => Some(KnotFamily::Uniform),
             m::PartialEntity::QuasiUniformCurve => Some(KnotFamily::QuasiUniform),
             m::PartialEntity::BezierCurve => Some(KnotFamily::Bezier),
             _ => None,
-        })?;
-        derived = family_knots(family, degree, cp.len())?;
+        }) else {
+            cx.warn("B_SPLINE_CURVE.to_nurbs: a complex B-spline has no knots".to_owned());
+            return None;
+        };
+        let Some(knots) = family_knots(family, degree, cp.len()) else {
+            cx.warn(
+                "B_SPLINE_CURVE.to_nurbs: control-point count invalid for its knot family"
+                    .to_owned(),
+            );
+            return None;
+        };
+        derived = knots;
         (&derived.0, &derived.1)
     };
     let weights = parts.iter().find_map(|p| match p {
@@ -453,6 +594,7 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
 /// The direction vector (orientation × magnitude) of a `VECTOR`.
 fn vector_dir(cx: Ctx<'_>, r: &m::VectorRef) -> Option<[f64; 3]> {
     let m::VectorRef::Vector(id) = r else {
+        cx.warn("vector is a complex instance; not read".to_owned());
         return None;
     };
     let v = cx.model.vector_arena.get(id.0);
@@ -469,16 +611,8 @@ fn line_trim_point(
     dir: [f64; 3],
 ) -> Option<[f64; 3]> {
     trim.iter().find_map(|s| match s {
-        m::TrimmingSelectRef::CartesianPoint(id) => {
-            let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-            Some([
-                c.first().copied().unwrap_or(0.0),
-                c.get(1).copied().unwrap_or(0.0),
-                c.get(2).copied().unwrap_or(0.0),
-            ])
-        }
         m::TrimmingSelectRef::ParameterValue(t) => Some(add(base, scale(dir, *t))),
-        _ => None,
+        _ => trim_point(cx, s),
     })
 }
 
@@ -497,17 +631,7 @@ fn conic_trim_angle(
     let (a, b) = ab;
     // From a CartesianPoint on the curve — geometric, unit-independent.
     let cartesian = || {
-        let p = trim.iter().find_map(|s| match s {
-            m::TrimmingSelectRef::CartesianPoint(id) => {
-                let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-                Some([
-                    c.first().copied().unwrap_or(0.0),
-                    c.get(1).copied().unwrap_or(0.0),
-                    c.get(2).copied().unwrap_or(0.0),
-                ])
-            }
-            _ => None,
-        })?;
+        let p = trim.iter().find_map(|s| trim_point(cx, s))?;
         let d = sub(p, center);
         Some((dot(d, y) / b).atan2(dot(d, x) / a))
     };
@@ -666,11 +790,32 @@ pub(crate) fn trimmed_to_nurbs(cx: Ctx<'_>, t: &m::TrimmedCurve) -> Option<Nurbs
             };
             open_conic_segment(cx, conic, frame, u0, u1, "TRIMMED_CURVE")
         }
-        _ => {
-            let basis = trimmed_basis_nurbs(cx, &t.basis_curve)?;
+        r => {
+            if !converts_as_basis(r) {
+                cx.warn(format!(
+                    "TRIMMED_CURVE.to_nurbs: basis curve {} is not converted",
+                    Ctx::keyword(r.entity_key())
+                ));
+                return None;
+            }
+            let basis = trimmed_basis_nurbs(cx, r)?;
             trimmed_bspline_to_nurbs(cx, t, &basis)
         }
     }
+}
+
+/// Whether [`trimmed_basis_nurbs`] takes this kind (it reports a bad instance
+/// of one itself).
+fn converts_as_basis(r: &m::CurveRef) -> bool {
+    matches!(
+        r,
+        m::CurveRef::BSplineCurveWithKnots(_)
+            | m::CurveRef::Complex(_)
+            | m::CurveRef::UniformCurve(_)
+            | m::CurveRef::QuasiUniformCurve(_)
+            | m::CurveRef::BezierCurve(_)
+            | m::CurveRef::Polyline(_)
+    )
 }
 
 // --- bspline segment extraction (trimmed B-spline basis) ---
@@ -959,17 +1104,7 @@ fn bspline_trim_param(
         })
     };
     let cartesian = || {
-        let p = trim.iter().find_map(|s| match s {
-            m::TrimmingSelectRef::CartesianPoint(id) => {
-                let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-                Some([
-                    c.first().copied().unwrap_or(0.0),
-                    c.get(1).copied().unwrap_or(0.0),
-                    c.get(2).copied().unwrap_or(0.0),
-                ])
-            }
-            _ => None,
-        })?;
+        let p = trim.iter().find_map(|s| trim_point(cx, s))?;
         hc.invert_point(p)
     };
     let t = match master {
@@ -1112,7 +1247,16 @@ fn resolved_curve_to_nurbs(cx: Ctx<'_>, r: &m::CurveRef) -> Option<NurbsCurve> {
         m::CurveRef::CompositeCurve(id) => {
             composite_to_nurbs(cx, cx.model.composite_curve_arena.get(id.0))
         }
-        other => trimmed_basis_nurbs(cx, other),
+        // Unbounded: a caller with bounds handles them, or none applies.
+        m::CurveRef::Line(_) | m::CurveRef::Parabola(_) | m::CurveRef::Hyperbola(_) => None,
+        other if converts_as_basis(other) => trimmed_basis_nurbs(cx, other),
+        other => {
+            cx.warn(format!(
+                "{} is not converted to NURBS here",
+                Ctx::keyword(other.entity_key())
+            ));
+            None
+        }
     }
 }
 
@@ -1127,7 +1271,8 @@ pub(crate) fn surface_curve_3d_to_nurbs(cx: Ctx<'_>, r: &m::CurveRef) -> Option<
 /// Contrast with `Curve::to_nurbs`, which converts the whole curve — here an
 /// unbounded line becomes the finite segment and a partial arc/span is cut
 /// out; an edge whose two vertices coincide is a closed edge and yields the
-/// whole (closed) curve.
+/// whole (closed) curve, reversed when `same_sense` is false, starting at the
+/// curve's parameter origin rather than at the vertex.
 pub(crate) fn edge_to_nurbs(
     cx: Ctx<'_>,
     geometry: &m::CurveRef,
@@ -1154,7 +1299,12 @@ pub(crate) fn edge_to_nurbs(
             ));
             return None;
         }
-        return resolved_curve_to_nurbs(cx, r);
+        let whole = resolved_curve_to_nurbs(cx, r)?;
+        return Some(if same_sense {
+            whole
+        } else {
+            reverse_curve(&whole)
+        });
     }
     match r {
         m::CurveRef::Line(_) => Some(NurbsCurve {
@@ -1363,17 +1513,7 @@ fn open_conic_trim_param(
     conic: OpenConic,
     frame: Frame,
 ) -> Option<f64> {
-    let point = trim.iter().find_map(|s| match s {
-        m::TrimmingSelectRef::CartesianPoint(id) => {
-            let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-            Some([
-                c.first().copied().unwrap_or(0.0),
-                c.get(1).copied().unwrap_or(0.0),
-                c.get(2).copied().unwrap_or(0.0),
-            ])
-        }
-        _ => None,
-    });
+    let point = trim.iter().find_map(|s| trim_point(cx, s));
     if let Some(p) = point {
         return Some(conic.param(frame, p));
     }
@@ -1664,11 +1804,7 @@ pub(crate) fn revolve_curve(profile: &NurbsCurve, frame: Frame) -> NurbsSurface 
 }
 
 pub(crate) fn sphere_to_nurbs(cx: Ctx<'_>, s: &m::SphericalSurface) -> Option<NurbsSurface> {
-    let Some(frame) = frame_of_3dref(cx, &s.position) else {
-        cx.warn("SPHERICAL_SURFACE.to_nurbs: degenerate placement".to_owned());
-        return None;
-    };
-    Some(sphere_nurbs(frame, s.radius))
+    Some(sphere_nurbs(frame_of_3dref(cx, &s.position)?, s.radius))
 }
 
 /// A whole sphere of radius `r` about the frame's centre.
@@ -1687,11 +1823,11 @@ fn sphere_nurbs((center, x, y, z): Frame, r: f64) -> NurbsSurface {
 }
 
 pub(crate) fn torus_to_nurbs(cx: Ctx<'_>, t: &m::ToroidalSurface) -> Option<NurbsSurface> {
-    let Some(frame) = frame_of_3dref(cx, &t.position) else {
-        cx.warn("TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
-        return None;
-    };
-    Some(torus_nurbs(frame, t.major_radius, t.minor_radius))
+    Some(torus_nurbs(
+        frame_of_3dref(cx, &t.position)?,
+        t.major_radius,
+        t.minor_radius,
+    ))
 }
 
 /// A whole torus about the frame's axis: tube radius `r` around the circle of
@@ -1724,10 +1860,7 @@ pub(crate) fn degenerate_torus_to_nurbs(
     cx: Ctx<'_>,
     t: &m::DegenerateToroidalSurface,
 ) -> Option<NurbsSurface> {
-    let Some(frame @ (center, x, _, z)) = frame_of_3dref(cx, &t.position) else {
-        cx.warn("DEGENERATE_TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
-        return None;
-    };
+    let frame @ (center, x, _, z) = frame_of_3dref(cx, &t.position)?;
     let (big, r) = (t.major_radius, t.minor_radius);
     let crossing = (-big / r).clamp(-1.0, 1.0).acos();
     if crossing.is_nan() {
@@ -1817,12 +1950,13 @@ pub(crate) fn bspline_surf_wk_to_nurbs(
 
 /// Assemble a rational (or plain) B-spline surface from a complex instance's
 /// parts — knots from a `B_SPLINE_SURFACE_WITH_KNOTS` part or derived from a
-/// uniform-family marker part. `None` if the complex is neither.
+/// uniform-family marker part. `None` if it has no `B_SPLINE_SURFACE` part or
+/// no knots, explicit or derived.
 pub(crate) fn complex_bspline_surface_to_nurbs(
     cx: Ctx<'_>,
     parts: &[m::PartialEntity],
 ) -> Option<NurbsSurface> {
-    let (u_degree, v_degree, cp) = parts.iter().find_map(|p| match p {
+    let Some((u_degree, v_degree, cp)) = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineSurface {
             u_degree,
             v_degree,
@@ -1830,7 +1964,10 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
             ..
         } => Some((*u_degree, *v_degree, control_points_list)),
         _ => None,
-    })?;
+    }) else {
+        cx.warn("complex surface has no B_SPLINE_SURFACE part; not converted".to_owned());
+        return None;
+    };
     let explicit = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineSurfaceWithKnots {
             u_knots,
@@ -1845,17 +1982,27 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
     let (u, v): (KnotsRef<'_>, KnotsRef<'_>) = if let Some((uk, um, vk, vm)) = explicit {
         ((uk, um), (vk, vm))
     } else {
-        let family = parts.iter().find_map(|p| match p {
+        let Some(family) = parts.iter().find_map(|p| match p {
             m::PartialEntity::UniformSurface => Some(KnotFamily::Uniform),
             m::PartialEntity::QuasiUniformSurface => Some(KnotFamily::QuasiUniform),
             m::PartialEntity::BezierSurface => Some(KnotFamily::Bezier),
             _ => None,
-        })?;
+        }) else {
+            cx.warn("B_SPLINE_SURFACE.to_nurbs: a complex B-spline has no knots".to_owned());
+            return None;
+        };
         let n_v = cp.first().map_or(0, Vec::len);
-        derived = (
-            family_knots(family, u_degree, cp.len())?,
-            family_knots(family, v_degree, n_v)?,
-        );
+        let (Some(u), Some(v)) = (
+            family_knots(family, u_degree, cp.len()),
+            family_knots(family, v_degree, n_v),
+        ) else {
+            cx.warn(
+                "B_SPLINE_SURFACE.to_nurbs: control-grid size invalid for its knot family"
+                    .to_owned(),
+            );
+            return None;
+        };
+        derived = (u, v);
         ((&derived.0.0, &derived.0.1), (&derived.1.0, &derived.1.1))
     };
     let weights = parts.iter().find_map(|p| match p {
@@ -1879,7 +2026,7 @@ pub(crate) fn offset_to_nurbs(cx: Ctx<'_>, o: &m::OffsetSurface) -> Option<Nurbs
             if r <= 0.0 {
                 return None;
             }
-            Some(sphere_nurbs(offset_frame(cx, &s.position)?, r))
+            Some(sphere_nurbs(frame_of_3dref(cx, &s.position)?, r))
         }
         m::SurfaceRef::ToroidalSurface(i) => {
             let t = cx.model.toroidal_surface_arena.get(i.0);
@@ -1888,18 +2035,10 @@ pub(crate) fn offset_to_nurbs(cx: Ctx<'_>, o: &m::OffsetSurface) -> Option<Nurbs
             if r <= 0.0 || r > big * (1.0 + 1e-9) {
                 return None;
             }
-            Some(torus_nurbs(offset_frame(cx, &t.position)?, big, r))
+            Some(torus_nurbs(frame_of_3dref(cx, &t.position)?, big, r))
         }
         _ => None,
     }
-}
-
-fn offset_frame(cx: Ctx<'_>, position: &m::Axis2Placement3dRef) -> Option<Frame> {
-    let frame = frame_of_3dref(cx, position);
-    if frame.is_none() {
-        cx.warn("OFFSET_SURFACE.to_nurbs: degenerate basis placement".to_owned());
-    }
-    frame
 }
 
 /// An open offset surface bounded by a face, as [`plane_patch`] and
@@ -2057,6 +2196,64 @@ pub(crate) fn cylinder_cone_patch(
     })
 }
 
+/// The unbounded `LINE` profile of a `SURFACE_OF_LINEAR_EXTRUSION` bounded by
+/// a face into a finite degree-1 segment (which [`extrude_patch`] then
+/// sweeps): each boundary point lies on the plane the line sweeps, so it pins
+/// the line parameter along the extrusion direction.
+pub(crate) fn extruded_line_segment(
+    cx: Ctx<'_>,
+    line: &m::Line,
+    axis: &m::VectorRef,
+    points: &[[f64; 3]],
+) -> Option<NurbsCurve> {
+    let base = point_coords(cx, &line.pnt)?;
+    let line_dir = |r: &m::VectorRef, zero: &str| {
+        let m::VectorRef::Vector(id) = r else {
+            cx.warn("vector is a complex instance; not read".to_owned());
+            return None;
+        };
+        let d = normalize(dir_ratios(
+            cx,
+            &cx.model.vector_arena.get(id.0).orientation,
+        )?);
+        if d.is_none() {
+            cx.warn(zero.to_owned());
+        }
+        d
+    };
+    let d = line_dir(&line.dir, "LINE direction is a zero vector")?;
+    let v = line_dir(
+        axis,
+        "SURFACE_OF_LINEAR_EXTRUSION face.to_nurbs: degenerate direction",
+    )?;
+    if points.is_empty() {
+        return None;
+    }
+    // Each boundary point lies on the plane base + s·d + t·v; solve for s.
+    let (dd, dv, vv) = (dot(d, d), dot(d, v), dot(v, v));
+    let det = dd * vv - dv * dv;
+    if det.abs() < 1e-12 {
+        cx.warn(
+            "SURFACE_OF_LINEAR_EXTRUSION face.to_nurbs: the line runs along the extrusion"
+                .to_owned(),
+        );
+        return None;
+    }
+    let (mut s_lo, mut s_hi) = (f64::MAX, f64::MIN);
+    for p in points {
+        let w = sub(*p, base);
+        let s = (vv * dot(d, w) - dv * dot(v, w)) / det;
+        s_lo = s_lo.min(s);
+        s_hi = s_hi.max(s);
+    }
+    Some(NurbsCurve {
+        degree: 1,
+        control_points: vec![add(base, scale(d, s_lo)), add(base, scale(d, s_hi))],
+        weights: vec![1.0, 1.0],
+        knots: vec![0.0, 0.0, 1.0, 1.0],
+    })
+}
+
 /// A `SURFACE_OF_LINEAR_EXTRUSION` bounded by a face into a finite ruled patch:
 /// the profile curve (u, already converted to NURBS) swept linearly (v) along
 /// the extrusion direction between two levels taken from the span of the face's
@@ -2073,6 +2270,7 @@ pub(crate) fn extrude_patch(
     points: &[[f64; 3]],
 ) -> Option<NurbsSurface> {
     let m::VectorRef::Vector(id) = axis else {
+        cx.warn("vector is a complex instance; not read".to_owned());
         return None;
     };
     let v = cx.model.vector_arena.get(id.0);
@@ -2128,10 +2326,14 @@ pub(crate) fn revolved_line_segment(
     let (center, _, _, z) = frame;
     let base = point_coords(cx, &line.pnt)?;
     let m::VectorRef::Vector(vid) = &line.dir else {
+        cx.warn("vector is a complex instance; not read".to_owned());
         return None;
     };
     let v = cx.model.vector_arena.get(vid.0);
-    let d = normalize(dir_ratios(cx, &v.orientation)?)?;
+    let Some(d) = normalize(dir_ratios(cx, &v.orientation)?) else {
+        cx.warn("LINE direction is a zero vector".to_owned());
+        return None;
+    };
     if points.is_empty() {
         return None;
     }

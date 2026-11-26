@@ -4,7 +4,9 @@ use crate::parser::lexer::{LexError, Span};
 
 /// A parsed attribute value from a Part 21 entity instance.
 ///
-/// Covers every construct allowed in a parameter position by ISO 10303-21.
+/// Covers every construct allowed in a parameter position by ISO 10303-21,
+/// except a typed parameter with a user-defined (`!NAME`) keyword, which the
+/// lexer does not read.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Attribute {
     Integer(i64),
@@ -40,7 +42,7 @@ pub struct RawEntityPart {
     pub attributes: Vec<Attribute>,
 }
 
-/// A parsed Part 21 entity instance (one line in the DATA section).
+/// A parsed Part 21 entity instance (one instance in the DATA section).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawEntity {
     Simple {
@@ -96,7 +98,8 @@ pub struct Graph {
     /// entity, in file order.
     pub anchors: Vec<(String, u64)>,
     /// What the parser repaired or skipped without stopping, such as a
-    /// missing semicolon, a blank attribute slot or a SIGNATURE section.
+    /// missing semicolon, a blank attribute slot, a SIGNATURE section or an
+    /// `ANCHOR`/`REFERENCE` line it could not read.
     pub warnings: Vec<ParseWarning>,
 }
 
@@ -124,8 +127,15 @@ pub enum ParseWarning {
     /// no place for them; [`parse`](crate::parser::parse) and
     /// [`stream`](crate::parser::stream) keep `ANCHOR` and `REFERENCE` (in
     /// the [`Graph`], or shown by the [`Stream`](crate::parser::Stream)) and
-    /// discard `SIGNATURE`, or a section whose lines they cannot read.
+    /// discard `SIGNATURE`, or a section none of whose lines they can read.
     Ed3SectionDiscarded {
+        section: String,
+        span: super::lexer::Span,
+    },
+    /// An `ANCHOR` or `REFERENCE` section that [`parse`](crate::parser::parse)
+    /// or [`stream`](crate::parser::stream) keeps has lines it could not read;
+    /// those lines are skipped and the others kept.
+    Ed3LinesSkipped {
         section: String,
         span: super::lexer::Span,
     },
@@ -147,6 +157,10 @@ impl std::fmt::Display for ParseWarning {
                 format!("HEADER entity {entity_name} has no terminating ';'"),
             ),
             Self::EmptyAttribute { span } => (span, "blank attribute read as $".to_owned()),
+            Self::Ed3LinesSkipped { section, span } => (
+                span,
+                format!("{section} section: lines it could not read were skipped"),
+            ),
             Self::Ed3SectionDiscarded { section, span } => {
                 (span, format!("{section} section skipped (not supported)"))
             }
@@ -178,7 +192,8 @@ impl Graph {
 /// [`stream`](crate::parser::stream) could not read a file.
 ///
 /// Lexer errors are wrapped in [`Error::Lex`] and a failing input in
-/// [`Error::Io`]; the remaining variants describe structural problems detected
+/// [`Error::Io`]; [`Error::TooLarge`] is a file larger than the reader can
+/// index, and the remaining variants describe structural problems detected
 /// during parsing. Each prints as a one-line message that includes the wrapped
 /// error's, so [`source`](std::error::Error::source) is always `None`.
 #[derive(Debug)]
@@ -205,7 +220,8 @@ pub enum Error {
     MissingHeaderEntity { name: &'static str },
     /// `FILE_SCHEMA` does not contain a list of strings.
     MalformedFileSchema { span: Span },
-    /// An attribute appeared in an invalid position (e.g. `$` inside a list).
+    /// A token that cannot start a parameter appeared where one belongs (e.g.
+    /// `;` or `=` inside a parameter list).
     InvalidAttributePosition { span: Span, detail: &'static str },
     /// A parameter is nested deeper than [`MAX_NESTING_DEPTH`] — guards against a
     /// stack overflow on adversarially deep `(((…)))` / `A(B(C(…)))` input.
@@ -213,7 +229,8 @@ pub enum Error {
     /// [`MAX_NESTING_DEPTH`]: crate::parser::MAX_NESTING_DEPTH
     NestingTooDeep { span: Span },
     /// The file holds more than the reader can index: at most `u32::MAX`
-    /// entities, and as many reference and text slots.
+    /// entities, and the reference data and text it keeps must each fit
+    /// 32-bit positions (about 4 GiB).
     /// `span` is the entity where reading stopped.
     TooLarge { span: Span },
     /// Reading the input failed, with the input's own error.
@@ -431,6 +448,13 @@ mod tests {
                     span,
                 },
                 "warning at line 12, column 5: ANCHOR section skipped (not supported)",
+            ),
+            (
+                ParseWarning::Ed3LinesSkipped {
+                    section: "REFERENCE".into(),
+                    span,
+                },
+                "warning at line 12, column 5: REFERENCE section: lines it could not read were skipped",
             ),
             (
                 ParseWarning::MalformedStringEscape { span },

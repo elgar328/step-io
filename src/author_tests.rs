@@ -287,6 +287,19 @@ fn complex_rule_rejects_invalid_name_sets() {
             reason: "oneof conflict"
         })
     );
+    // An ABSTRACT part needs a part of one of its subtypes beside it.
+    let abstract_alone = Err(AuthorError::InvalidComplex {
+        reason: "abstract part without a subtype part",
+    });
+    assert_eq!(complex_rule(&["GEOMETRIC_TOLERANCE"]), abstract_alone);
+    assert_eq!(
+        complex_rule(&[
+            "GEOMETRIC_REPRESENTATION_ITEM",
+            "REPRESENTATION_ITEM",
+            "TESSELLATED_ITEM",
+        ]),
+        abstract_alone
+    );
     // Duplicates and the empty bag.
     assert_eq!(
         complex_rule(&["NAMED_UNIT", "NAMED_UNIT", "SI_UNIT"]),

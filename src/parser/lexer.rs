@@ -516,7 +516,8 @@ fn truncate_to_chars(s: &str, max_chars: usize) -> String {
 
 /// Part 21 token kinds.
 ///
-/// Variants cover every lexical construct defined in ISO 10303-21.
+/// Variants cover every lexical construct defined in ISO 10303-21, except
+/// user-defined (`!NAME`) keywords, which are a lexical error.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum TokenKind {
     IsoStart,

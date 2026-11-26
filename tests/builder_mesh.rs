@@ -1,15 +1,17 @@
 //! Display-mesh authoring through `StepBuilder::mesh`: a plain vertex array
 //! with index triangles round-trips exactly through the read side's
 //! Mesh/MeshGroup (including the 1-based strip winding encoding), with the
-//! group linked back to the b-rep solid it tessellates.
+//! group linked back to the b-rep solid it tessellates. Beside a solid, the
+//! meshes' representation is marked as an alternative shape representation.
 
 mod common;
 
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, MeshInput, MeshNormalsInput, SurfaceInput, VoidShellNormals,
 };
+use step_io::model::{NameAttribute, NameAttributeSelectRef, RepresentationRef};
 use step_io::scene::MeshNormals;
-use step_io::{Orientation, StepBuilder, read};
+use step_io::{Orientation, StepBuilder, StepModel, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -17,6 +19,28 @@ fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
         axis,
         ref_dir,
     }
+}
+
+/// How many `NAME_ATTRIBUTE`s the model holds, after checking that each marks
+/// the binding of a tessellated representation as an alternative shape
+/// representation.
+fn alternative_marks(model: &StepModel) -> usize {
+    let marks = model.all::<NameAttribute>();
+    let n = marks.len();
+    for (_, mark) in marks {
+        assert_eq!(
+            model.text(mark.attribute_value),
+            "alternative shape representation"
+        );
+        let NameAttributeSelectRef::ShapeDefinitionRepresentation(binding) = mark.named_item else {
+            panic!("mark names {:?}", mark.named_item);
+        };
+        assert!(matches!(
+            model[binding].used_representation,
+            RepresentationRef::TessellatedShapeRepresentation(_)
+        ));
+    }
+    n
 }
 
 /// A quad split into two triangles, as a kernel tessellation would hand it
@@ -79,6 +103,7 @@ fn mesh_round_trips_with_solid_back_link() {
         2,
         "shape SDR + mesh SDR"
     );
+    assert_eq!(alternative_marks(&model), 1);
 
     let scene = model.scene();
     let groups: Vec<_> = scene.all_mesh_groups().collect();
@@ -144,6 +169,7 @@ fn mesh_links_back_to_void_solid() {
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    assert_eq!(alternative_marks(&model), 1);
 
     let scene = model.scene();
     let groups: Vec<_> = scene.all_mesh_groups().collect();
@@ -171,6 +197,8 @@ fn standalone_mesh_with_uniform_normals() {
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    // Without a solid the meshes are the part's only shape, not an alternative.
+    assert_eq!(alternative_marks(&model), 0);
 
     let scene = model.scene();
     let groups: Vec<_> = scene.all_mesh_groups().collect();

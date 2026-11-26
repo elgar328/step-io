@@ -3,6 +3,7 @@
 //! schema-faithful model + generic 2-pass read + topo write into step-io's
 //! `src/generated/`. Run: `cargo run -p codegen`.
 
+mod author_narrow;
 mod classify;
 mod coverage;
 mod emit;
@@ -43,6 +44,7 @@ fn main() {
     }
     let exclude: BTreeSet<String> = coverage.exclude.iter().cloned().collect();
     let closure = build_closure(&schema, &res, &seeds, &exclude);
+    report_closure_change(&format!("{root}/docs/entities.md"), &closure);
 
     // Complex-part entities = closure entities flagged is_complex_part in
     // universal.toml (auto-derived from EXPRESS ANDOR; replaces the former hand
@@ -118,24 +120,11 @@ fn main() {
 
     // Emit into step-io's own `src/generated`, where the parser types are reached
     // as `crate::` (the generated code lives inside step-io).
-    let dir = format!("{root}/src/generated");
-    let crate_path = "crate";
-    std::fs::create_dir_all(&dir).expect("mkdir generated");
-    write_fmt(&format!("{dir}/model.rs"), &emit::emit_model(&ir));
-    write_fmt(&format!("{dir}/read.rs"), &emit::emit_read(&ir, crate_path));
-    write_fmt(&format!("{dir}/write.rs"), &emit::emit_write(&ir));
-    write_fmt(&format!("{dir}/walk.rs"), &emit::emit_walk(&ir));
-    write_fmt(&format!("{dir}/resolve.rs"), &emit::emit_resolvers(&ir));
-    write_fmt(
-        &format!("{dir}/generic_normalize.rs"),
-        &emit::emit_normalize(&ir, crate_path),
-    );
-
     // Output profile (legal set / downgrade / header), baked from the vendored
-    // schema/ap242e2.toml. AP242 ed2 is the single output schema (step-io
-    // reads all APs but always writes ed2); its FILE_SCHEMA identity is baked
+    // schema/ap242e4.toml. AP242 ed4 is the single output schema (step-io
+    // reads all APs but always writes ed4); its FILE_SCHEMA identity is baked
     // into src/generated/schema.rs for the authoring layer to stamp.
-    let profile_specs = [("AP242E2", "Ap242", "ap242e2")];
+    let profile_specs = [("AP242E4", "Ap242", "ap242e4")];
     let parsed: Vec<(&str, &str, schema::ProfileToml)> = profile_specs
         .iter()
         .map(|(prefix, variant, stem)| {
@@ -147,14 +136,49 @@ fn main() {
             (*prefix, *variant, p)
         })
         .collect();
+    // The output schema read as a schema of its own (entities, attributes
+    // with every redeclaration, SELECTs), for where it is narrower than the
+    // model.
+    let target_schema: Schema = toml::from_str(
+        &std::fs::read_to_string(format!("{root}/schema/{}.toml", profile_specs[0].2))
+            .expect("read output profile"),
+    )
+    .expect("parse output profile as a schema");
+    let legal: BTreeSet<String> = parsed[0]
+        .2
+        .entity
+        .keys()
+        .map(|k| k.to_uppercase())
+        .collect();
+    let narrowing = author_narrow::AuthorNarrowing::build(&ir, &target_schema, &legal);
+    for line in narrowing.report() {
+        eprintln!("codegen: narrow {line}");
+    }
     let targets: Vec<(&str, &str, &schema::ProfileToml)> =
         parsed.iter().map(|(a, b, c)| (*a, *b, c)).collect();
+    let dir = format!("{root}/src/generated");
+    let crate_path = "crate";
+    std::fs::create_dir_all(&dir).expect("mkdir generated");
+    write_fmt(
+        &format!("{dir}/model.rs"),
+        &emit::emit_model(&ir, &narrowing),
+    );
+    write_fmt(&format!("{dir}/read.rs"), &emit::emit_read(&ir, crate_path));
+    write_fmt(&format!("{dir}/write.rs"), &emit::emit_write(&ir));
+    write_fmt(&format!("{dir}/walk.rs"), &emit::emit_walk(&ir));
+    write_fmt(&format!("{dir}/resolve.rs"), &emit::emit_resolvers(&ir));
+    write_fmt(
+        &format!("{dir}/generic_normalize.rs"),
+        &emit::emit_normalize(&ir, crate_path),
+    );
+
     write_fmt(&format!("{dir}/schema.rs"), &emit::emit_schema(&targets));
 
-    // Strict AP242 authoring layer: constructors only for AP242-legal entities.
+    // Strict AP242 authoring layer: constructors only for AP242-legal entities
+    // that are not ABSTRACT.
     write_fmt(
         &format!("{dir}/author.rs"),
-        &emit::emit_author(&ir, &parsed[0].2, &schema),
+        &emit::emit_author(&ir, &parsed[0].2, &schema, &narrowing),
     );
 
     write_fmt(
@@ -195,5 +219,37 @@ fn write_fmt(path: &str, body: &str) {
         if std::fs::read_to_string(path).unwrap_or_default() == before {
             return;
         }
+    }
+}
+
+/// Print the entities the closure gains and loses against the read column of
+/// the committed `docs/entities.md`, so a schema or coverage change that moves
+/// the support boundary is seen before it lands.
+fn report_closure_change(matrix: &str, closure: &BTreeSet<String>) {
+    let Ok(text) = std::fs::read_to_string(matrix) else {
+        return;
+    };
+    let cols = |l: &str| -> Vec<String> { l.split('|').map(|c| c.trim().to_string()).collect() };
+    // The read column's position, from the entity table's header row.
+    let Some(read) = text
+        .lines()
+        .find(|l| l.starts_with("| Entity |"))
+        .and_then(|h| cols(h).iter().position(|c| c == "step-io (read)"))
+    else {
+        return;
+    };
+    let before: BTreeSet<String> = text
+        .lines()
+        .filter_map(|l| {
+            let cols = cols(l);
+            let name = cols.get(1)?.strip_prefix('`')?.strip_suffix('`')?;
+            (cols.get(read).map(String::as_str) == Some("o")).then(|| name.to_string())
+        })
+        .collect();
+    let added: Vec<&String> = closure.difference(&before).collect();
+    let removed: Vec<&String> = before.difference(closure).collect();
+    if !added.is_empty() || !removed.is_empty() {
+        eprintln!("codegen: closure +{} {added:?}", added.len());
+        eprintln!("codegen: closure -{} {removed:?}", removed.len());
     }
 }

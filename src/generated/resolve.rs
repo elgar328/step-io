@@ -3,18 +3,23 @@
 
 use super::model::*;
 
+/// What a [`ActionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionRefView<'m> {
     Action(&'m Action),
     Complex(&'m ComplexEntity),
 }
 impl ActionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionRefView<'m> {
         match self {
             ActionRef::Action(i) => ActionRefView::Action(model.action_arena.get(i.0)),
             ActionRef::Complex(i) => ActionRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionRef::Action(i) => EntityKey::Action(*i),
@@ -23,12 +28,16 @@ impl ActionRef {
     }
 }
 
+/// What a [`ActionMethodRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionMethodRefView<'m> {
     ActionMethod(&'m ActionMethod),
     Complex(&'m ComplexEntity),
 }
 impl ActionMethodRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionMethodRefView<'m> {
         match self {
             ActionMethodRef::ActionMethod(i) => {
@@ -39,6 +48,7 @@ impl ActionMethodRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionMethodRef::ActionMethod(i) => EntityKey::ActionMethod(*i),
@@ -47,12 +57,16 @@ impl ActionMethodRef {
     }
 }
 
+/// What a [`ActionResourceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionResourceRefView<'m> {
     ActionResource(&'m ActionResource),
     Complex(&'m ComplexEntity),
 }
 impl ActionResourceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceRefView<'m> {
         match self {
             ActionResourceRef::ActionResource(i) => {
@@ -63,6 +77,7 @@ impl ActionResourceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionResourceRef::ActionResource(i) => EntityKey::ActionResource(*i),
@@ -71,11 +86,48 @@ impl ActionResourceRef {
     }
 }
 
+/// What a [`ActionResourceRequirementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum ActionResourceRequirementRefView<'m> {
+    ActionResourceRequirement(&'m ActionResourceRequirement),
+    Complex(&'m ComplexEntity),
+}
+impl ActionResourceRequirementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceRequirementRefView<'m> {
+        match self {
+            ActionResourceRequirementRef::ActionResourceRequirement(i) => {
+                ActionResourceRequirementRefView::ActionResourceRequirement(
+                    model.action_resource_requirement_arena.get(i.0),
+                )
+            }
+            ActionResourceRequirementRef::Complex(i) => {
+                ActionResourceRequirementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ActionResourceRequirementRef::ActionResourceRequirement(i) => {
+                EntityKey::ActionResourceRequirement(*i)
+            }
+            ActionResourceRequirementRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`ActionResourceTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionResourceTypeRefView<'m> {
     ActionResourceType(&'m ActionResourceType),
 }
 impl ActionResourceTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceTypeRefView<'m> {
         match self {
             ActionResourceTypeRef::ActionResourceType(i) => {
@@ -85,6 +137,7 @@ impl ActionResourceTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionResourceTypeRef::ActionResourceType(i) => EntityKey::ActionResourceType(*i),
@@ -92,6 +145,8 @@ impl ActionResourceTypeRef {
     }
 }
 
+/// What a [`AnnotationCurveOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationCurveOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -99,6 +154,8 @@ pub enum AnnotationCurveOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationCurveOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationCurveOccurrenceRefView<'m> {
         match self {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -114,6 +171,7 @@ impl AnnotationCurveOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -125,10 +183,11 @@ impl AnnotationCurveOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -138,6 +197,7 @@ pub enum AnnotationOccurrenceRefView<'m> {
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
@@ -145,16 +205,13 @@ pub enum AnnotationOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationOccurrenceRefView<'m> {
         match self {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 AnnotationOccurrenceRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
-                AnnotationOccurrenceRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             AnnotationOccurrenceRef::AnnotationOccurrence(i) => {
@@ -192,6 +249,11 @@ impl AnnotationOccurrenceRef {
                     model.draughting_annotation_occurrence_arena.get(i.0),
                 )
             }
+            AnnotationOccurrenceRef::ExternalImagePlacementInCallout(i) => {
+                AnnotationOccurrenceRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             AnnotationOccurrenceRef::LeaderCurve(i) => {
                 AnnotationOccurrenceRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
             }
@@ -215,13 +277,11 @@ impl AnnotationOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             AnnotationOccurrenceRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             AnnotationOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
@@ -240,6 +300,9 @@ impl AnnotationOccurrenceRef {
             AnnotationOccurrenceRef::DraughtingAnnotationOccurrence(i) => {
                 EntityKey::DraughtingAnnotationOccurrence(*i)
             }
+            AnnotationOccurrenceRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             AnnotationOccurrenceRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             AnnotationOccurrenceRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
             AnnotationOccurrenceRef::TerminatorSymbol(i) => EntityKey::TerminatorSymbol(*i),
@@ -251,14 +314,19 @@ impl AnnotationOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationPlaceholderLeaderLineRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationPlaceholderLeaderLineRefView<'m> {
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
     AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
     AuxiliaryLeaderLine(&'m AuxiliaryLeaderLine),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaceholderLeaderLineRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaceholderLeaderLineRefView<'m> {
         match self {
             AnnotationPlaceholderLeaderLineRef::AnnotationPlaceholderLeaderLine(i) => {
@@ -281,8 +349,12 @@ impl AnnotationPlaceholderLeaderLineRef {
                     model.auxiliary_leader_line_arena.get(i.0),
                 )
             }
+            AnnotationPlaceholderLeaderLineRef::Complex(i) => {
+                AnnotationPlaceholderLeaderLineRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationPlaceholderLeaderLineRef::AnnotationPlaceholderLeaderLine(i) => {
@@ -297,10 +369,13 @@ impl AnnotationPlaceholderLeaderLineRef {
             AnnotationPlaceholderLeaderLineRef::AuxiliaryLeaderLine(i) => {
                 EntityKey::AuxiliaryLeaderLine(*i)
             }
+            AnnotationPlaceholderLeaderLineRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`AnnotationPlaceholderOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationPlaceholderOccurrenceRefView<'m> {
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -310,6 +385,8 @@ pub enum AnnotationPlaceholderOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaceholderOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaceholderOccurrenceRefView<'m> {
         match self {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => AnnotationPlaceholderOccurrenceRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
@@ -317,6 +394,7 @@ impl AnnotationPlaceholderOccurrenceRef {
             AnnotationPlaceholderOccurrenceRef::Complex(i) => AnnotationPlaceholderOccurrenceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
@@ -330,10 +408,11 @@ impl AnnotationPlaceholderOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationPlaneElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationPlaneElementRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -345,6 +424,7 @@ pub enum AnnotationPlaneElementRefView<'m> {
     ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
     DraughtingCallout(&'m DraughtingCallout),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderDirectedCallout(&'m LeaderDirectedCallout),
     LeaderTerminator(&'m LeaderTerminator),
@@ -355,16 +435,13 @@ pub enum AnnotationPlaneElementRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaneElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaneElementRefView<'m> {
         match self {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
                 AnnotationPlaneElementRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            AnnotationPlaneElementRef::AnnotationFillAreaOccurrence(i) => {
-                AnnotationPlaneElementRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             AnnotationPlaneElementRef::AnnotationOccurrence(i) => {
@@ -416,6 +493,11 @@ impl AnnotationPlaneElementRef {
                     model.draughting_callout_arena.get(i.0),
                 )
             }
+            AnnotationPlaneElementRef::ExternalImagePlacementInCallout(i) => {
+                AnnotationPlaneElementRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             AnnotationPlaneElementRef::LeaderCurve(i) => {
                 AnnotationPlaneElementRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
             }
@@ -452,13 +534,11 @@ impl AnnotationPlaneElementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            AnnotationPlaneElementRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             AnnotationPlaneElementRef::AnnotationOccurrence(i) => {
                 EntityKey::AnnotationOccurrence(*i)
@@ -483,6 +563,9 @@ impl AnnotationPlaneElementRef {
                 EntityKey::DraughtingAnnotationOccurrence(*i)
             }
             AnnotationPlaneElementRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
+            AnnotationPlaneElementRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             AnnotationPlaneElementRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             AnnotationPlaneElementRef::LeaderDirectedCallout(i) => {
                 EntityKey::LeaderDirectedCallout(*i)
@@ -501,6 +584,8 @@ impl AnnotationPlaneElementRef {
     }
 }
 
+/// What a [`AnnotationRepresentationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationRepresentationSelectRefView<'m> {
     DraughtingModel(&'m DraughtingModel),
@@ -510,6 +595,8 @@ pub enum AnnotationRepresentationSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationRepresentationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationRepresentationSelectRefView<'m> {
         match self {
             AnnotationRepresentationSelectRef::DraughtingModel(i) => {
@@ -537,6 +624,7 @@ impl AnnotationRepresentationSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationRepresentationSelectRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
@@ -554,6 +642,8 @@ impl AnnotationRepresentationSelectRef {
     }
 }
 
+/// What a [`AnnotationSymbolOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationSymbolOccurrenceRefView<'m> {
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
@@ -562,6 +652,8 @@ pub enum AnnotationSymbolOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceRefView<'m> {
         match self {
             AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(i) => {
@@ -584,6 +676,7 @@ impl AnnotationSymbolOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(i) => {
@@ -596,20 +689,18 @@ impl AnnotationSymbolOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationSymbolOccurrenceItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationSymbolOccurrenceItemRefView<'m> {
-    AnnotationSymbol(&'m AnnotationSymbol),
     DefinedSymbol(&'m DefinedSymbol),
     Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceItemRefView<'m> {
         match self {
-            AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
-                AnnotationSymbolOccurrenceItemRefView::AnnotationSymbol(
-                    model.annotation_symbol_arena.get(i.0),
-                )
-            }
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
                 AnnotationSymbolOccurrenceItemRefView::DefinedSymbol(
                     model.defined_symbol_arena.get(i.0),
@@ -620,17 +711,17 @@ impl AnnotationSymbolOccurrenceItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
-            AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
-                EntityKey::AnnotationSymbol(*i)
-            }
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => EntityKey::DefinedSymbol(*i),
             AnnotationSymbolOccurrenceItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`AnnotationTextOccurrenceItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationTextOccurrenceItemRefView<'m> {
     AnnotationText(&'m AnnotationText),
@@ -641,6 +732,8 @@ pub enum AnnotationTextOccurrenceItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationTextOccurrenceItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationTextOccurrenceItemRefView<'m> {
         match self {
             AnnotationTextOccurrenceItemRef::AnnotationText(i) => {
@@ -671,6 +764,7 @@ impl AnnotationTextOccurrenceItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationTextOccurrenceItemRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
@@ -687,11 +781,16 @@ impl AnnotationTextOccurrenceItemRef {
     }
 }
 
+/// What a [`AnnotationToModelLeaderLineRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationToModelLeaderLineRefView<'m> {
     AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationToModelLeaderLineRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationToModelLeaderLineRefView<'m> {
         match self {
             AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
@@ -699,22 +798,31 @@ impl AnnotationToModelLeaderLineRef {
                     model.annotation_to_model_leader_line_arena.get(i.0),
                 )
             }
+            AnnotationToModelLeaderLineRef::Complex(i) => {
+                AnnotationToModelLeaderLineRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
                 EntityKey::AnnotationToModelLeaderLine(*i)
             }
+            AnnotationToModelLeaderLineRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`ApplicationContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApplicationContextRefView<'m> {
     ApplicationContext(&'m ApplicationContext),
 }
 impl ApplicationContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApplicationContextRefView<'m> {
         match self {
             ApplicationContextRef::ApplicationContext(i) => {
@@ -724,6 +832,7 @@ impl ApplicationContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApplicationContextRef::ApplicationContext(i) => EntityKey::ApplicationContext(*i),
@@ -731,16 +840,21 @@ impl ApplicationContextRef {
     }
 }
 
+/// What a [`ApprovalRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalRefView<'m> {
     Approval(&'m Approval),
 }
 impl ApprovalRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalRefView<'m> {
         match self {
             ApprovalRef::Approval(i) => ApprovalRefView::Approval(model.approval_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalRef::Approval(i) => EntityKey::Approval(*i),
@@ -748,6 +862,8 @@ impl ApprovalRef {
     }
 }
 
+/// What a [`ApprovalItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalItemRefView<'m> {
     Action(&'m Action),
@@ -760,7 +876,6 @@ pub enum ApprovalItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     AngularLocation(&'m AngularLocation),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -768,7 +883,6 @@ pub enum ApprovalItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -858,6 +972,7 @@ pub enum ApprovalItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -1010,6 +1125,8 @@ pub enum ApprovalItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ApprovalItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalItemRefView<'m> {
         match self {
             ApprovalItemRef::Action(i) => ApprovalItemRefView::Action(model.action_arena.get(i.0)),
@@ -1048,11 +1165,6 @@ impl ApprovalItemRef {
                     model.annotation_curve_occurrence_arena.get(i.0),
                 )
             }
-            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
-                ApprovalItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
-                )
-            }
             ApprovalItemRef::AnnotationOccurrence(i) => ApprovalItemRefView::AnnotationOccurrence(
                 model.annotation_occurrence_arena.get(i.0),
             ),
@@ -1075,9 +1187,6 @@ impl ApprovalItemRef {
             }
             ApprovalItemRef::AnnotationPlane(i) => {
                 ApprovalItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            ApprovalItemRef::AnnotationSymbol(i) => {
-                ApprovalItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
                 ApprovalItemRefView::AnnotationSymbolOccurrence(
@@ -1405,6 +1514,11 @@ impl ApprovalItemRef {
             }
             ApprovalItemRef::Ellipse(i) => {
                 ApprovalItemRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            ApprovalItemRef::ExternalImagePlacementInCallout(i) => {
+                ApprovalItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
                 ApprovalItemRefView::ExternallyDefinedHatchStyle(
@@ -1946,6 +2060,7 @@ impl ApprovalItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalItemRef::Action(i) => EntityKey::Action(*i),
@@ -1962,9 +2077,6 @@ impl ApprovalItemRef {
             ApprovalItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             ApprovalItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             ApprovalItemRef::AnnotationPlaceholderLeaderLine(i) => {
                 EntityKey::AnnotationPlaceholderLeaderLine(*i)
@@ -1976,7 +2088,6 @@ impl ApprovalItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             ApprovalItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            ApprovalItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -2108,6 +2219,9 @@ impl ApprovalItemRef {
             ApprovalItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             ApprovalItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             ApprovalItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            ApprovalItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -2330,11 +2444,15 @@ impl ApprovalItemRef {
     }
 }
 
+/// What a [`ApprovalRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalRoleRefView<'m> {
     ApprovalRole(&'m ApprovalRole),
 }
 impl ApprovalRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalRoleRefView<'m> {
         match self {
             ApprovalRoleRef::ApprovalRole(i) => {
@@ -2342,6 +2460,7 @@ impl ApprovalRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalRoleRef::ApprovalRole(i) => EntityKey::ApprovalRole(*i),
@@ -2349,11 +2468,15 @@ impl ApprovalRoleRef {
     }
 }
 
+/// What a [`ApprovalStatusRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalStatusRefView<'m> {
     ApprovalStatus(&'m ApprovalStatus),
 }
 impl ApprovalStatusRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalStatusRefView<'m> {
         match self {
             ApprovalStatusRef::ApprovalStatus(i) => {
@@ -2361,6 +2484,7 @@ impl ApprovalStatusRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalStatusRef::ApprovalStatus(i) => EntityKey::ApprovalStatus(*i),
@@ -2368,6 +2492,8 @@ impl ApprovalStatusRef {
     }
 }
 
+/// What a [`ApprovedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovedItemRefView<'m> {
     Certification(&'m Certification),
@@ -2389,6 +2515,8 @@ pub enum ApprovedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ApprovedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovedItemRefView<'m> {
         match self {
             ApprovedItemRef::Certification(i) => {
@@ -2450,6 +2578,7 @@ impl ApprovedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovedItemRef::Certification(i) => EntityKey::Certification(*i),
@@ -2477,11 +2606,15 @@ impl ApprovedItemRef {
     }
 }
 
+/// What a [`AscribableStateRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AscribableStateRefView<'m> {
     AscribableState(&'m AscribableState),
 }
 impl AscribableStateRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AscribableStateRefView<'m> {
         match self {
             AscribableStateRef::AscribableState(i) => {
@@ -2489,6 +2622,7 @@ impl AscribableStateRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AscribableStateRef::AscribableState(i) => EntityKey::AscribableState(*i),
@@ -2496,31 +2630,46 @@ impl AscribableStateRef {
     }
 }
 
+/// What a [`Axis1PlacementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum Axis1PlacementRefView<'m> {
     Axis1Placement(&'m Axis1Placement),
+    Complex(&'m ComplexEntity),
 }
 impl Axis1PlacementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis1PlacementRefView<'m> {
         match self {
             Axis1PlacementRef::Axis1Placement(i) => {
                 Axis1PlacementRefView::Axis1Placement(model.axis1_placement_arena.get(i.0))
             }
+            Axis1PlacementRef::Complex(i) => {
+                Axis1PlacementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis1PlacementRef::Axis1Placement(i) => EntityKey::Axis1Placement(*i),
+            Axis1PlacementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`Axis2PlacementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum Axis2PlacementRefView<'m> {
     Axis2Placement2d(&'m Axis2Placement2d),
     Axis2Placement3d(&'m Axis2Placement3d),
+    Complex(&'m ComplexEntity),
 }
 impl Axis2PlacementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis2PlacementRefView<'m> {
         match self {
             Axis2PlacementRef::Axis2Placement2d(i) => {
@@ -2529,40 +2678,211 @@ impl Axis2PlacementRef {
             Axis2PlacementRef::Axis2Placement3d(i) => {
                 Axis2PlacementRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0))
             }
+            Axis2PlacementRef::Complex(i) => {
+                Axis2PlacementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis2PlacementRef::Axis2Placement2d(i) => EntityKey::Axis2Placement2d(*i),
             Axis2PlacementRef::Axis2Placement3d(i) => EntityKey::Axis2Placement3d(*i),
+            Axis2PlacementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`Axis2Placement3dRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum Axis2Placement3dRefView<'m> {
     Axis2Placement3d(&'m Axis2Placement3d),
+    Complex(&'m ComplexEntity),
 }
 impl Axis2Placement3dRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis2Placement3dRefView<'m> {
         match self {
             Axis2Placement3dRef::Axis2Placement3d(i) => {
                 Axis2Placement3dRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0))
             }
+            Axis2Placement3dRef::Complex(i) => {
+                Axis2Placement3dRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis2Placement3dRef::Axis2Placement3d(i) => EntityKey::Axis2Placement3d(*i),
+            Axis2Placement3dRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`BottomConditionTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum BottomConditionTargetRefView<'m> {
+    BasicRoundHole(&'m BasicRoundHole),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
+    Complex(&'m ComplexEntity),
+}
+impl BottomConditionTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> BottomConditionTargetRefView<'m> {
+        match self {
+            BottomConditionTargetRef::BasicRoundHole(i) => {
+                BottomConditionTargetRefView::BasicRoundHole(model.basic_round_hole_arena.get(i.0))
+            }
+            BottomConditionTargetRef::CounterboreHoleDefinition(i) => {
+                BottomConditionTargetRefView::CounterboreHoleDefinition(
+                    model.counterbore_hole_definition_arena.get(i.0),
+                )
+            }
+            BottomConditionTargetRef::CounterdrillHoleDefinition(i) => {
+                BottomConditionTargetRefView::CounterdrillHoleDefinition(
+                    model.counterdrill_hole_definition_arena.get(i.0),
+                )
+            }
+            BottomConditionTargetRef::CountersinkHoleDefinition(i) => {
+                BottomConditionTargetRefView::CountersinkHoleDefinition(
+                    model.countersink_hole_definition_arena.get(i.0),
+                )
+            }
+            BottomConditionTargetRef::Complex(i) => {
+                BottomConditionTargetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            BottomConditionTargetRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
+            BottomConditionTargetRef::CounterboreHoleDefinition(i) => {
+                EntityKey::CounterboreHoleDefinition(*i)
+            }
+            BottomConditionTargetRef::CounterdrillHoleDefinition(i) => {
+                EntityKey::CounterdrillHoleDefinition(*i)
+            }
+            BottomConditionTargetRef::CountersinkHoleDefinition(i) => {
+                EntityKey::CountersinkHoleDefinition(*i)
+            }
+            BottomConditionTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`CameraModelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum CameraModelRefView<'m> {
+    CameraModel(&'m CameraModel),
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    Complex(&'m ComplexEntity),
+}
+impl CameraModelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraModelRefView<'m> {
+        match self {
+            CameraModelRef::CameraModel(i) => {
+                CameraModelRefView::CameraModel(model.camera_model_arena.get(i.0))
+            }
+            CameraModelRef::CameraModelD3(i) => {
+                CameraModelRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0))
+            }
+            CameraModelRef::CameraModelD3MultiClipping(i) => {
+                CameraModelRefView::CameraModelD3MultiClipping(
+                    model.camera_model_d3_multi_clipping_arena.get(i.0),
+                )
+            }
+            CameraModelRef::CameraModelD3WithHlhsr(i) => {
+                CameraModelRefView::CameraModelD3WithHlhsr(
+                    model.camera_model_d3_with_hlhsr_arena.get(i.0),
+                )
+            }
+            CameraModelRef::Complex(i) => {
+                CameraModelRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            CameraModelRef::CameraModel(i) => EntityKey::CameraModel(*i),
+            CameraModelRef::CameraModelD3(i) => EntityKey::CameraModelD3(*i),
+            CameraModelRef::CameraModelD3MultiClipping(i) => {
+                EntityKey::CameraModelD3MultiClipping(*i)
+            }
+            CameraModelRef::CameraModelD3WithHlhsr(i) => EntityKey::CameraModelD3WithHlhsr(*i),
+            CameraModelRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`CameraModelD3Ref`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum CameraModelD3RefView<'m> {
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    Complex(&'m ComplexEntity),
+}
+impl CameraModelD3Ref {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraModelD3RefView<'m> {
+        match self {
+            CameraModelD3Ref::CameraModelD3(i) => {
+                CameraModelD3RefView::CameraModelD3(model.camera_model_d3_arena.get(i.0))
+            }
+            CameraModelD3Ref::CameraModelD3MultiClipping(i) => {
+                CameraModelD3RefView::CameraModelD3MultiClipping(
+                    model.camera_model_d3_multi_clipping_arena.get(i.0),
+                )
+            }
+            CameraModelD3Ref::CameraModelD3WithHlhsr(i) => {
+                CameraModelD3RefView::CameraModelD3WithHlhsr(
+                    model.camera_model_d3_with_hlhsr_arena.get(i.0),
+                )
+            }
+            CameraModelD3Ref::Complex(i) => {
+                CameraModelD3RefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            CameraModelD3Ref::CameraModelD3(i) => EntityKey::CameraModelD3(*i),
+            CameraModelD3Ref::CameraModelD3MultiClipping(i) => {
+                EntityKey::CameraModelD3MultiClipping(*i)
+            }
+            CameraModelD3Ref::CameraModelD3WithHlhsr(i) => EntityKey::CameraModelD3WithHlhsr(*i),
+            CameraModelD3Ref::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`CameraModelD3MultiClippingIntersectionSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CameraModelD3MultiClippingIntersectionSelectRefView<'m> {
     Plane(&'m Plane),
+    Complex(&'m ComplexEntity),
 }
 impl CameraModelD3MultiClippingIntersectionSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -2573,22 +2893,65 @@ impl CameraModelD3MultiClippingIntersectionSelectRef {
                     model.plane_arena.get(i.0),
                 )
             }
+            CameraModelD3MultiClippingIntersectionSelectRef::Complex(i) => {
+                CameraModelD3MultiClippingIntersectionSelectRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => EntityKey::Plane(*i),
+            CameraModelD3MultiClippingIntersectionSelectRef::Complex(i) => {
+                EntityKey::ComplexEntity(*i)
+            }
         }
     }
 }
 
+/// What a [`CameraUsageRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum CameraUsageRefView<'m> {
+    CameraUsage(&'m CameraUsage),
+    Complex(&'m ComplexEntity),
+}
+impl CameraUsageRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraUsageRefView<'m> {
+        match self {
+            CameraUsageRef::CameraUsage(i) => {
+                CameraUsageRefView::CameraUsage(model.camera_usage_arena.get(i.0))
+            }
+            CameraUsageRef::Complex(i) => {
+                CameraUsageRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            CameraUsageRef::CameraUsage(i) => EntityKey::CameraUsage(*i),
+            CameraUsageRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`CartesianPointRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CartesianPointRefView<'m> {
     ApllPoint(&'m ApllPoint),
     ApllPointWithSurface(&'m ApllPointWithSurface),
     CartesianPoint(&'m CartesianPoint),
+    Complex(&'m ComplexEntity),
 }
 impl CartesianPointRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CartesianPointRefView<'m> {
         match self {
             CartesianPointRef::ApllPoint(i) => {
@@ -2602,17 +2965,24 @@ impl CartesianPointRef {
             CartesianPointRef::CartesianPoint(i) => {
                 CartesianPointRefView::CartesianPoint(model.cartesian_point_arena.get(i.0))
             }
+            CartesianPointRef::Complex(i) => {
+                CartesianPointRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CartesianPointRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
             CartesianPointRef::ApllPointWithSurface(i) => EntityKey::ApllPointWithSurface(*i),
             CartesianPointRef::CartesianPoint(i) => EntityKey::CartesianPoint(*i),
+            CartesianPointRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`CcClassifiedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CcClassifiedItemRefView<'m> {
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
@@ -2624,6 +2994,8 @@ pub enum CcClassifiedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CcClassifiedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CcClassifiedItemRefView<'m> {
         match self {
             CcClassifiedItemRef::AssemblyComponentUsage(i) => {
@@ -2653,6 +3025,7 @@ impl CcClassifiedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CcClassifiedItemRef::AssemblyComponentUsage(i) => EntityKey::AssemblyComponentUsage(*i),
@@ -2670,6 +3043,8 @@ impl CcClassifiedItemRef {
     }
 }
 
+/// What a [`CcPersonOrganizationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CcPersonOrganizationItemRefView<'m> {
     Change(&'m Change),
@@ -2689,6 +3064,8 @@ pub enum CcPersonOrganizationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CcPersonOrganizationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CcPersonOrganizationItemRefView<'m> {
         match self {
             CcPersonOrganizationItemRef::Change(i) => {
@@ -2748,6 +3125,7 @@ impl CcPersonOrganizationItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CcPersonOrganizationItemRef::Change(i) => EntityKey::Change(*i),
@@ -2775,11 +3153,15 @@ impl CcPersonOrganizationItemRef {
     }
 }
 
+/// What a [`CertificationTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CertificationTypeRefView<'m> {
     CertificationType(&'m CertificationType),
 }
 impl CertificationTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CertificationTypeRefView<'m> {
         match self {
             CertificationTypeRef::CertificationType(i) => {
@@ -2787,6 +3169,7 @@ impl CertificationTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CertificationTypeRef::CertificationType(i) => EntityKey::CertificationType(*i),
@@ -2794,6 +3177,8 @@ impl CertificationTypeRef {
     }
 }
 
+/// What a [`ChangeRequestItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ChangeRequestItemRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -2803,6 +3188,8 @@ pub enum ChangeRequestItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ChangeRequestItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ChangeRequestItemRefView<'m> {
         match self {
             ChangeRequestItemRef::ProductDefinitionFormation(i) => {
@@ -2822,6 +3209,7 @@ impl ChangeRequestItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ChangeRequestItemRef::ProductDefinitionFormation(i) => {
@@ -2835,6 +3223,8 @@ impl ChangeRequestItemRef {
     }
 }
 
+/// What a [`CharacterStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterStyleSelectRefView<'m> {
     CharacterGlyphStyleOutline(&'m CharacterGlyphStyleOutline),
@@ -2843,6 +3233,8 @@ pub enum CharacterStyleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CharacterStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterStyleSelectRefView<'m> {
         match self {
             CharacterStyleSelectRef::CharacterGlyphStyleOutline(i) => {
@@ -2865,6 +3257,7 @@ impl CharacterStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterStyleSelectRef::CharacterGlyphStyleOutline(i) => {
@@ -2881,6 +3274,8 @@ impl CharacterStyleSelectRef {
     }
 }
 
+/// What a [`CharacterizedActionDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterizedActionDefinitionRefView<'m> {
     Action(&'m Action),
@@ -2890,6 +3285,8 @@ pub enum CharacterizedActionDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CharacterizedActionDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedActionDefinitionRefView<'m> {
         match self {
             CharacterizedActionDefinitionRef::Action(i) => {
@@ -2915,6 +3312,7 @@ impl CharacterizedActionDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterizedActionDefinitionRef::Action(i) => EntityKey::Action(*i),
@@ -2930,6 +3328,8 @@ impl CharacterizedActionDefinitionRef {
     }
 }
 
+/// What a [`CharacterizedDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterizedDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -2937,6 +3337,7 @@ pub enum CharacterizedDefinitionRefView<'m> {
     AngularSize(&'m AngularSize),
     AngularityTolerance(&'m AngularityTolerance),
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
+    BasicRoundHole(&'m BasicRoundHole),
     CentreOfSymmetry(&'m CentreOfSymmetry),
     CharacterizedItemWithinRepresentation(&'m CharacterizedItemWithinRepresentation),
     CharacterizedObject(&'m CharacterizedObject),
@@ -2945,9 +3346,14 @@ pub enum CharacterizedDefinitionRefView<'m> {
     CoaxialityTolerance(&'m CoaxialityTolerance),
     CommonDatum(&'m CommonDatum),
     CompositeGroupShapeAspect(&'m CompositeGroupShapeAspect),
+    CompositeHole(&'m CompositeHole),
     CompositeShapeAspect(&'m CompositeShapeAspect),
+    CompoundFeature(&'m CompoundFeature),
     ConcentricityTolerance(&'m ConcentricityTolerance),
     ContinuousShapeAspect(&'m ContinuousShapeAspect),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
     CylindricityTolerance(&'m CylindricityTolerance),
     Datum(&'m Datum),
     DatumFeature(&'m DatumFeature),
@@ -2968,6 +3374,9 @@ pub enum CharacterizedDefinitionRefView<'m> {
     DraughtingModelItemAssociationWithPlaceholder(
         &'m DraughtingModelItemAssociationWithPlaceholder,
     ),
+    ExplicitCompositeHole(&'m ExplicitCompositeHole),
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    FeatureDefinition(&'m FeatureDefinition),
     FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     FlatnessTolerance(&'m FlatnessTolerance),
     GeneralDatumReference(&'m GeneralDatumReference),
@@ -2995,6 +3404,7 @@ pub enum CharacterizedDefinitionRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
     ProductDefinitionUsage(&'m ProductDefinitionUsage),
     ProductDefinitionWithAssociatedDocuments(&'m ProductDefinitionWithAssociatedDocuments),
+    RoundHole(&'m RoundHole),
     RoundnessTolerance(&'m RoundnessTolerance),
     ShapeAspect(&'m ShapeAspect),
     ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
@@ -3010,6 +3420,8 @@ pub enum CharacterizedDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CharacterizedDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedDefinitionRefView<'m> {
         match self {
             CharacterizedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -3033,6 +3445,11 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 CharacterizedDefinitionRefView::AssemblyComponentUsage(
                     model.assembly_component_usage_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::BasicRoundHole(i) => {
+                CharacterizedDefinitionRefView::BasicRoundHole(
+                    model.basic_round_hole_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::CentreOfSymmetry(i) => {
@@ -3075,9 +3492,17 @@ impl CharacterizedDefinitionRef {
                     model.composite_group_shape_aspect_arena.get(i.0),
                 )
             }
+            CharacterizedDefinitionRef::CompositeHole(i) => {
+                CharacterizedDefinitionRefView::CompositeHole(model.composite_hole_arena.get(i.0))
+            }
             CharacterizedDefinitionRef::CompositeShapeAspect(i) => {
                 CharacterizedDefinitionRefView::CompositeShapeAspect(
                     model.composite_shape_aspect_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CompoundFeature(i) => {
+                CharacterizedDefinitionRefView::CompoundFeature(
+                    model.compound_feature_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
@@ -3088,6 +3513,21 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
                 CharacterizedDefinitionRefView::ContinuousShapeAspect(
                     model.continuous_shape_aspect_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CounterboreHoleDefinition(i) => {
+                CharacterizedDefinitionRefView::CounterboreHoleDefinition(
+                    model.counterbore_hole_definition_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CounterdrillHoleDefinition(i) => {
+                CharacterizedDefinitionRefView::CounterdrillHoleDefinition(
+                    model.counterdrill_hole_definition_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CountersinkHoleDefinition(i) => {
+                CharacterizedDefinitionRefView::CountersinkHoleDefinition(
+                    model.countersink_hole_definition_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
@@ -3170,6 +3610,21 @@ impl CharacterizedDefinitionRef {
                     model
                         .draughting_model_item_association_with_placeholder_arena
                         .get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::ExplicitCompositeHole(i) => {
+                CharacterizedDefinitionRefView::ExplicitCompositeHole(
+                    model.explicit_composite_hole_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::ExplicitRoundHole(i) => {
+                CharacterizedDefinitionRefView::ExplicitRoundHole(
+                    model.explicit_round_hole_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::FeatureDefinition(i) => {
+                CharacterizedDefinitionRefView::FeatureDefinition(
+                    model.feature_definition_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::FeatureForDatumTargetRelationship(i) => {
@@ -3317,6 +3772,9 @@ impl CharacterizedDefinitionRef {
                         .get(i.0),
                 )
             }
+            CharacterizedDefinitionRef::RoundHole(i) => {
+                CharacterizedDefinitionRefView::RoundHole(model.round_hole_arena.get(i.0))
+            }
             CharacterizedDefinitionRef::RoundnessTolerance(i) => {
                 CharacterizedDefinitionRefView::RoundnessTolerance(
                     model.roundness_tolerance_arena.get(i.0),
@@ -3378,6 +3836,7 @@ impl CharacterizedDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterizedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -3391,6 +3850,7 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 EntityKey::AssemblyComponentUsage(*i)
             }
+            CharacterizedDefinitionRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
             CharacterizedDefinitionRef::CentreOfSymmetry(i) => EntityKey::CentreOfSymmetry(*i),
             CharacterizedDefinitionRef::CharacterizedItemWithinRepresentation(i) => {
                 EntityKey::CharacterizedItemWithinRepresentation(*i)
@@ -3411,14 +3871,25 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::CompositeGroupShapeAspect(i) => {
                 EntityKey::CompositeGroupShapeAspect(*i)
             }
+            CharacterizedDefinitionRef::CompositeHole(i) => EntityKey::CompositeHole(*i),
             CharacterizedDefinitionRef::CompositeShapeAspect(i) => {
                 EntityKey::CompositeShapeAspect(*i)
             }
+            CharacterizedDefinitionRef::CompoundFeature(i) => EntityKey::CompoundFeature(*i),
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
                 EntityKey::ConcentricityTolerance(*i)
             }
             CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
                 EntityKey::ContinuousShapeAspect(*i)
+            }
+            CharacterizedDefinitionRef::CounterboreHoleDefinition(i) => {
+                EntityKey::CounterboreHoleDefinition(*i)
+            }
+            CharacterizedDefinitionRef::CounterdrillHoleDefinition(i) => {
+                EntityKey::CounterdrillHoleDefinition(*i)
+            }
+            CharacterizedDefinitionRef::CountersinkHoleDefinition(i) => {
+                EntityKey::CountersinkHoleDefinition(*i)
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
                 EntityKey::CylindricityTolerance(*i)
@@ -3460,6 +3931,11 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::DraughtingModelItemAssociationWithPlaceholder(i) => {
                 EntityKey::DraughtingModelItemAssociationWithPlaceholder(*i)
             }
+            CharacterizedDefinitionRef::ExplicitCompositeHole(i) => {
+                EntityKey::ExplicitCompositeHole(*i)
+            }
+            CharacterizedDefinitionRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            CharacterizedDefinitionRef::FeatureDefinition(i) => EntityKey::FeatureDefinition(*i),
             CharacterizedDefinitionRef::FeatureForDatumTargetRelationship(i) => {
                 EntityKey::FeatureForDatumTargetRelationship(*i)
             }
@@ -3531,6 +4007,7 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 EntityKey::ProductDefinitionWithAssociatedDocuments(*i)
             }
+            CharacterizedDefinitionRef::RoundHole(i) => EntityKey::RoundHole(*i),
             CharacterizedDefinitionRef::RoundnessTolerance(i) => EntityKey::RoundnessTolerance(*i),
             CharacterizedDefinitionRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
             CharacterizedDefinitionRef::ShapeAspectAssociativity(i) => {
@@ -3564,14 +4041,19 @@ impl CharacterizedDefinitionRef {
     }
 }
 
+/// What a [`CharacterizedResourceDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterizedResourceDefinitionRefView<'m> {
     ActionResource(&'m ActionResource),
     ActionResourceRelationship(&'m ActionResourceRelationship),
     ActionResourceRequirement(&'m ActionResourceRequirement),
+    ActionResourceRequirementRelationship(&'m ActionResourceRequirementRelationship),
     Complex(&'m ComplexEntity),
 }
 impl CharacterizedResourceDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedResourceDefinitionRefView<'m> {
         match self {
             CharacterizedResourceDefinitionRef::ActionResource(i) => {
@@ -3589,11 +4071,19 @@ impl CharacterizedResourceDefinitionRef {
                     model.action_resource_requirement_arena.get(i.0),
                 )
             }
+            CharacterizedResourceDefinitionRef::ActionResourceRequirementRelationship(i) => {
+                CharacterizedResourceDefinitionRefView::ActionResourceRequirementRelationship(
+                    model
+                        .action_resource_requirement_relationship_arena
+                        .get(i.0),
+                )
+            }
             CharacterizedResourceDefinitionRef::Complex(i) => {
                 CharacterizedResourceDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterizedResourceDefinitionRef::ActionResource(i) => EntityKey::ActionResource(*i),
@@ -3603,11 +4093,16 @@ impl CharacterizedResourceDefinitionRef {
             CharacterizedResourceDefinitionRef::ActionResourceRequirement(i) => {
                 EntityKey::ActionResourceRequirement(*i)
             }
+            CharacterizedResourceDefinitionRef::ActionResourceRequirementRelationship(i) => {
+                EntityKey::ActionResourceRequirementRelationship(*i)
+            }
             CharacterizedResourceDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`ClosedShellRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ClosedShellRefView<'m> {
     ClosedShell(&'m ClosedShell),
@@ -3615,6 +4110,8 @@ pub enum ClosedShellRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ClosedShellRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ClosedShellRefView<'m> {
         match self {
             ClosedShellRef::ClosedShell(i) => {
@@ -3628,6 +4125,7 @@ impl ClosedShellRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ClosedShellRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
@@ -3637,6 +4135,8 @@ impl ClosedShellRef {
     }
 }
 
+/// What a [`ColourRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ColourRefView<'m> {
     Colour(&'m Colour),
@@ -3647,6 +4147,8 @@ pub enum ColourRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ColourRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ColourRefView<'m> {
         match self {
             ColourRef::Colour(i) => ColourRefView::Colour(model.colour_arena.get(i.0)),
@@ -3663,6 +4165,7 @@ impl ColourRef {
             ColourRef::Complex(i) => ColourRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ColourRef::Colour(i) => EntityKey::Colour(*i),
@@ -3675,12 +4178,16 @@ impl ColourRef {
     }
 }
 
+/// What a [`CompositeCurveSegmentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CompositeCurveSegmentRefView<'m> {
     CompositeCurveSegment(&'m CompositeCurveSegment),
     Complex(&'m ComplexEntity),
 }
 impl CompositeCurveSegmentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CompositeCurveSegmentRefView<'m> {
         match self {
             CompositeCurveSegmentRef::CompositeCurveSegment(i) => {
@@ -3693,6 +4200,7 @@ impl CompositeCurveSegmentRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CompositeCurveSegmentRef::CompositeCurveSegment(i) => {
@@ -3703,11 +4211,1086 @@ impl CompositeCurveSegmentRef {
     }
 }
 
+/// What a [`CompoundItemDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum CompoundItemDefinitionRefView<'m> {
+    AdvancedFace(&'m AdvancedFace),
+    AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
+    AnnotationOccurrence(&'m AnnotationOccurrence),
+    AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
+    AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(
+        &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
+    ),
+    AnnotationPlane(&'m AnnotationPlane),
+    AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
+    AnnotationText(&'m AnnotationText),
+    AnnotationTextCharacter(&'m AnnotationTextCharacter),
+    AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
+    AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
+    AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
+    ApllPoint(&'m ApllPoint),
+    ApllPointWithSurface(&'m ApllPointWithSurface),
+    AuxiliaryLeaderLine(&'m AuxiliaryLeaderLine),
+    Axis1Placement(&'m Axis1Placement),
+    Axis2Placement2d(&'m Axis2Placement2d),
+    Axis2Placement3d(&'m Axis2Placement3d),
+    BSplineCurve(&'m BSplineCurve),
+    BSplineCurveWithKnots(&'m BSplineCurveWithKnots),
+    BSplineSurface(&'m BSplineSurface),
+    BSplineSurfaceWithKnots(&'m BSplineSurfaceWithKnots),
+    BezierCurve(&'m BezierCurve),
+    BezierSurface(&'m BezierSurface),
+    BoundedCurve(&'m BoundedCurve),
+    BoundedPcurve(&'m BoundedPcurve),
+    BoundedSurface(&'m BoundedSurface),
+    BoundedSurfaceCurve(&'m BoundedSurfaceCurve),
+    BrepWithVoids(&'m BrepWithVoids),
+    CameraImage(&'m CameraImage),
+    CameraImage3dWithScale(&'m CameraImage3dWithScale),
+    CameraModel(&'m CameraModel),
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    CartesianPoint(&'m CartesianPoint),
+    Circle(&'m Circle),
+    ClosedShell(&'m ClosedShell),
+    ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
+    ComplexTriangulatedSurfaceSet(&'m ComplexTriangulatedSurfaceSet),
+    CompositeCurve(&'m CompositeCurve),
+    CompositeText(&'m CompositeText),
+    CompoundRepresentationItem(&'m CompoundRepresentationItem),
+    Conic(&'m Conic),
+    ConicalSurface(&'m ConicalSurface),
+    ConnectedFaceSet(&'m ConnectedFaceSet),
+    ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
+    CoordinatesList(&'m CoordinatesList),
+    Curve(&'m Curve),
+    CylindricalSurface(&'m CylindricalSurface),
+    DefinedCharacterGlyph(&'m DefinedCharacterGlyph),
+    DefinedSymbol(&'m DefinedSymbol),
+    DegenerateToroidalSurface(&'m DegenerateToroidalSurface),
+    DescriptiveRepresentationItem(&'m DescriptiveRepresentationItem),
+    Direction(&'m Direction),
+    DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    DraughtingCallout(&'m DraughtingCallout),
+    Edge(&'m Edge),
+    EdgeCurve(&'m EdgeCurve),
+    EdgeLoop(&'m EdgeLoop),
+    ElementarySurface(&'m ElementarySurface),
+    Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
+    ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
+    ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
+    Face(&'m Face),
+    FaceBound(&'m FaceBound),
+    FaceOuterBound(&'m FaceOuterBound),
+    FaceSurface(&'m FaceSurface),
+    FillAreaStyleHatching(&'m FillAreaStyleHatching),
+    FillAreaStyleTileColouredRegion(&'m FillAreaStyleTileColouredRegion),
+    FillAreaStyleTileCurveWithStyle(&'m FillAreaStyleTileCurveWithStyle),
+    FillAreaStyleTileSymbolWithStyle(&'m FillAreaStyleTileSymbolWithStyle),
+    FillAreaStyleTiles(&'m FillAreaStyleTiles),
+    GeometricCurveSet(&'m GeometricCurveSet),
+    GeometricRepresentationItem(&'m GeometricRepresentationItem),
+    GeometricSet(&'m GeometricSet),
+    Hyperbola(&'m Hyperbola),
+    IntegerRepresentationItem(&'m IntegerRepresentationItem),
+    IntersectionCurve(&'m IntersectionCurve),
+    LeaderCurve(&'m LeaderCurve),
+    LeaderDirectedCallout(&'m LeaderDirectedCallout),
+    LeaderTerminator(&'m LeaderTerminator),
+    Line(&'m Line),
+    Loop(&'m Loop),
+    ManifoldSolidBrep(&'m ManifoldSolidBrep),
+    MappedItem(&'m MappedItem),
+    MeasureRepresentationItem(&'m MeasureRepresentationItem),
+    OffsetSurface(&'m OffsetSurface),
+    OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
+    OpenShell(&'m OpenShell),
+    OrientedClosedShell(&'m OrientedClosedShell),
+    OrientedEdge(&'m OrientedEdge),
+    OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
+    Path(&'m Path),
+    Pcurve(&'m Pcurve),
+    Placement(&'m Placement),
+    PlanarBox(&'m PlanarBox),
+    PlanarExtent(&'m PlanarExtent),
+    Plane(&'m Plane),
+    Point(&'m Point),
+    PolyLoop(&'m PolyLoop),
+    Polyline(&'m Polyline),
+    QualifiedRepresentationItem(&'m QualifiedRepresentationItem),
+    QuasiUniformCurve(&'m QuasiUniformCurve),
+    QuasiUniformSurface(&'m QuasiUniformSurface),
+    RationalBSplineCurve(&'m RationalBSplineCurve),
+    RationalBSplineSurface(&'m RationalBSplineSurface),
+    RealRepresentationItem(&'m RealRepresentationItem),
+    RepositionedTessellatedItem(&'m RepositionedTessellatedItem),
+    RepresentationItem(&'m RepresentationItem),
+    SeamCurve(&'m SeamCurve),
+    ShellBasedSurfaceModel(&'m ShellBasedSurfaceModel),
+    SolidModel(&'m SolidModel),
+    SphericalSurface(&'m SphericalSurface),
+    StyledItem(&'m StyledItem),
+    Surface(&'m Surface),
+    SurfaceCurve(&'m SurfaceCurve),
+    SurfaceOfLinearExtrusion(&'m SurfaceOfLinearExtrusion),
+    SurfaceOfRevolution(&'m SurfaceOfRevolution),
+    SweptSurface(&'m SweptSurface),
+    SymbolTarget(&'m SymbolTarget),
+    TerminatorSymbol(&'m TerminatorSymbol),
+    TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
+    TessellatedCurveSet(&'m TessellatedCurveSet),
+    TessellatedFace(&'m TessellatedFace),
+    TessellatedGeometricSet(&'m TessellatedGeometricSet),
+    TessellatedItem(&'m TessellatedItem),
+    TessellatedShell(&'m TessellatedShell),
+    TessellatedSolid(&'m TessellatedSolid),
+    TessellatedStructuredItem(&'m TessellatedStructuredItem),
+    TessellatedSurfaceSet(&'m TessellatedSurfaceSet),
+    TextLiteral(&'m TextLiteral),
+    TopologicalRepresentationItem(&'m TopologicalRepresentationItem),
+    ToroidalSurface(&'m ToroidalSurface),
+    TrimmedCurve(&'m TrimmedCurve),
+    TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
+    UniformCurve(&'m UniformCurve),
+    UniformSurface(&'m UniformSurface),
+    ValueRepresentationItem(&'m ValueRepresentationItem),
+    Vector(&'m Vector),
+    Vertex(&'m Vertex),
+    VertexLoop(&'m VertexLoop),
+    VertexPoint(&'m VertexPoint),
+    VertexShell(&'m VertexShell),
+    WireShell(&'m WireShell),
+    ListRepresentationItem(&'m [RepresentationItemRef]),
+    SetRepresentationItem(&'m [RepresentationItemRef]),
+    Complex(&'m ComplexEntity),
+}
+impl CompoundItemDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&'m self, model: &'m StepModel) -> CompoundItemDefinitionRefView<'m> {
+        match self {
+            CompoundItemDefinitionRef::AdvancedFace(i) => {
+                CompoundItemDefinitionRefView::AdvancedFace(model.advanced_face_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::AnnotationCurveOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationCurveOccurrence(
+                    model.annotation_curve_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationOccurrence(
+                    model.annotation_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlaceholderLeaderLine(
+                    model.annotation_placeholder_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlaceholderOccurrence(
+                    model.annotation_placeholder_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(
+                    model
+                        .annotation_placeholder_occurrence_with_leader_line_arena
+                        .get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlane(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlane(
+                    model.annotation_plane_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationSymbolOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationSymbolOccurrence(
+                    model.annotation_symbol_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationText(i) => {
+                CompoundItemDefinitionRefView::AnnotationText(model.annotation_text_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::AnnotationTextCharacter(i) => {
+                CompoundItemDefinitionRefView::AnnotationTextCharacter(
+                    model.annotation_text_character_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationTextOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationTextOccurrence(
+                    model.annotation_text_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationToAnnotationLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationToAnnotationLeaderLine(
+                    model.annotation_to_annotation_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationToModelLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationToModelLeaderLine(
+                    model.annotation_to_model_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ApllPoint(i) => {
+                CompoundItemDefinitionRefView::ApllPoint(model.apll_point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ApllPointWithSurface(i) => {
+                CompoundItemDefinitionRefView::ApllPointWithSurface(
+                    model.apll_point_with_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AuxiliaryLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AuxiliaryLeaderLine(
+                    model.auxiliary_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Axis1Placement(i) => {
+                CompoundItemDefinitionRefView::Axis1Placement(model.axis1_placement_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Axis2Placement2d(i) => {
+                CompoundItemDefinitionRefView::Axis2Placement2d(
+                    model.axis2_placement2d_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Axis2Placement3d(i) => {
+                CompoundItemDefinitionRefView::Axis2Placement3d(
+                    model.axis2_placement3d_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BSplineCurve(i) => {
+                CompoundItemDefinitionRefView::BSplineCurve(model.b_spline_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BSplineCurveWithKnots(i) => {
+                CompoundItemDefinitionRefView::BSplineCurveWithKnots(
+                    model.b_spline_curve_with_knots_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BSplineSurface(i) => {
+                CompoundItemDefinitionRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BSplineSurfaceWithKnots(i) => {
+                CompoundItemDefinitionRefView::BSplineSurfaceWithKnots(
+                    model.b_spline_surface_with_knots_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BezierCurve(i) => {
+                CompoundItemDefinitionRefView::BezierCurve(model.bezier_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BezierSurface(i) => {
+                CompoundItemDefinitionRefView::BezierSurface(model.bezier_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedCurve(i) => {
+                CompoundItemDefinitionRefView::BoundedCurve(model.bounded_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedPcurve(i) => {
+                CompoundItemDefinitionRefView::BoundedPcurve(model.bounded_pcurve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedSurface(i) => {
+                CompoundItemDefinitionRefView::BoundedSurface(model.bounded_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedSurfaceCurve(i) => {
+                CompoundItemDefinitionRefView::BoundedSurfaceCurve(
+                    model.bounded_surface_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BrepWithVoids(i) => {
+                CompoundItemDefinitionRefView::BrepWithVoids(model.brep_with_voids_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraImage(i) => {
+                CompoundItemDefinitionRefView::CameraImage(model.camera_image_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraImage3dWithScale(i) => {
+                CompoundItemDefinitionRefView::CameraImage3dWithScale(
+                    model.camera_image3d_with_scale_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CameraModel(i) => {
+                CompoundItemDefinitionRefView::CameraModel(model.camera_model_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraModelD3(i) => {
+                CompoundItemDefinitionRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraModelD3MultiClipping(i) => {
+                CompoundItemDefinitionRefView::CameraModelD3MultiClipping(
+                    model.camera_model_d3_multi_clipping_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CameraModelD3WithHlhsr(i) => {
+                CompoundItemDefinitionRefView::CameraModelD3WithHlhsr(
+                    model.camera_model_d3_with_hlhsr_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CartesianPoint(i) => {
+                CompoundItemDefinitionRefView::CartesianPoint(model.cartesian_point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Circle(i) => {
+                CompoundItemDefinitionRefView::Circle(model.circle_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ClosedShell(i) => {
+                CompoundItemDefinitionRefView::ClosedShell(model.closed_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ComplexTriangulatedFace(i) => {
+                CompoundItemDefinitionRefView::ComplexTriangulatedFace(
+                    model.complex_triangulated_face_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ComplexTriangulatedSurfaceSet(i) => {
+                CompoundItemDefinitionRefView::ComplexTriangulatedSurfaceSet(
+                    model.complex_triangulated_surface_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CompositeCurve(i) => {
+                CompoundItemDefinitionRefView::CompositeCurve(model.composite_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CompositeText(i) => {
+                CompoundItemDefinitionRefView::CompositeText(model.composite_text_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CompoundRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::CompoundRepresentationItem(
+                    model.compound_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Conic(i) => {
+                CompoundItemDefinitionRefView::Conic(model.conic_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ConicalSurface(i) => {
+                CompoundItemDefinitionRefView::ConicalSurface(model.conical_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ConnectedFaceSet(i) => {
+                CompoundItemDefinitionRefView::ConnectedFaceSet(
+                    model.connected_face_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ContextDependentOverRidingStyledItem(i) => {
+                CompoundItemDefinitionRefView::ContextDependentOverRidingStyledItem(
+                    model
+                        .context_dependent_over_riding_styled_item_arena
+                        .get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CoordinatesList(i) => {
+                CompoundItemDefinitionRefView::CoordinatesList(
+                    model.coordinates_list_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Curve(i) => {
+                CompoundItemDefinitionRefView::Curve(model.curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CylindricalSurface(i) => {
+                CompoundItemDefinitionRefView::CylindricalSurface(
+                    model.cylindrical_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DefinedCharacterGlyph(i) => {
+                CompoundItemDefinitionRefView::DefinedCharacterGlyph(
+                    model.defined_character_glyph_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DefinedSymbol(i) => {
+                CompoundItemDefinitionRefView::DefinedSymbol(model.defined_symbol_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::DegenerateToroidalSurface(i) => {
+                CompoundItemDefinitionRefView::DegenerateToroidalSurface(
+                    model.degenerate_toroidal_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DescriptiveRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::DescriptiveRepresentationItem(
+                    model.descriptive_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Direction(i) => {
+                CompoundItemDefinitionRefView::Direction(model.direction_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::DraughtingAnnotationOccurrence(i) => {
+                CompoundItemDefinitionRefView::DraughtingAnnotationOccurrence(
+                    model.draughting_annotation_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DraughtingCallout(i) => {
+                CompoundItemDefinitionRefView::DraughtingCallout(
+                    model.draughting_callout_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Edge(i) => {
+                CompoundItemDefinitionRefView::Edge(model.edge_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::EdgeCurve(i) => {
+                CompoundItemDefinitionRefView::EdgeCurve(model.edge_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::EdgeLoop(i) => {
+                CompoundItemDefinitionRefView::EdgeLoop(model.edge_loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ElementarySurface(i) => {
+                CompoundItemDefinitionRefView::ElementarySurface(
+                    model.elementary_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Ellipse(i) => {
+                CompoundItemDefinitionRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ExternalImagePlacementInCallout(i) => {
+                CompoundItemDefinitionRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedHatchStyle(i) => {
+                CompoundItemDefinitionRefView::ExternallyDefinedHatchStyle(
+                    model.externally_defined_hatch_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedTileStyle(i) => {
+                CompoundItemDefinitionRefView::ExternallyDefinedTileStyle(
+                    model.externally_defined_tile_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Face(i) => {
+                CompoundItemDefinitionRefView::Face(model.face_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FaceBound(i) => {
+                CompoundItemDefinitionRefView::FaceBound(model.face_bound_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FaceOuterBound(i) => {
+                CompoundItemDefinitionRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FaceSurface(i) => {
+                CompoundItemDefinitionRefView::FaceSurface(model.face_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleHatching(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleHatching(
+                    model.fill_area_style_hatching_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileColouredRegion(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTileColouredRegion(
+                    model.fill_area_style_tile_coloured_region_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileCurveWithStyle(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTileCurveWithStyle(
+                    model.fill_area_style_tile_curve_with_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTileSymbolWithStyle(
+                    model.fill_area_style_tile_symbol_with_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTiles(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTiles(
+                    model.fill_area_style_tiles_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::GeometricCurveSet(i) => {
+                CompoundItemDefinitionRefView::GeometricCurveSet(
+                    model.geometric_curve_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::GeometricRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::GeometricRepresentationItem(
+                    model.geometric_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::GeometricSet(i) => {
+                CompoundItemDefinitionRefView::GeometricSet(model.geometric_set_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Hyperbola(i) => {
+                CompoundItemDefinitionRefView::Hyperbola(model.hyperbola_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::IntegerRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::IntegerRepresentationItem(
+                    model.integer_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::IntersectionCurve(i) => {
+                CompoundItemDefinitionRefView::IntersectionCurve(
+                    model.intersection_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::LeaderCurve(i) => {
+                CompoundItemDefinitionRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::LeaderDirectedCallout(i) => {
+                CompoundItemDefinitionRefView::LeaderDirectedCallout(
+                    model.leader_directed_callout_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::LeaderTerminator(i) => {
+                CompoundItemDefinitionRefView::LeaderTerminator(
+                    model.leader_terminator_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Line(i) => {
+                CompoundItemDefinitionRefView::Line(model.line_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Loop(i) => {
+                CompoundItemDefinitionRefView::Loop(model.loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ManifoldSolidBrep(i) => {
+                CompoundItemDefinitionRefView::ManifoldSolidBrep(
+                    model.manifold_solid_brep_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::MappedItem(i) => {
+                CompoundItemDefinitionRefView::MappedItem(model.mapped_item_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::MeasureRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::MeasureRepresentationItem(
+                    model.measure_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::OffsetSurface(i) => {
+                CompoundItemDefinitionRefView::OffsetSurface(model.offset_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::OneDirectionRepeatFactor(i) => {
+                CompoundItemDefinitionRefView::OneDirectionRepeatFactor(
+                    model.one_direction_repeat_factor_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::OpenShell(i) => {
+                CompoundItemDefinitionRefView::OpenShell(model.open_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::OrientedClosedShell(i) => {
+                CompoundItemDefinitionRefView::OrientedClosedShell(
+                    model.oriented_closed_shell_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::OrientedEdge(i) => {
+                CompoundItemDefinitionRefView::OrientedEdge(model.oriented_edge_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::OverRidingStyledItem(i) => {
+                CompoundItemDefinitionRefView::OverRidingStyledItem(
+                    model.over_riding_styled_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Parabola(i) => {
+                CompoundItemDefinitionRefView::Parabola(model.parabola_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Path(i) => {
+                CompoundItemDefinitionRefView::Path(model.path_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Pcurve(i) => {
+                CompoundItemDefinitionRefView::Pcurve(model.pcurve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Placement(i) => {
+                CompoundItemDefinitionRefView::Placement(model.placement_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::PlanarBox(i) => {
+                CompoundItemDefinitionRefView::PlanarBox(model.planar_box_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::PlanarExtent(i) => {
+                CompoundItemDefinitionRefView::PlanarExtent(model.planar_extent_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Plane(i) => {
+                CompoundItemDefinitionRefView::Plane(model.plane_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Point(i) => {
+                CompoundItemDefinitionRefView::Point(model.point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::PolyLoop(i) => {
+                CompoundItemDefinitionRefView::PolyLoop(model.poly_loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Polyline(i) => {
+                CompoundItemDefinitionRefView::Polyline(model.polyline_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::QualifiedRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::QualifiedRepresentationItem(
+                    model.qualified_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::QuasiUniformCurve(i) => {
+                CompoundItemDefinitionRefView::QuasiUniformCurve(
+                    model.quasi_uniform_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::QuasiUniformSurface(i) => {
+                CompoundItemDefinitionRefView::QuasiUniformSurface(
+                    model.quasi_uniform_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RationalBSplineCurve(i) => {
+                CompoundItemDefinitionRefView::RationalBSplineCurve(
+                    model.rational_b_spline_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RationalBSplineSurface(i) => {
+                CompoundItemDefinitionRefView::RationalBSplineSurface(
+                    model.rational_b_spline_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RealRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::RealRepresentationItem(
+                    model.real_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RepositionedTessellatedItem(i) => {
+                CompoundItemDefinitionRefView::RepositionedTessellatedItem(
+                    model.repositioned_tessellated_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RepresentationItem(i) => {
+                CompoundItemDefinitionRefView::RepresentationItem(
+                    model.representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SeamCurve(i) => {
+                CompoundItemDefinitionRefView::SeamCurve(model.seam_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ShellBasedSurfaceModel(i) => {
+                CompoundItemDefinitionRefView::ShellBasedSurfaceModel(
+                    model.shell_based_surface_model_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SolidModel(i) => {
+                CompoundItemDefinitionRefView::SolidModel(model.solid_model_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SphericalSurface(i) => {
+                CompoundItemDefinitionRefView::SphericalSurface(
+                    model.spherical_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::StyledItem(i) => {
+                CompoundItemDefinitionRefView::StyledItem(model.styled_item_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Surface(i) => {
+                CompoundItemDefinitionRefView::Surface(model.surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SurfaceCurve(i) => {
+                CompoundItemDefinitionRefView::SurfaceCurve(model.surface_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SurfaceOfLinearExtrusion(i) => {
+                CompoundItemDefinitionRefView::SurfaceOfLinearExtrusion(
+                    model.surface_of_linear_extrusion_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SurfaceOfRevolution(i) => {
+                CompoundItemDefinitionRefView::SurfaceOfRevolution(
+                    model.surface_of_revolution_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SweptSurface(i) => {
+                CompoundItemDefinitionRefView::SweptSurface(model.swept_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SymbolTarget(i) => {
+                CompoundItemDefinitionRefView::SymbolTarget(model.symbol_target_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::TerminatorSymbol(i) => {
+                CompoundItemDefinitionRefView::TerminatorSymbol(
+                    model.terminator_symbol_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedAnnotationOccurrence(i) => {
+                CompoundItemDefinitionRefView::TessellatedAnnotationOccurrence(
+                    model.tessellated_annotation_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedCurveSet(i) => {
+                CompoundItemDefinitionRefView::TessellatedCurveSet(
+                    model.tessellated_curve_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedFace(i) => {
+                CompoundItemDefinitionRefView::TessellatedFace(
+                    model.tessellated_face_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedGeometricSet(i) => {
+                CompoundItemDefinitionRefView::TessellatedGeometricSet(
+                    model.tessellated_geometric_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedItem(i) => {
+                CompoundItemDefinitionRefView::TessellatedItem(
+                    model.tessellated_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedShell(i) => {
+                CompoundItemDefinitionRefView::TessellatedShell(
+                    model.tessellated_shell_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedSolid(i) => {
+                CompoundItemDefinitionRefView::TessellatedSolid(
+                    model.tessellated_solid_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedStructuredItem(i) => {
+                CompoundItemDefinitionRefView::TessellatedStructuredItem(
+                    model.tessellated_structured_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedSurfaceSet(i) => {
+                CompoundItemDefinitionRefView::TessellatedSurfaceSet(
+                    model.tessellated_surface_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TextLiteral(i) => {
+                CompoundItemDefinitionRefView::TextLiteral(model.text_literal_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::TopologicalRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::TopologicalRepresentationItem(
+                    model.topological_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ToroidalSurface(i) => {
+                CompoundItemDefinitionRefView::ToroidalSurface(
+                    model.toroidal_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TrimmedCurve(i) => {
+                CompoundItemDefinitionRefView::TrimmedCurve(model.trimmed_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::TwoDirectionRepeatFactor(i) => {
+                CompoundItemDefinitionRefView::TwoDirectionRepeatFactor(
+                    model.two_direction_repeat_factor_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::UniformCurve(i) => {
+                CompoundItemDefinitionRefView::UniformCurve(model.uniform_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::UniformSurface(i) => {
+                CompoundItemDefinitionRefView::UniformSurface(model.uniform_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ValueRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::ValueRepresentationItem(
+                    model.value_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Vector(i) => {
+                CompoundItemDefinitionRefView::Vector(model.vector_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Vertex(i) => {
+                CompoundItemDefinitionRefView::Vertex(model.vertex_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::VertexLoop(i) => {
+                CompoundItemDefinitionRefView::VertexLoop(model.vertex_loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::VertexPoint(i) => {
+                CompoundItemDefinitionRefView::VertexPoint(model.vertex_point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::VertexShell(i) => {
+                CompoundItemDefinitionRefView::VertexShell(model.vertex_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::WireShell(i) => {
+                CompoundItemDefinitionRefView::WireShell(model.wire_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ListRepresentationItem(v) => {
+                CompoundItemDefinitionRefView::ListRepresentationItem(v)
+            }
+            CompoundItemDefinitionRef::SetRepresentationItem(v) => {
+                CompoundItemDefinitionRefView::SetRepresentationItem(v)
+            }
+            CompoundItemDefinitionRef::Complex(i) => {
+                CompoundItemDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            CompoundItemDefinitionRef::AdvancedFace(i) => Some(EntityKey::AdvancedFace(*i)),
+            CompoundItemDefinitionRef::AnnotationCurveOccurrence(i) => {
+                Some(EntityKey::AnnotationCurveOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationOccurrence(i) => {
+                Some(EntityKey::AnnotationOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderLeaderLine(i) => {
+                Some(EntityKey::AnnotationPlaceholderLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrence(i) => {
+                Some(EntityKey::AnnotationPlaceholderOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Some(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlane(i) => Some(EntityKey::AnnotationPlane(*i)),
+            CompoundItemDefinitionRef::AnnotationSymbolOccurrence(i) => {
+                Some(EntityKey::AnnotationSymbolOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationText(i) => Some(EntityKey::AnnotationText(*i)),
+            CompoundItemDefinitionRef::AnnotationTextCharacter(i) => {
+                Some(EntityKey::AnnotationTextCharacter(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationTextOccurrence(i) => {
+                Some(EntityKey::AnnotationTextOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationToAnnotationLeaderLine(i) => {
+                Some(EntityKey::AnnotationToAnnotationLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationToModelLeaderLine(i) => {
+                Some(EntityKey::AnnotationToModelLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::ApllPoint(i) => Some(EntityKey::ApllPoint(*i)),
+            CompoundItemDefinitionRef::ApllPointWithSurface(i) => {
+                Some(EntityKey::ApllPointWithSurface(*i))
+            }
+            CompoundItemDefinitionRef::AuxiliaryLeaderLine(i) => {
+                Some(EntityKey::AuxiliaryLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::Axis1Placement(i) => Some(EntityKey::Axis1Placement(*i)),
+            CompoundItemDefinitionRef::Axis2Placement2d(i) => Some(EntityKey::Axis2Placement2d(*i)),
+            CompoundItemDefinitionRef::Axis2Placement3d(i) => Some(EntityKey::Axis2Placement3d(*i)),
+            CompoundItemDefinitionRef::BSplineCurve(i) => Some(EntityKey::BSplineCurve(*i)),
+            CompoundItemDefinitionRef::BSplineCurveWithKnots(i) => {
+                Some(EntityKey::BSplineCurveWithKnots(*i))
+            }
+            CompoundItemDefinitionRef::BSplineSurface(i) => Some(EntityKey::BSplineSurface(*i)),
+            CompoundItemDefinitionRef::BSplineSurfaceWithKnots(i) => {
+                Some(EntityKey::BSplineSurfaceWithKnots(*i))
+            }
+            CompoundItemDefinitionRef::BezierCurve(i) => Some(EntityKey::BezierCurve(*i)),
+            CompoundItemDefinitionRef::BezierSurface(i) => Some(EntityKey::BezierSurface(*i)),
+            CompoundItemDefinitionRef::BoundedCurve(i) => Some(EntityKey::BoundedCurve(*i)),
+            CompoundItemDefinitionRef::BoundedPcurve(i) => Some(EntityKey::BoundedPcurve(*i)),
+            CompoundItemDefinitionRef::BoundedSurface(i) => Some(EntityKey::BoundedSurface(*i)),
+            CompoundItemDefinitionRef::BoundedSurfaceCurve(i) => {
+                Some(EntityKey::BoundedSurfaceCurve(*i))
+            }
+            CompoundItemDefinitionRef::BrepWithVoids(i) => Some(EntityKey::BrepWithVoids(*i)),
+            CompoundItemDefinitionRef::CameraImage(i) => Some(EntityKey::CameraImage(*i)),
+            CompoundItemDefinitionRef::CameraImage3dWithScale(i) => {
+                Some(EntityKey::CameraImage3dWithScale(*i))
+            }
+            CompoundItemDefinitionRef::CameraModel(i) => Some(EntityKey::CameraModel(*i)),
+            CompoundItemDefinitionRef::CameraModelD3(i) => Some(EntityKey::CameraModelD3(*i)),
+            CompoundItemDefinitionRef::CameraModelD3MultiClipping(i) => {
+                Some(EntityKey::CameraModelD3MultiClipping(*i))
+            }
+            CompoundItemDefinitionRef::CameraModelD3WithHlhsr(i) => {
+                Some(EntityKey::CameraModelD3WithHlhsr(*i))
+            }
+            CompoundItemDefinitionRef::CartesianPoint(i) => Some(EntityKey::CartesianPoint(*i)),
+            CompoundItemDefinitionRef::Circle(i) => Some(EntityKey::Circle(*i)),
+            CompoundItemDefinitionRef::ClosedShell(i) => Some(EntityKey::ClosedShell(*i)),
+            CompoundItemDefinitionRef::ComplexTriangulatedFace(i) => {
+                Some(EntityKey::ComplexTriangulatedFace(*i))
+            }
+            CompoundItemDefinitionRef::ComplexTriangulatedSurfaceSet(i) => {
+                Some(EntityKey::ComplexTriangulatedSurfaceSet(*i))
+            }
+            CompoundItemDefinitionRef::CompositeCurve(i) => Some(EntityKey::CompositeCurve(*i)),
+            CompoundItemDefinitionRef::CompositeText(i) => Some(EntityKey::CompositeText(*i)),
+            CompoundItemDefinitionRef::CompoundRepresentationItem(i) => {
+                Some(EntityKey::CompoundRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::Conic(i) => Some(EntityKey::Conic(*i)),
+            CompoundItemDefinitionRef::ConicalSurface(i) => Some(EntityKey::ConicalSurface(*i)),
+            CompoundItemDefinitionRef::ConnectedFaceSet(i) => Some(EntityKey::ConnectedFaceSet(*i)),
+            CompoundItemDefinitionRef::ContextDependentOverRidingStyledItem(i) => {
+                Some(EntityKey::ContextDependentOverRidingStyledItem(*i))
+            }
+            CompoundItemDefinitionRef::CoordinatesList(i) => Some(EntityKey::CoordinatesList(*i)),
+            CompoundItemDefinitionRef::Curve(i) => Some(EntityKey::Curve(*i)),
+            CompoundItemDefinitionRef::CylindricalSurface(i) => {
+                Some(EntityKey::CylindricalSurface(*i))
+            }
+            CompoundItemDefinitionRef::DefinedCharacterGlyph(i) => {
+                Some(EntityKey::DefinedCharacterGlyph(*i))
+            }
+            CompoundItemDefinitionRef::DefinedSymbol(i) => Some(EntityKey::DefinedSymbol(*i)),
+            CompoundItemDefinitionRef::DegenerateToroidalSurface(i) => {
+                Some(EntityKey::DegenerateToroidalSurface(*i))
+            }
+            CompoundItemDefinitionRef::DescriptiveRepresentationItem(i) => {
+                Some(EntityKey::DescriptiveRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::Direction(i) => Some(EntityKey::Direction(*i)),
+            CompoundItemDefinitionRef::DraughtingAnnotationOccurrence(i) => {
+                Some(EntityKey::DraughtingAnnotationOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::DraughtingCallout(i) => {
+                Some(EntityKey::DraughtingCallout(*i))
+            }
+            CompoundItemDefinitionRef::Edge(i) => Some(EntityKey::Edge(*i)),
+            CompoundItemDefinitionRef::EdgeCurve(i) => Some(EntityKey::EdgeCurve(*i)),
+            CompoundItemDefinitionRef::EdgeLoop(i) => Some(EntityKey::EdgeLoop(*i)),
+            CompoundItemDefinitionRef::ElementarySurface(i) => {
+                Some(EntityKey::ElementarySurface(*i))
+            }
+            CompoundItemDefinitionRef::Ellipse(i) => Some(EntityKey::Ellipse(*i)),
+            CompoundItemDefinitionRef::ExternalImagePlacementInCallout(i) => {
+                Some(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedHatchStyle(i) => {
+                Some(EntityKey::ExternallyDefinedHatchStyle(*i))
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedTileStyle(i) => {
+                Some(EntityKey::ExternallyDefinedTileStyle(*i))
+            }
+            CompoundItemDefinitionRef::Face(i) => Some(EntityKey::Face(*i)),
+            CompoundItemDefinitionRef::FaceBound(i) => Some(EntityKey::FaceBound(*i)),
+            CompoundItemDefinitionRef::FaceOuterBound(i) => Some(EntityKey::FaceOuterBound(*i)),
+            CompoundItemDefinitionRef::FaceSurface(i) => Some(EntityKey::FaceSurface(*i)),
+            CompoundItemDefinitionRef::FillAreaStyleHatching(i) => {
+                Some(EntityKey::FillAreaStyleHatching(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileColouredRegion(i) => {
+                Some(EntityKey::FillAreaStyleTileColouredRegion(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileCurveWithStyle(i) => {
+                Some(EntityKey::FillAreaStyleTileCurveWithStyle(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                Some(EntityKey::FillAreaStyleTileSymbolWithStyle(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTiles(i) => {
+                Some(EntityKey::FillAreaStyleTiles(*i))
+            }
+            CompoundItemDefinitionRef::GeometricCurveSet(i) => {
+                Some(EntityKey::GeometricCurveSet(*i))
+            }
+            CompoundItemDefinitionRef::GeometricRepresentationItem(i) => {
+                Some(EntityKey::GeometricRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::GeometricSet(i) => Some(EntityKey::GeometricSet(*i)),
+            CompoundItemDefinitionRef::Hyperbola(i) => Some(EntityKey::Hyperbola(*i)),
+            CompoundItemDefinitionRef::IntegerRepresentationItem(i) => {
+                Some(EntityKey::IntegerRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::IntersectionCurve(i) => {
+                Some(EntityKey::IntersectionCurve(*i))
+            }
+            CompoundItemDefinitionRef::LeaderCurve(i) => Some(EntityKey::LeaderCurve(*i)),
+            CompoundItemDefinitionRef::LeaderDirectedCallout(i) => {
+                Some(EntityKey::LeaderDirectedCallout(*i))
+            }
+            CompoundItemDefinitionRef::LeaderTerminator(i) => Some(EntityKey::LeaderTerminator(*i)),
+            CompoundItemDefinitionRef::Line(i) => Some(EntityKey::Line(*i)),
+            CompoundItemDefinitionRef::Loop(i) => Some(EntityKey::Loop(*i)),
+            CompoundItemDefinitionRef::ManifoldSolidBrep(i) => {
+                Some(EntityKey::ManifoldSolidBrep(*i))
+            }
+            CompoundItemDefinitionRef::MappedItem(i) => Some(EntityKey::MappedItem(*i)),
+            CompoundItemDefinitionRef::MeasureRepresentationItem(i) => {
+                Some(EntityKey::MeasureRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::OffsetSurface(i) => Some(EntityKey::OffsetSurface(*i)),
+            CompoundItemDefinitionRef::OneDirectionRepeatFactor(i) => {
+                Some(EntityKey::OneDirectionRepeatFactor(*i))
+            }
+            CompoundItemDefinitionRef::OpenShell(i) => Some(EntityKey::OpenShell(*i)),
+            CompoundItemDefinitionRef::OrientedClosedShell(i) => {
+                Some(EntityKey::OrientedClosedShell(*i))
+            }
+            CompoundItemDefinitionRef::OrientedEdge(i) => Some(EntityKey::OrientedEdge(*i)),
+            CompoundItemDefinitionRef::OverRidingStyledItem(i) => {
+                Some(EntityKey::OverRidingStyledItem(*i))
+            }
+            CompoundItemDefinitionRef::Parabola(i) => Some(EntityKey::Parabola(*i)),
+            CompoundItemDefinitionRef::Path(i) => Some(EntityKey::Path(*i)),
+            CompoundItemDefinitionRef::Pcurve(i) => Some(EntityKey::Pcurve(*i)),
+            CompoundItemDefinitionRef::Placement(i) => Some(EntityKey::Placement(*i)),
+            CompoundItemDefinitionRef::PlanarBox(i) => Some(EntityKey::PlanarBox(*i)),
+            CompoundItemDefinitionRef::PlanarExtent(i) => Some(EntityKey::PlanarExtent(*i)),
+            CompoundItemDefinitionRef::Plane(i) => Some(EntityKey::Plane(*i)),
+            CompoundItemDefinitionRef::Point(i) => Some(EntityKey::Point(*i)),
+            CompoundItemDefinitionRef::PolyLoop(i) => Some(EntityKey::PolyLoop(*i)),
+            CompoundItemDefinitionRef::Polyline(i) => Some(EntityKey::Polyline(*i)),
+            CompoundItemDefinitionRef::QualifiedRepresentationItem(i) => {
+                Some(EntityKey::QualifiedRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::QuasiUniformCurve(i) => {
+                Some(EntityKey::QuasiUniformCurve(*i))
+            }
+            CompoundItemDefinitionRef::QuasiUniformSurface(i) => {
+                Some(EntityKey::QuasiUniformSurface(*i))
+            }
+            CompoundItemDefinitionRef::RationalBSplineCurve(i) => {
+                Some(EntityKey::RationalBSplineCurve(*i))
+            }
+            CompoundItemDefinitionRef::RationalBSplineSurface(i) => {
+                Some(EntityKey::RationalBSplineSurface(*i))
+            }
+            CompoundItemDefinitionRef::RealRepresentationItem(i) => {
+                Some(EntityKey::RealRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::RepositionedTessellatedItem(i) => {
+                Some(EntityKey::RepositionedTessellatedItem(*i))
+            }
+            CompoundItemDefinitionRef::RepresentationItem(i) => {
+                Some(EntityKey::RepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::SeamCurve(i) => Some(EntityKey::SeamCurve(*i)),
+            CompoundItemDefinitionRef::ShellBasedSurfaceModel(i) => {
+                Some(EntityKey::ShellBasedSurfaceModel(*i))
+            }
+            CompoundItemDefinitionRef::SolidModel(i) => Some(EntityKey::SolidModel(*i)),
+            CompoundItemDefinitionRef::SphericalSurface(i) => Some(EntityKey::SphericalSurface(*i)),
+            CompoundItemDefinitionRef::StyledItem(i) => Some(EntityKey::StyledItem(*i)),
+            CompoundItemDefinitionRef::Surface(i) => Some(EntityKey::Surface(*i)),
+            CompoundItemDefinitionRef::SurfaceCurve(i) => Some(EntityKey::SurfaceCurve(*i)),
+            CompoundItemDefinitionRef::SurfaceOfLinearExtrusion(i) => {
+                Some(EntityKey::SurfaceOfLinearExtrusion(*i))
+            }
+            CompoundItemDefinitionRef::SurfaceOfRevolution(i) => {
+                Some(EntityKey::SurfaceOfRevolution(*i))
+            }
+            CompoundItemDefinitionRef::SweptSurface(i) => Some(EntityKey::SweptSurface(*i)),
+            CompoundItemDefinitionRef::SymbolTarget(i) => Some(EntityKey::SymbolTarget(*i)),
+            CompoundItemDefinitionRef::TerminatorSymbol(i) => Some(EntityKey::TerminatorSymbol(*i)),
+            CompoundItemDefinitionRef::TessellatedAnnotationOccurrence(i) => {
+                Some(EntityKey::TessellatedAnnotationOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedCurveSet(i) => {
+                Some(EntityKey::TessellatedCurveSet(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedFace(i) => Some(EntityKey::TessellatedFace(*i)),
+            CompoundItemDefinitionRef::TessellatedGeometricSet(i) => {
+                Some(EntityKey::TessellatedGeometricSet(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedItem(i) => Some(EntityKey::TessellatedItem(*i)),
+            CompoundItemDefinitionRef::TessellatedShell(i) => Some(EntityKey::TessellatedShell(*i)),
+            CompoundItemDefinitionRef::TessellatedSolid(i) => Some(EntityKey::TessellatedSolid(*i)),
+            CompoundItemDefinitionRef::TessellatedStructuredItem(i) => {
+                Some(EntityKey::TessellatedStructuredItem(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedSurfaceSet(i) => {
+                Some(EntityKey::TessellatedSurfaceSet(*i))
+            }
+            CompoundItemDefinitionRef::TextLiteral(i) => Some(EntityKey::TextLiteral(*i)),
+            CompoundItemDefinitionRef::TopologicalRepresentationItem(i) => {
+                Some(EntityKey::TopologicalRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::ToroidalSurface(i) => Some(EntityKey::ToroidalSurface(*i)),
+            CompoundItemDefinitionRef::TrimmedCurve(i) => Some(EntityKey::TrimmedCurve(*i)),
+            CompoundItemDefinitionRef::TwoDirectionRepeatFactor(i) => {
+                Some(EntityKey::TwoDirectionRepeatFactor(*i))
+            }
+            CompoundItemDefinitionRef::UniformCurve(i) => Some(EntityKey::UniformCurve(*i)),
+            CompoundItemDefinitionRef::UniformSurface(i) => Some(EntityKey::UniformSurface(*i)),
+            CompoundItemDefinitionRef::ValueRepresentationItem(i) => {
+                Some(EntityKey::ValueRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::Vector(i) => Some(EntityKey::Vector(*i)),
+            CompoundItemDefinitionRef::Vertex(i) => Some(EntityKey::Vertex(*i)),
+            CompoundItemDefinitionRef::VertexLoop(i) => Some(EntityKey::VertexLoop(*i)),
+            CompoundItemDefinitionRef::VertexPoint(i) => Some(EntityKey::VertexPoint(*i)),
+            CompoundItemDefinitionRef::VertexShell(i) => Some(EntityKey::VertexShell(*i)),
+            CompoundItemDefinitionRef::WireShell(i) => Some(EntityKey::WireShell(*i)),
+            CompoundItemDefinitionRef::ListRepresentationItem(_) => None,
+            CompoundItemDefinitionRef::SetRepresentationItem(_) => None,
+            CompoundItemDefinitionRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
+        }
+    }
+}
+
+/// What a [`ConfigurationDesignRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConfigurationDesignRefView<'m> {
     ConfigurationDesign(&'m ConfigurationDesign),
 }
 impl ConfigurationDesignRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationDesignRefView<'m> {
         match self {
             ConfigurationDesignRef::ConfigurationDesign(i) => {
@@ -3717,6 +5300,7 @@ impl ConfigurationDesignRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConfigurationDesignRef::ConfigurationDesign(i) => EntityKey::ConfigurationDesign(*i),
@@ -3724,6 +5308,8 @@ impl ConfigurationDesignRef {
     }
 }
 
+/// What a [`ConfigurationDesignItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConfigurationDesignItemRefView<'m> {
     ProductDefinition(&'m ProductDefinition),
@@ -3736,6 +5322,8 @@ pub enum ConfigurationDesignItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ConfigurationDesignItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationDesignItemRefView<'m> {
         match self {
             ConfigurationDesignItemRef::ProductDefinition(i) => {
@@ -3772,6 +5360,7 @@ impl ConfigurationDesignItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConfigurationDesignItemRef::ProductDefinition(i) => EntityKey::ProductDefinition(*i),
@@ -3792,12 +5381,16 @@ impl ConfigurationDesignItemRef {
     }
 }
 
+/// What a [`ConfigurationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConfigurationItemRefView<'m> {
     ConfigurationItem(&'m ConfigurationItem),
     Complex(&'m ComplexEntity),
 }
 impl ConfigurationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationItemRefView<'m> {
         match self {
             ConfigurationItemRef::ConfigurationItem(i) => {
@@ -3808,6 +5401,7 @@ impl ConfigurationItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConfigurationItemRef::ConfigurationItem(i) => EntityKey::ConfigurationItem(*i),
@@ -3816,6 +5410,8 @@ impl ConfigurationItemRef {
     }
 }
 
+/// What a [`ConnectedFaceSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConnectedFaceSetRefView<'m> {
     ClosedShell(&'m ClosedShell),
@@ -3825,6 +5421,8 @@ pub enum ConnectedFaceSetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ConnectedFaceSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConnectedFaceSetRefView<'m> {
         match self {
             ConnectedFaceSetRef::ClosedShell(i) => {
@@ -3846,6 +5444,7 @@ impl ConnectedFaceSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConnectedFaceSetRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
@@ -3857,62 +5456,15 @@ impl ConnectedFaceSetRef {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRefView<'m> {
-    AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
-    ConstructiveGeometryRepresentation(&'m ConstructiveGeometryRepresentation),
-    GeometricallyBoundedSurfaceShapeRepresentation(
-        &'m GeometricallyBoundedSurfaceShapeRepresentation,
-    ),
-    GeometricallyBoundedWireframeShapeRepresentation(
-        &'m GeometricallyBoundedWireframeShapeRepresentation,
-    ),
-    ManifoldSurfaceShapeRepresentation(&'m ManifoldSurfaceShapeRepresentation),
-    ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
-    ShapeRepresentation(&'m ShapeRepresentation),
-    ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
-    TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexEntity),
-}
-impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
-    pub fn resolve<'m>(
-        &self,
-        model: &'m StepModel,
-    ) -> ConstructiveGeometryRepresentationOrShapeRepresentationRefView<'m> {
-        match self {
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::AdvancedBrepShapeRepresentation(model.advanced_brep_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ConstructiveGeometryRepresentation(model.constructive_geometry_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::GeometricallyBoundedSurfaceShapeRepresentation(model.geometrically_bounded_surface_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::GeometricallyBoundedWireframeShapeRepresentation(model.geometrically_bounded_wireframe_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ManifoldSurfaceShapeRepresentation(model.manifold_surface_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeDimensionRepresentation(model.shape_dimension_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeRepresentation(model.shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeRepresentationWithParameters(model.shape_representation_with_parameters_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::Complex(model.complex_entity_arena.get(i.0)),
-        }
-    }
-    pub fn entity_key(&self) -> EntityKey {
-        match self {
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => EntityKey::ConstructiveGeometryRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => EntityKey::ManifoldSurfaceShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => EntityKey::ShapeDimensionRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => EntityKey::ShapeRepresentationWithParameters(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
-        }
-    }
-}
-
+/// What a [`ContractTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ContractTypeRefView<'m> {
     ContractType(&'m ContractType),
 }
 impl ContractTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ContractTypeRefView<'m> {
         match self {
             ContractTypeRef::ContractType(i) => {
@@ -3920,6 +5472,7 @@ impl ContractTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ContractTypeRef::ContractType(i) => EntityKey::ContractType(*i),
@@ -3927,11 +5480,15 @@ impl ContractTypeRef {
     }
 }
 
+/// What a [`CoordinatedUniversalTimeOffsetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CoordinatedUniversalTimeOffsetRefView<'m> {
     CoordinatedUniversalTimeOffset(&'m CoordinatedUniversalTimeOffset),
 }
 impl CoordinatedUniversalTimeOffsetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CoordinatedUniversalTimeOffsetRefView<'m> {
         match self {
             CoordinatedUniversalTimeOffsetRef::CoordinatedUniversalTimeOffset(i) => {
@@ -3941,6 +5498,7 @@ impl CoordinatedUniversalTimeOffsetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CoordinatedUniversalTimeOffsetRef::CoordinatedUniversalTimeOffset(i) => {
@@ -3950,25 +5508,37 @@ impl CoordinatedUniversalTimeOffsetRef {
     }
 }
 
+/// What a [`CoordinatesListRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CoordinatesListRefView<'m> {
     CoordinatesList(&'m CoordinatesList),
+    Complex(&'m ComplexEntity),
 }
 impl CoordinatesListRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CoordinatesListRefView<'m> {
         match self {
             CoordinatesListRef::CoordinatesList(i) => {
                 CoordinatesListRefView::CoordinatesList(model.coordinates_list_arena.get(i.0))
             }
+            CoordinatesListRef::Complex(i) => {
+                CoordinatesListRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CoordinatesListRef::CoordinatesList(i) => EntityKey::CoordinatesList(*i),
+            CoordinatesListRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`CurveRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveRefView<'m> {
     BSplineCurve(&'m BSplineCurve),
@@ -3997,6 +5567,8 @@ pub enum CurveRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveRefView<'m> {
         match self {
             CurveRef::BSplineCurve(i) => {
@@ -4051,6 +5623,7 @@ impl CurveRef {
             CurveRef::Complex(i) => CurveRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveRef::BSplineCurve(i) => EntityKey::BSplineCurve(*i),
@@ -4081,6 +5654,8 @@ impl CurveRef {
     }
 }
 
+/// What a [`CurveFontOrScaledCurveFontSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveFontOrScaledCurveFontSelectRefView<'m> {
     CurveStyleFont(&'m CurveStyleFont),
@@ -4091,6 +5666,8 @@ pub enum CurveFontOrScaledCurveFontSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveFontOrScaledCurveFontSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveFontOrScaledCurveFontSelectRefView<'m> {
         match self {
             CurveFontOrScaledCurveFontSelectRef::CurveStyleFont(i) => {
@@ -4125,6 +5702,7 @@ impl CurveFontOrScaledCurveFontSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveFontOrScaledCurveFontSelectRef::CurveStyleFont(i) => EntityKey::CurveStyleFont(*i),
@@ -4145,6 +5723,8 @@ impl CurveFontOrScaledCurveFontSelectRef {
     }
 }
 
+/// What a [`CurveOrAnnotationCurveOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveOrAnnotationCurveOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -4175,6 +5755,8 @@ pub enum CurveOrAnnotationCurveOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveOrAnnotationCurveOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrAnnotationCurveOccurrenceRefView<'m> {
         match self {
             CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -4289,6 +5871,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -4333,6 +5916,8 @@ impl CurveOrAnnotationCurveOccurrenceRef {
     }
 }
 
+/// What a [`CurveOrCurveSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveOrCurveSetRefView<'m> {
     BSplineCurve(&'m BSplineCurve),
@@ -4362,6 +5947,8 @@ pub enum CurveOrCurveSetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveOrCurveSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrCurveSetRefView<'m> {
         match self {
             CurveOrCurveSetRef::BSplineCurve(i) => {
@@ -4445,6 +6032,7 @@ impl CurveOrCurveSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveOrCurveSetRef::BSplineCurve(i) => EntityKey::BSplineCurve(*i),
@@ -4476,6 +6064,8 @@ impl CurveOrCurveSetRef {
     }
 }
 
+/// What a [`CurveOrRenderRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveOrRenderRefView<'m> {
     CurveStyle(&'m CurveStyle),
@@ -4483,6 +6073,8 @@ pub enum CurveOrRenderRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveOrRenderRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrRenderRefView<'m> {
         match self {
             CurveOrRenderRef::CurveStyle(i) => {
@@ -4496,6 +6088,7 @@ impl CurveOrRenderRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveOrRenderRef::CurveStyle(i) => EntityKey::CurveStyle(*i),
@@ -4505,12 +6098,16 @@ impl CurveOrRenderRef {
     }
 }
 
+/// What a [`CurveStyleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleRefView<'m> {
     CurveStyle(&'m CurveStyle),
     Complex(&'m ComplexEntity),
 }
 impl CurveStyleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleRefView<'m> {
         match self {
             CurveStyleRef::CurveStyle(i) => {
@@ -4521,6 +6118,7 @@ impl CurveStyleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveStyleRef::CurveStyle(i) => EntityKey::CurveStyle(*i),
@@ -4529,12 +6127,16 @@ impl CurveStyleRef {
     }
 }
 
+/// What a [`CurveStyleFontPatternRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleFontPatternRefView<'m> {
     CurveStyleFontPattern(&'m CurveStyleFontPattern),
     Complex(&'m ComplexEntity),
 }
 impl CurveStyleFontPatternRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleFontPatternRefView<'m> {
         match self {
             CurveStyleFontPatternRef::CurveStyleFontPattern(i) => {
@@ -4547,6 +6149,7 @@ impl CurveStyleFontPatternRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveStyleFontPatternRef::CurveStyleFontPattern(i) => {
@@ -4557,6 +6160,8 @@ impl CurveStyleFontPatternRef {
     }
 }
 
+/// What a [`CurveStyleFontSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleFontSelectRefView<'m> {
     CurveStyleFont(&'m CurveStyleFont),
@@ -4566,6 +6171,8 @@ pub enum CurveStyleFontSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveStyleFontSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleFontSelectRefView<'m> {
         match self {
             CurveStyleFontSelectRef::CurveStyleFont(i) => {
@@ -4591,6 +6198,7 @@ impl CurveStyleFontSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveStyleFontSelectRef::CurveStyleFont(i) => EntityKey::CurveStyleFont(*i),
@@ -4606,6 +6214,8 @@ impl CurveStyleFontSelectRef {
     }
 }
 
+/// What a [`DateRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateRefView<'m> {
     CalendarDate(&'m CalendarDate),
@@ -4613,6 +6223,8 @@ pub enum DateRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateRefView<'m> {
         match self {
             DateRef::CalendarDate(i) => {
@@ -4622,6 +6234,7 @@ impl DateRef {
             DateRef::Complex(i) => DateRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateRef::CalendarDate(i) => EntityKey::CalendarDate(*i),
@@ -4631,12 +6244,16 @@ impl DateRef {
     }
 }
 
+/// What a [`DateAndTimeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateAndTimeRefView<'m> {
     DateAndTime(&'m DateAndTime),
     Complex(&'m ComplexEntity),
 }
 impl DateAndTimeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateAndTimeRefView<'m> {
         match self {
             DateAndTimeRef::DateAndTime(i) => {
@@ -4647,6 +6264,7 @@ impl DateAndTimeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateAndTimeRef::DateAndTime(i) => EntityKey::DateAndTime(*i),
@@ -4655,6 +6273,8 @@ impl DateAndTimeRef {
     }
 }
 
+/// What a [`DateAndTimeItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateAndTimeItemRefView<'m> {
     Action(&'m Action),
@@ -4743,6 +6363,8 @@ pub enum DateAndTimeItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateAndTimeItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateAndTimeItemRefView<'m> {
         match self {
             DateAndTimeItemRef::Action(i) => {
@@ -5063,6 +6685,7 @@ impl DateAndTimeItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateAndTimeItemRef::Action(i) => EntityKey::Action(*i),
@@ -5201,6 +6824,8 @@ impl DateAndTimeItemRef {
     }
 }
 
+/// What a [`DateTimeItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateTimeItemRefView<'m> {
     ApprovalPersonOrganization(&'m ApprovalPersonOrganization),
@@ -5216,6 +6841,8 @@ pub enum DateTimeItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateTimeItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeItemRefView<'m> {
         match self {
             DateTimeItemRef::ApprovalPersonOrganization(i) => {
@@ -5259,6 +6886,7 @@ impl DateTimeItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateTimeItemRef::ApprovalPersonOrganization(i) => {
@@ -5280,11 +6908,15 @@ impl DateTimeItemRef {
     }
 }
 
+/// What a [`DateTimeRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateTimeRoleRefView<'m> {
     DateTimeRole(&'m DateTimeRole),
 }
 impl DateTimeRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeRoleRefView<'m> {
         match self {
             DateTimeRoleRef::DateTimeRole(i) => {
@@ -5292,6 +6924,7 @@ impl DateTimeRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateTimeRoleRef::DateTimeRole(i) => EntityKey::DateTimeRole(*i),
@@ -5299,6 +6932,8 @@ impl DateTimeRoleRef {
     }
 }
 
+/// What a [`DateTimeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateTimeSelectRefView<'m> {
     CalendarDate(&'m CalendarDate),
@@ -5308,6 +6943,8 @@ pub enum DateTimeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateTimeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeSelectRefView<'m> {
         match self {
             DateTimeSelectRef::CalendarDate(i) => {
@@ -5325,6 +6962,7 @@ impl DateTimeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateTimeSelectRef::CalendarDate(i) => EntityKey::CalendarDate(*i),
@@ -5336,6 +6974,8 @@ impl DateTimeSelectRef {
     }
 }
 
+/// What a [`DatumRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumRefView<'m> {
     CommonDatum(&'m CommonDatum),
@@ -5343,6 +6983,8 @@ pub enum DatumRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DatumRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumRefView<'m> {
         match self {
             DatumRef::CommonDatum(i) => {
@@ -5352,6 +6994,7 @@ impl DatumRef {
             DatumRef::Complex(i) => DatumRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumRef::CommonDatum(i) => EntityKey::CommonDatum(*i),
@@ -5361,11 +7004,65 @@ impl DatumRef {
     }
 }
 
+/// What a [`DatumOrCommonDatumRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum DatumOrCommonDatumRefView<'m> {
+    CommonDatum(&'m CommonDatum),
+    Datum(&'m Datum),
+    DatumReferenceElement(&'m DatumReferenceElement),
+    CommonDatumList(&'m [DatumReferenceElementRef]),
+    Complex(&'m ComplexEntity),
+}
+impl DatumOrCommonDatumRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&'m self, model: &'m StepModel) -> DatumOrCommonDatumRefView<'m> {
+        match self {
+            DatumOrCommonDatumRef::CommonDatum(i) => {
+                DatumOrCommonDatumRefView::CommonDatum(model.common_datum_arena.get(i.0))
+            }
+            DatumOrCommonDatumRef::Datum(i) => {
+                DatumOrCommonDatumRefView::Datum(model.datum_arena.get(i.0))
+            }
+            DatumOrCommonDatumRef::DatumReferenceElement(i) => {
+                DatumOrCommonDatumRefView::DatumReferenceElement(
+                    model.datum_reference_element_arena.get(i.0),
+                )
+            }
+            DatumOrCommonDatumRef::CommonDatumList(v) => {
+                DatumOrCommonDatumRefView::CommonDatumList(v)
+            }
+            DatumOrCommonDatumRef::Complex(i) => {
+                DatumOrCommonDatumRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            DatumOrCommonDatumRef::CommonDatum(i) => Some(EntityKey::CommonDatum(*i)),
+            DatumOrCommonDatumRef::Datum(i) => Some(EntityKey::Datum(*i)),
+            DatumOrCommonDatumRef::DatumReferenceElement(i) => {
+                Some(EntityKey::DatumReferenceElement(*i))
+            }
+            DatumOrCommonDatumRef::CommonDatumList(_) => None,
+            DatumOrCommonDatumRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
+        }
+    }
+}
+
+/// What a [`DatumReferenceCompartmentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumReferenceCompartmentRefView<'m> {
     DatumReferenceCompartment(&'m DatumReferenceCompartment),
+    Complex(&'m ComplexEntity),
 }
 impl DatumReferenceCompartmentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumReferenceCompartmentRefView<'m> {
         match self {
             DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
@@ -5373,22 +7070,32 @@ impl DatumReferenceCompartmentRef {
                     model.datum_reference_compartment_arena.get(i.0),
                 )
             }
+            DatumReferenceCompartmentRef::Complex(i) => {
+                DatumReferenceCompartmentRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
                 EntityKey::DatumReferenceCompartment(*i)
             }
+            DatumReferenceCompartmentRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`DatumReferenceElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumReferenceElementRefView<'m> {
     DatumReferenceElement(&'m DatumReferenceElement),
+    Complex(&'m ComplexEntity),
 }
 impl DatumReferenceElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumReferenceElementRefView<'m> {
         match self {
             DatumReferenceElementRef::DatumReferenceElement(i) => {
@@ -5396,23 +7103,32 @@ impl DatumReferenceElementRef {
                     model.datum_reference_element_arena.get(i.0),
                 )
             }
+            DatumReferenceElementRef::Complex(i) => {
+                DatumReferenceElementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumReferenceElementRef::DatumReferenceElement(i) => {
                 EntityKey::DatumReferenceElement(*i)
             }
+            DatumReferenceElementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`DatumSystemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumSystemRefView<'m> {
     DatumSystem(&'m DatumSystem),
     Complex(&'m ComplexEntity),
 }
 impl DatumSystemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumSystemRefView<'m> {
         match self {
             DatumSystemRef::DatumSystem(i) => {
@@ -5423,6 +7139,7 @@ impl DatumSystemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumSystemRef::DatumSystem(i) => EntityKey::DatumSystem(*i),
@@ -5431,6 +7148,8 @@ impl DatumSystemRef {
     }
 }
 
+/// What a [`DatumSystemOrReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumSystemOrReferenceRefView<'m> {
     DatumReference(&'m DatumReference),
@@ -5438,6 +7157,8 @@ pub enum DatumSystemOrReferenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DatumSystemOrReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumSystemOrReferenceRefView<'m> {
         match self {
             DatumSystemOrReferenceRef::DatumReference(i) => {
@@ -5451,6 +7172,7 @@ impl DatumSystemOrReferenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumSystemOrReferenceRef::DatumReference(i) => EntityKey::DatumReference(*i),
@@ -5460,6 +7182,44 @@ impl DatumSystemOrReferenceRef {
     }
 }
 
+/// What a [`DatumTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum DatumTargetRefView<'m> {
+    DatumTarget(&'m DatumTarget),
+    PlacedDatumTargetFeature(&'m PlacedDatumTargetFeature),
+    Complex(&'m ComplexEntity),
+}
+impl DatumTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumTargetRefView<'m> {
+        match self {
+            DatumTargetRef::DatumTarget(i) => {
+                DatumTargetRefView::DatumTarget(model.datum_target_arena.get(i.0))
+            }
+            DatumTargetRef::PlacedDatumTargetFeature(i) => {
+                DatumTargetRefView::PlacedDatumTargetFeature(
+                    model.placed_datum_target_feature_arena.get(i.0),
+                )
+            }
+            DatumTargetRef::Complex(i) => {
+                DatumTargetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            DatumTargetRef::DatumTarget(i) => EntityKey::DatumTarget(*i),
+            DatumTargetRef::PlacedDatumTargetFeature(i) => EntityKey::PlacedDatumTargetFeature(*i),
+            DatumTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`DefinedGlyphSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DefinedGlyphSelectRefView<'m> {
     ExternallyDefinedCharacterGlyph(&'m ExternallyDefinedCharacterGlyph),
@@ -5467,6 +7227,8 @@ pub enum DefinedGlyphSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DefinedGlyphSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinedGlyphSelectRefView<'m> {
         match self {
             DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(i) => {
@@ -5484,6 +7246,7 @@ impl DefinedGlyphSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(i) => {
@@ -5497,6 +7260,8 @@ impl DefinedGlyphSelectRef {
     }
 }
 
+/// What a [`DefinedSymbolSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DefinedSymbolSelectRefView<'m> {
     ExternallyDefinedSymbol(&'m ExternallyDefinedSymbol),
@@ -5506,6 +7271,8 @@ pub enum DefinedSymbolSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DefinedSymbolSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinedSymbolSelectRefView<'m> {
         match self {
             DefinedSymbolSelectRef::ExternallyDefinedSymbol(i) => {
@@ -5533,6 +7300,7 @@ impl DefinedSymbolSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DefinedSymbolSelectRef::ExternallyDefinedSymbol(i) => {
@@ -5550,12 +7318,16 @@ impl DefinedSymbolSelectRef {
     }
 }
 
+/// What a [`DefinitionalRepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DefinitionalRepresentationRefView<'m> {
     DefinitionalRepresentation(&'m DefinitionalRepresentation),
     Complex(&'m ComplexEntity),
 }
 impl DefinitionalRepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinitionalRepresentationRefView<'m> {
         match self {
             DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
@@ -5568,6 +7340,7 @@ impl DefinitionalRepresentationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
@@ -5578,6 +7351,8 @@ impl DefinitionalRepresentationRef {
     }
 }
 
+/// What a [`DerivedPropertySelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DerivedPropertySelectRefView<'m> {
     ActionProperty(&'m ActionProperty),
@@ -5618,6 +7393,8 @@ pub enum DerivedPropertySelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DerivedPropertySelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DerivedPropertySelectRefView<'m> {
         match self {
             DerivedPropertySelectRef::ActionProperty(i) => {
@@ -5798,6 +7575,7 @@ impl DerivedPropertySelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DerivedPropertySelectRef::ActionProperty(i) => EntityKey::ActionProperty(*i),
@@ -5882,11 +7660,15 @@ impl DerivedPropertySelectRef {
     }
 }
 
+/// What a [`DerivedUnitElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DerivedUnitElementRefView<'m> {
     DerivedUnitElement(&'m DerivedUnitElement),
 }
 impl DerivedUnitElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DerivedUnitElementRefView<'m> {
         match self {
             DerivedUnitElementRef::DerivedUnitElement(i) => {
@@ -5896,6 +7678,7 @@ impl DerivedUnitElementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DerivedUnitElementRef::DerivedUnitElement(i) => EntityKey::DerivedUnitElement(*i),
@@ -5903,12 +7686,17 @@ impl DerivedUnitElementRef {
     }
 }
 
+/// What a [`DesApllPointSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DesApllPointSelectRefView<'m> {
     ApllPoint(&'m ApllPoint),
     ApllPointWithSurface(&'m ApllPointWithSurface),
+    Complex(&'m ComplexEntity),
 }
 impl DesApllPointSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DesApllPointSelectRefView<'m> {
         match self {
             DesApllPointSelectRef::ApllPoint(i) => {
@@ -5919,16 +7707,23 @@ impl DesApllPointSelectRef {
                     model.apll_point_with_surface_arena.get(i.0),
                 )
             }
+            DesApllPointSelectRef::Complex(i) => {
+                DesApllPointSelectRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DesApllPointSelectRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
             DesApllPointSelectRef::ApllPointWithSurface(i) => EntityKey::ApllPointWithSurface(*i),
+            DesApllPointSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`DescriptionAttributeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DescriptionAttributeSelectRefView<'m> {
     ActionRequestSolution(&'m ActionRequestSolution),
@@ -5981,6 +7776,8 @@ pub enum DescriptionAttributeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DescriptionAttributeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DescriptionAttributeSelectRefView<'m> {
         match self {
             DescriptionAttributeSelectRef::ActionRequestSolution(i) => DescriptionAttributeSelectRefView::ActionRequestSolution(model.action_request_solution_arena.get(i.0)),
@@ -6023,6 +7820,7 @@ impl DescriptionAttributeSelectRef {
             DescriptionAttributeSelectRef::Complex(i) => DescriptionAttributeSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DescriptionAttributeSelectRef::ActionRequestSolution(i) => EntityKey::ActionRequestSolution(*i),
@@ -6067,6 +7865,8 @@ impl DescriptionAttributeSelectRef {
     }
 }
 
+/// What a [`DimensionalCharacteristicRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DimensionalCharacteristicRefView<'m> {
     AngularLocation(&'m AngularLocation),
@@ -6080,6 +7880,8 @@ pub enum DimensionalCharacteristicRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DimensionalCharacteristicRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DimensionalCharacteristicRefView<'m> {
         match self {
             DimensionalCharacteristicRef::AngularLocation(i) => {
@@ -6125,6 +7927,7 @@ impl DimensionalCharacteristicRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DimensionalCharacteristicRef::AngularLocation(i) => EntityKey::AngularLocation(*i),
@@ -6150,11 +7953,15 @@ impl DimensionalCharacteristicRef {
     }
 }
 
+/// What a [`DimensionalExponentsRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DimensionalExponentsRefView<'m> {
     DimensionalExponents(&'m DimensionalExponents),
 }
 impl DimensionalExponentsRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DimensionalExponentsRefView<'m> {
         match self {
             DimensionalExponentsRef::DimensionalExponents(i) => {
@@ -6164,6 +7971,7 @@ impl DimensionalExponentsRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DimensionalExponentsRef::DimensionalExponents(i) => EntityKey::DimensionalExponents(*i),
@@ -6171,12 +7979,16 @@ impl DimensionalExponentsRef {
     }
 }
 
+/// What a [`DirectionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DirectionRefView<'m> {
     Direction(&'m Direction),
     Complex(&'m ComplexEntity),
 }
 impl DirectionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DirectionRefView<'m> {
         match self {
             DirectionRef::Direction(i) => {
@@ -6187,6 +7999,7 @@ impl DirectionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DirectionRef::Direction(i) => EntityKey::Direction(*i),
@@ -6195,6 +8008,8 @@ impl DirectionRef {
     }
 }
 
+/// What a [`DocumentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DocumentRefView<'m> {
     Document(&'m Document),
@@ -6202,6 +8017,8 @@ pub enum DocumentRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DocumentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentRefView<'m> {
         match self {
             DocumentRef::Document(i) => DocumentRefView::Document(model.document_arena.get(i.0)),
@@ -6213,6 +8030,7 @@ impl DocumentRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DocumentRef::Document(i) => EntityKey::Document(*i),
@@ -6222,6 +8040,8 @@ impl DocumentRef {
     }
 }
 
+/// What a [`DocumentReferenceItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DocumentReferenceItemRefView<'m> {
     ActionDirective(&'m ActionDirective),
@@ -6235,7 +8055,6 @@ pub enum DocumentReferenceItemRefView<'m> {
     AngularLocation(&'m AngularLocation),
     AngularSize(&'m AngularSize),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -6243,7 +8062,6 @@ pub enum DocumentReferenceItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -6266,6 +8084,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     BSplineCurveWithKnots(&'m BSplineCurveWithKnots),
     BSplineSurface(&'m BSplineSurface),
     BSplineSurfaceWithKnots(&'m BSplineSurfaceWithKnots),
+    BasicRoundHole(&'m BasicRoundHole),
     BezierCurve(&'m BezierCurve),
     BezierSurface(&'m BezierSurface),
     BoundedCurve(&'m BoundedCurve),
@@ -6293,8 +8112,10 @@ pub enum DocumentReferenceItemRefView<'m> {
     ComplexTriangulatedSurfaceSet(&'m ComplexTriangulatedSurfaceSet),
     CompositeCurve(&'m CompositeCurve),
     CompositeGroupShapeAspect(&'m CompositeGroupShapeAspect),
+    CompositeHole(&'m CompositeHole),
     CompositeShapeAspect(&'m CompositeShapeAspect),
     CompositeText(&'m CompositeText),
+    CompoundFeature(&'m CompoundFeature),
     CompoundRepresentationItem(&'m CompoundRepresentationItem),
     ConfigurationDesign(&'m ConfigurationDesign),
     ConfigurationEffectivity(&'m ConfigurationEffectivity),
@@ -6310,6 +8131,9 @@ pub enum DocumentReferenceItemRefView<'m> {
     ContinuousShapeAspect(&'m ContinuousShapeAspect),
     Contract(&'m Contract),
     CoordinatesList(&'m CoordinatesList),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
     Curve(&'m Curve),
     CylindricalSurface(&'m CylindricalSurface),
     DateAndTimeAssignment(&'m DateAndTimeAssignment),
@@ -6348,6 +8172,9 @@ pub enum DocumentReferenceItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExplicitCompositeHole(&'m ExplicitCompositeHole),
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedCharacterGlyph(&'m ExternallyDefinedCharacterGlyph),
     ExternallyDefinedCurveFont(&'m ExternallyDefinedCurveFont),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
@@ -6361,6 +8188,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     FaceBound(&'m FaceBound),
     FaceOuterBound(&'m FaceOuterBound),
     FaceSurface(&'m FaceSurface),
+    FeatureDefinition(&'m FeatureDefinition),
     FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     FillAreaStyleHatching(&'m FillAreaStyleHatching),
     FillAreaStyleTileColouredRegion(&'m FillAreaStyleTileColouredRegion),
@@ -6462,6 +8290,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     RepresentationRelationship(&'m RepresentationRelationship),
     RepresentationRelationshipWithTransformation(&'m RepresentationRelationshipWithTransformation),
     ResourceRequirementType(&'m ResourceRequirementType),
+    RoundHole(&'m RoundHole),
     SeamCurve(&'m SeamCurve),
     SecurityClassification(&'m SecurityClassification),
     ShapeAspect(&'m ShapeAspect),
@@ -6517,6 +8346,8 @@ pub enum DocumentReferenceItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DocumentReferenceItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentReferenceItemRefView<'m> {
         match self {
             DocumentReferenceItemRef::ActionDirective(i) => DocumentReferenceItemRefView::ActionDirective(model.action_directive_arena.get(i.0)),
@@ -6530,13 +8361,11 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::AngularLocation(i) => DocumentReferenceItemRefView::AngularLocation(model.angular_location_arena.get(i.0)),
             DocumentReferenceItemRef::AngularSize(i) => DocumentReferenceItemRefView::AngularSize(model.angular_size_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => DocumentReferenceItemRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
-            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => DocumentReferenceItemRefView::AnnotationFillAreaOccurrence(model.annotation_fill_area_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationOccurrence(i) => DocumentReferenceItemRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlaceholderLeaderLine(i) => DocumentReferenceItemRefView::AnnotationPlaceholderLeaderLine(model.annotation_placeholder_leader_line_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlaceholderOccurrence(i) => DocumentReferenceItemRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => DocumentReferenceItemRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlane(i) => DocumentReferenceItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0)),
-            DocumentReferenceItemRef::AnnotationSymbol(i) => DocumentReferenceItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => DocumentReferenceItemRefView::AnnotationSymbolOccurrence(model.annotation_symbol_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationText(i) => DocumentReferenceItemRefView::AnnotationText(model.annotation_text_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationTextCharacter(i) => DocumentReferenceItemRefView::AnnotationTextCharacter(model.annotation_text_character_arena.get(i.0)),
@@ -6559,6 +8388,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::BSplineCurveWithKnots(i) => DocumentReferenceItemRefView::BSplineCurveWithKnots(model.b_spline_curve_with_knots_arena.get(i.0)),
             DocumentReferenceItemRef::BSplineSurface(i) => DocumentReferenceItemRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0)),
             DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => DocumentReferenceItemRefView::BSplineSurfaceWithKnots(model.b_spline_surface_with_knots_arena.get(i.0)),
+            DocumentReferenceItemRef::BasicRoundHole(i) => DocumentReferenceItemRefView::BasicRoundHole(model.basic_round_hole_arena.get(i.0)),
             DocumentReferenceItemRef::BezierCurve(i) => DocumentReferenceItemRefView::BezierCurve(model.bezier_curve_arena.get(i.0)),
             DocumentReferenceItemRef::BezierSurface(i) => DocumentReferenceItemRefView::BezierSurface(model.bezier_surface_arena.get(i.0)),
             DocumentReferenceItemRef::BoundedCurve(i) => DocumentReferenceItemRefView::BoundedCurve(model.bounded_curve_arena.get(i.0)),
@@ -6586,8 +8416,10 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::ComplexTriangulatedSurfaceSet(i) => DocumentReferenceItemRefView::ComplexTriangulatedSurfaceSet(model.complex_triangulated_surface_set_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeCurve(i) => DocumentReferenceItemRefView::CompositeCurve(model.composite_curve_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => DocumentReferenceItemRefView::CompositeGroupShapeAspect(model.composite_group_shape_aspect_arena.get(i.0)),
+            DocumentReferenceItemRef::CompositeHole(i) => DocumentReferenceItemRefView::CompositeHole(model.composite_hole_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeShapeAspect(i) => DocumentReferenceItemRefView::CompositeShapeAspect(model.composite_shape_aspect_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeText(i) => DocumentReferenceItemRefView::CompositeText(model.composite_text_arena.get(i.0)),
+            DocumentReferenceItemRef::CompoundFeature(i) => DocumentReferenceItemRefView::CompoundFeature(model.compound_feature_arena.get(i.0)),
             DocumentReferenceItemRef::CompoundRepresentationItem(i) => DocumentReferenceItemRefView::CompoundRepresentationItem(model.compound_representation_item_arena.get(i.0)),
             DocumentReferenceItemRef::ConfigurationDesign(i) => DocumentReferenceItemRefView::ConfigurationDesign(model.configuration_design_arena.get(i.0)),
             DocumentReferenceItemRef::ConfigurationEffectivity(i) => DocumentReferenceItemRefView::ConfigurationEffectivity(model.configuration_effectivity_arena.get(i.0)),
@@ -6601,6 +8433,9 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::ContinuousShapeAspect(i) => DocumentReferenceItemRefView::ContinuousShapeAspect(model.continuous_shape_aspect_arena.get(i.0)),
             DocumentReferenceItemRef::Contract(i) => DocumentReferenceItemRefView::Contract(model.contract_arena.get(i.0)),
             DocumentReferenceItemRef::CoordinatesList(i) => DocumentReferenceItemRefView::CoordinatesList(model.coordinates_list_arena.get(i.0)),
+            DocumentReferenceItemRef::CounterboreHoleDefinition(i) => DocumentReferenceItemRefView::CounterboreHoleDefinition(model.counterbore_hole_definition_arena.get(i.0)),
+            DocumentReferenceItemRef::CounterdrillHoleDefinition(i) => DocumentReferenceItemRefView::CounterdrillHoleDefinition(model.counterdrill_hole_definition_arena.get(i.0)),
+            DocumentReferenceItemRef::CountersinkHoleDefinition(i) => DocumentReferenceItemRefView::CountersinkHoleDefinition(model.countersink_hole_definition_arena.get(i.0)),
             DocumentReferenceItemRef::Curve(i) => DocumentReferenceItemRefView::Curve(model.curve_arena.get(i.0)),
             DocumentReferenceItemRef::CylindricalSurface(i) => DocumentReferenceItemRefView::CylindricalSurface(model.cylindrical_surface_arena.get(i.0)),
             DocumentReferenceItemRef::DateAndTimeAssignment(i) => DocumentReferenceItemRefView::DateAndTimeAssignment(model.date_and_time_assignment_arena.get(i.0)),
@@ -6637,6 +8472,9 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::Effectivity(i) => DocumentReferenceItemRefView::Effectivity(model.effectivity_arena.get(i.0)),
             DocumentReferenceItemRef::ElementarySurface(i) => DocumentReferenceItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
             DocumentReferenceItemRef::Ellipse(i) => DocumentReferenceItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            DocumentReferenceItemRef::ExplicitCompositeHole(i) => DocumentReferenceItemRefView::ExplicitCompositeHole(model.explicit_composite_hole_arena.get(i.0)),
+            DocumentReferenceItemRef::ExplicitRoundHole(i) => DocumentReferenceItemRefView::ExplicitRoundHole(model.explicit_round_hole_arena.get(i.0)),
+            DocumentReferenceItemRef::ExternalImagePlacementInCallout(i) => DocumentReferenceItemRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => DocumentReferenceItemRefView::ExternallyDefinedCharacterGlyph(model.externally_defined_character_glyph_arena.get(i.0)),
             DocumentReferenceItemRef::ExternallyDefinedCurveFont(i) => DocumentReferenceItemRefView::ExternallyDefinedCurveFont(model.externally_defined_curve_font_arena.get(i.0)),
             DocumentReferenceItemRef::ExternallyDefinedHatchStyle(i) => DocumentReferenceItemRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
@@ -6650,6 +8488,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::FaceBound(i) => DocumentReferenceItemRefView::FaceBound(model.face_bound_arena.get(i.0)),
             DocumentReferenceItemRef::FaceOuterBound(i) => DocumentReferenceItemRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0)),
             DocumentReferenceItemRef::FaceSurface(i) => DocumentReferenceItemRefView::FaceSurface(model.face_surface_arena.get(i.0)),
+            DocumentReferenceItemRef::FeatureDefinition(i) => DocumentReferenceItemRefView::FeatureDefinition(model.feature_definition_arena.get(i.0)),
             DocumentReferenceItemRef::FeatureForDatumTargetRelationship(i) => DocumentReferenceItemRefView::FeatureForDatumTargetRelationship(model.feature_for_datum_target_relationship_arena.get(i.0)),
             DocumentReferenceItemRef::FillAreaStyleHatching(i) => DocumentReferenceItemRefView::FillAreaStyleHatching(model.fill_area_style_hatching_arena.get(i.0)),
             DocumentReferenceItemRef::FillAreaStyleTileColouredRegion(i) => DocumentReferenceItemRefView::FillAreaStyleTileColouredRegion(model.fill_area_style_tile_coloured_region_arena.get(i.0)),
@@ -6739,6 +8578,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::RepresentationRelationship(i) => DocumentReferenceItemRefView::RepresentationRelationship(model.representation_relationship_arena.get(i.0)),
             DocumentReferenceItemRef::RepresentationRelationshipWithTransformation(i) => DocumentReferenceItemRefView::RepresentationRelationshipWithTransformation(model.representation_relationship_with_transformation_arena.get(i.0)),
             DocumentReferenceItemRef::ResourceRequirementType(i) => DocumentReferenceItemRefView::ResourceRequirementType(model.resource_requirement_type_arena.get(i.0)),
+            DocumentReferenceItemRef::RoundHole(i) => DocumentReferenceItemRefView::RoundHole(model.round_hole_arena.get(i.0)),
             DocumentReferenceItemRef::SeamCurve(i) => DocumentReferenceItemRefView::SeamCurve(model.seam_curve_arena.get(i.0)),
             DocumentReferenceItemRef::SecurityClassification(i) => DocumentReferenceItemRefView::SecurityClassification(model.security_classification_arena.get(i.0)),
             DocumentReferenceItemRef::ShapeAspect(i) => DocumentReferenceItemRefView::ShapeAspect(model.shape_aspect_arena.get(i.0)),
@@ -6794,6 +8634,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::Complex(i) => DocumentReferenceItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DocumentReferenceItemRef::ActionDirective(i) => EntityKey::ActionDirective(*i),
@@ -6815,9 +8656,6 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             DocumentReferenceItemRef::AnnotationOccurrence(i) => {
                 EntityKey::AnnotationOccurrence(*i)
             }
@@ -6831,7 +8669,6 @@ impl DocumentReferenceItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             DocumentReferenceItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            DocumentReferenceItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -6880,6 +8717,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => {
                 EntityKey::BSplineSurfaceWithKnots(*i)
             }
+            DocumentReferenceItemRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
             DocumentReferenceItemRef::BezierCurve(i) => EntityKey::BezierCurve(*i),
             DocumentReferenceItemRef::BezierSurface(i) => EntityKey::BezierSurface(*i),
             DocumentReferenceItemRef::BoundedCurve(i) => EntityKey::BoundedCurve(*i),
@@ -6925,10 +8763,12 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => {
                 EntityKey::CompositeGroupShapeAspect(*i)
             }
+            DocumentReferenceItemRef::CompositeHole(i) => EntityKey::CompositeHole(*i),
             DocumentReferenceItemRef::CompositeShapeAspect(i) => {
                 EntityKey::CompositeShapeAspect(*i)
             }
             DocumentReferenceItemRef::CompositeText(i) => EntityKey::CompositeText(*i),
+            DocumentReferenceItemRef::CompoundFeature(i) => EntityKey::CompoundFeature(*i),
             DocumentReferenceItemRef::CompoundRepresentationItem(i) => {
                 EntityKey::CompoundRepresentationItem(*i)
             }
@@ -6954,6 +8794,15 @@ impl DocumentReferenceItemRef {
             }
             DocumentReferenceItemRef::Contract(i) => EntityKey::Contract(*i),
             DocumentReferenceItemRef::CoordinatesList(i) => EntityKey::CoordinatesList(*i),
+            DocumentReferenceItemRef::CounterboreHoleDefinition(i) => {
+                EntityKey::CounterboreHoleDefinition(*i)
+            }
+            DocumentReferenceItemRef::CounterdrillHoleDefinition(i) => {
+                EntityKey::CounterdrillHoleDefinition(*i)
+            }
+            DocumentReferenceItemRef::CountersinkHoleDefinition(i) => {
+                EntityKey::CountersinkHoleDefinition(*i)
+            }
             DocumentReferenceItemRef::Curve(i) => EntityKey::Curve(*i),
             DocumentReferenceItemRef::CylindricalSurface(i) => EntityKey::CylindricalSurface(*i),
             DocumentReferenceItemRef::DateAndTimeAssignment(i) => {
@@ -7020,6 +8869,13 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             DocumentReferenceItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             DocumentReferenceItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            DocumentReferenceItemRef::ExplicitCompositeHole(i) => {
+                EntityKey::ExplicitCompositeHole(*i)
+            }
+            DocumentReferenceItemRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            DocumentReferenceItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => {
                 EntityKey::ExternallyDefinedCharacterGlyph(*i)
             }
@@ -7051,6 +8907,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::FaceBound(i) => EntityKey::FaceBound(*i),
             DocumentReferenceItemRef::FaceOuterBound(i) => EntityKey::FaceOuterBound(*i),
             DocumentReferenceItemRef::FaceSurface(i) => EntityKey::FaceSurface(*i),
+            DocumentReferenceItemRef::FeatureDefinition(i) => EntityKey::FeatureDefinition(*i),
             DocumentReferenceItemRef::FeatureForDatumTargetRelationship(i) => {
                 EntityKey::FeatureForDatumTargetRelationship(*i)
             }
@@ -7234,6 +9091,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::ResourceRequirementType(i) => {
                 EntityKey::ResourceRequirementType(*i)
             }
+            DocumentReferenceItemRef::RoundHole(i) => EntityKey::RoundHole(*i),
             DocumentReferenceItemRef::SeamCurve(i) => EntityKey::SeamCurve(*i),
             DocumentReferenceItemRef::SecurityClassification(i) => {
                 EntityKey::SecurityClassification(*i)
@@ -7333,11 +9191,15 @@ impl DocumentReferenceItemRef {
     }
 }
 
+/// What a [`DocumentTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DocumentTypeRefView<'m> {
     DocumentType(&'m DocumentType),
 }
 impl DocumentTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentTypeRefView<'m> {
         match self {
             DocumentTypeRef::DocumentType(i) => {
@@ -7345,6 +9207,7 @@ impl DocumentTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DocumentTypeRef::DocumentType(i) => EntityKey::DocumentType(*i),
@@ -7352,6 +9215,8 @@ impl DocumentTypeRef {
     }
 }
 
+/// What a [`DraughtingCalloutRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingCalloutRefView<'m> {
     DraughtingCallout(&'m DraughtingCallout),
@@ -7359,6 +9224,8 @@ pub enum DraughtingCalloutRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingCalloutRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingCalloutRefView<'m> {
         match self {
             DraughtingCalloutRef::DraughtingCallout(i) => {
@@ -7374,6 +9241,7 @@ impl DraughtingCalloutRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingCalloutRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
@@ -7383,16 +9251,18 @@ impl DraughtingCalloutRef {
     }
 }
 
+/// What a [`DraughtingCalloutElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingCalloutElementRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
@@ -7400,16 +9270,13 @@ pub enum DraughtingCalloutElementRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingCalloutElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingCalloutElementRefView<'m> {
         match self {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
                 DraughtingCalloutElementRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            DraughtingCalloutElementRef::AnnotationFillAreaOccurrence(i) => {
-                DraughtingCalloutElementRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
@@ -7432,6 +9299,11 @@ impl DraughtingCalloutElementRef {
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 DraughtingCalloutElementRefView::AnnotationTextOccurrence(
                     model.annotation_text_occurrence_arena.get(i.0),
+                )
+            }
+            DraughtingCalloutElementRef::ExternalImagePlacementInCallout(i) => {
+                DraughtingCalloutElementRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
                 )
             }
             DraughtingCalloutElementRef::LeaderCurve(i) => {
@@ -7457,13 +9329,11 @@ impl DraughtingCalloutElementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            DraughtingCalloutElementRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
                 EntityKey::AnnotationPlaceholderOccurrence(*i)
@@ -7477,6 +9347,9 @@ impl DraughtingCalloutElementRef {
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 EntityKey::AnnotationTextOccurrence(*i)
             }
+            DraughtingCalloutElementRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             DraughtingCalloutElementRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             DraughtingCalloutElementRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
             DraughtingCalloutElementRef::TerminatorSymbol(i) => EntityKey::TerminatorSymbol(*i),
@@ -7488,10 +9361,40 @@ impl DraughtingCalloutElementRef {
     }
 }
 
+/// What a [`DraughtingModelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum DraughtingModelRefView<'m> {
+    DraughtingModel(&'m DraughtingModel),
+    Complex(&'m ComplexEntity),
+}
+impl DraughtingModelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingModelRefView<'m> {
+        match self {
+            DraughtingModelRef::DraughtingModel(i) => {
+                DraughtingModelRefView::DraughtingModel(model.draughting_model_arena.get(i.0))
+            }
+            DraughtingModelRef::Complex(i) => {
+                DraughtingModelRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            DraughtingModelRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
+            DraughtingModelRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`DraughtingModelItemAssociationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -7502,6 +9405,7 @@ pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
     DraughtingCallout(&'m DraughtingCallout),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderDirectedCallout(&'m LeaderDirectedCallout),
     LeaderTerminator(&'m LeaderTerminator),
@@ -7510,13 +9414,14 @@ pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingModelItemAssociationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
     ) -> DraughtingModelItemAssociationSelectRefView<'m> {
         match self {
             DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
-            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationFillAreaOccurrence(model.annotation_fill_area_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => DraughtingModelItemAssociationSelectRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
@@ -7525,6 +9430,7 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationTextOccurrence(model.annotation_text_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => DraughtingModelItemAssociationSelectRefView::DraughtingAnnotationOccurrence(model.draughting_annotation_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => DraughtingModelItemAssociationSelectRefView::DraughtingCallout(model.draughting_callout_arena.get(i.0)),
+            DraughtingModelItemAssociationSelectRef::ExternalImagePlacementInCallout(i) => DraughtingModelItemAssociationSelectRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => DraughtingModelItemAssociationSelectRefView::LeaderCurve(model.leader_curve_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => DraughtingModelItemAssociationSelectRefView::LeaderDirectedCallout(model.leader_directed_callout_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => DraughtingModelItemAssociationSelectRefView::LeaderTerminator(model.leader_terminator_arena.get(i.0)),
@@ -7533,10 +9439,10 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::Complex(i) => DraughtingModelItemAssociationSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
-            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => EntityKey::AnnotationFillAreaOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => EntityKey::AnnotationPlaceholderOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i),
@@ -7545,6 +9451,7 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => EntityKey::AnnotationTextOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => EntityKey::DraughtingAnnotationOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
+            DraughtingModelItemAssociationSelectRef::ExternalImagePlacementInCallout(i) => EntityKey::ExternalImagePlacementInCallout(*i),
             DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => EntityKey::LeaderDirectedCallout(*i),
             DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
@@ -7555,6 +9462,8 @@ impl DraughtingModelItemAssociationSelectRef {
     }
 }
 
+/// What a [`DraughtingModelItemDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingModelItemDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -7621,6 +9530,8 @@ pub enum DraughtingModelItemDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingModelItemDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingModelItemDefinitionRefView<'m> {
         match self {
             DraughtingModelItemDefinitionRef::AllAroundShapeAspect(i) => {
@@ -7927,6 +9838,7 @@ impl DraughtingModelItemDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingModelItemDefinitionRef::AllAroundShapeAspect(i) => {
@@ -8097,6 +10009,8 @@ impl DraughtingModelItemDefinitionRef {
     }
 }
 
+/// What a [`EdgeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum EdgeRefView<'m> {
     Edge(&'m Edge),
@@ -8105,6 +10019,8 @@ pub enum EdgeRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl EdgeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> EdgeRefView<'m> {
         match self {
             EdgeRef::Edge(i) => EdgeRefView::Edge(model.edge_arena.get(i.0)),
@@ -8115,6 +10031,7 @@ impl EdgeRef {
             EdgeRef::Complex(i) => EdgeRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             EdgeRef::Edge(i) => EntityKey::Edge(*i),
@@ -8125,6 +10042,39 @@ impl EdgeRef {
     }
 }
 
+/// What a [`ExplicitRoundHoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum ExplicitRoundHoleRefView<'m> {
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    Complex(&'m ComplexEntity),
+}
+impl ExplicitRoundHoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ExplicitRoundHoleRefView<'m> {
+        match self {
+            ExplicitRoundHoleRef::ExplicitRoundHole(i) => {
+                ExplicitRoundHoleRefView::ExplicitRoundHole(
+                    model.explicit_round_hole_arena.get(i.0),
+                )
+            }
+            ExplicitRoundHoleRef::Complex(i) => {
+                ExplicitRoundHoleRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ExplicitRoundHoleRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            ExplicitRoundHoleRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`ExternalIdentificationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ExternalIdentificationItemRefView<'m> {
     ActionDirective(&'m ActionDirective),
@@ -8135,7 +10085,6 @@ pub enum ExternalIdentificationItemRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -8143,7 +10092,6 @@ pub enum ExternalIdentificationItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -8222,6 +10170,7 @@ pub enum ExternalIdentificationItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternalSource(&'m ExternalSource),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
@@ -8377,6 +10326,8 @@ pub enum ExternalIdentificationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ExternalIdentificationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ExternalIdentificationItemRefView<'m> {
         match self {
             ExternalIdentificationItemRef::ActionDirective(i) => ExternalIdentificationItemRefView::ActionDirective(model.action_directive_arena.get(i.0)),
@@ -8387,13 +10338,11 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => ExternalIdentificationItemRefView::AdvancedBrepShapeRepresentation(model.advanced_brep_shape_representation_arena.get(i.0)),
             ExternalIdentificationItemRef::AdvancedFace(i) => ExternalIdentificationItemRefView::AdvancedFace(model.advanced_face_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => ExternalIdentificationItemRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
-            ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => ExternalIdentificationItemRefView::AnnotationFillAreaOccurrence(model.annotation_fill_area_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationOccurrence(i) => ExternalIdentificationItemRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => ExternalIdentificationItemRefView::AnnotationPlaceholderLeaderLine(model.annotation_placeholder_leader_line_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => ExternalIdentificationItemRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => ExternalIdentificationItemRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlane(i) => ExternalIdentificationItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0)),
-            ExternalIdentificationItemRef::AnnotationSymbol(i) => ExternalIdentificationItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => ExternalIdentificationItemRefView::AnnotationSymbolOccurrence(model.annotation_symbol_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationText(i) => ExternalIdentificationItemRefView::AnnotationText(model.annotation_text_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationTextCharacter(i) => ExternalIdentificationItemRefView::AnnotationTextCharacter(model.annotation_text_character_arena.get(i.0)),
@@ -8472,6 +10421,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::Effectivity(i) => ExternalIdentificationItemRefView::Effectivity(model.effectivity_arena.get(i.0)),
             ExternalIdentificationItemRef::ElementarySurface(i) => ExternalIdentificationItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
             ExternalIdentificationItemRef::Ellipse(i) => ExternalIdentificationItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            ExternalIdentificationItemRef::ExternalImagePlacementInCallout(i) => ExternalIdentificationItemRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             ExternalIdentificationItemRef::ExternalSource(i) => ExternalIdentificationItemRefView::ExternalSource(model.external_source_arena.get(i.0)),
             ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => ExternalIdentificationItemRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
             ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => ExternalIdentificationItemRefView::ExternallyDefinedTileStyle(model.externally_defined_tile_style_arena.get(i.0)),
@@ -8615,6 +10565,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::Complex(i) => ExternalIdentificationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ExternalIdentificationItemRef::ActionDirective(i) => EntityKey::ActionDirective(*i),
@@ -8625,13 +10576,11 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
             ExternalIdentificationItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
             ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
-            ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => EntityKey::AnnotationFillAreaOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => EntityKey::AnnotationPlaceholderLeaderLine(*i),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => EntityKey::AnnotationPlaceholderOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i),
             ExternalIdentificationItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            ExternalIdentificationItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => EntityKey::AnnotationSymbolOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
             ExternalIdentificationItemRef::AnnotationTextCharacter(i) => EntityKey::AnnotationTextCharacter(*i),
@@ -8710,6 +10659,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             ExternalIdentificationItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             ExternalIdentificationItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            ExternalIdentificationItemRef::ExternalImagePlacementInCallout(i) => EntityKey::ExternalImagePlacementInCallout(*i),
             ExternalIdentificationItemRef::ExternalSource(i) => EntityKey::ExternalSource(*i),
             ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => EntityKey::ExternallyDefinedHatchStyle(*i),
             ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => EntityKey::ExternallyDefinedTileStyle(*i),
@@ -8855,12 +10805,16 @@ impl ExternalIdentificationItemRef {
     }
 }
 
+/// What a [`ExternalSourceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ExternalSourceRefView<'m> {
     ExternalSource(&'m ExternalSource),
     Complex(&'m ComplexEntity),
 }
 impl ExternalSourceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ExternalSourceRefView<'m> {
         match self {
             ExternalSourceRef::ExternalSource(i) => {
@@ -8871,6 +10825,7 @@ impl ExternalSourceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ExternalSourceRef::ExternalSource(i) => EntityKey::ExternalSource(*i),
@@ -8879,6 +10834,8 @@ impl ExternalSourceRef {
     }
 }
 
+/// What a [`FaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -8887,6 +10844,8 @@ pub enum FaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceRefView<'m> {
         match self {
             FaceRef::AdvancedFace(i) => {
@@ -8897,6 +10856,7 @@ impl FaceRef {
             FaceRef::Complex(i) => FaceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -8907,6 +10867,8 @@ impl FaceRef {
     }
 }
 
+/// What a [`FaceBoundRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceBoundRefView<'m> {
     FaceBound(&'m FaceBound),
@@ -8914,6 +10876,8 @@ pub enum FaceBoundRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceBoundRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceBoundRefView<'m> {
         match self {
             FaceBoundRef::FaceBound(i) => {
@@ -8927,6 +10891,7 @@ impl FaceBoundRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceBoundRef::FaceBound(i) => EntityKey::FaceBound(*i),
@@ -8936,6 +10901,8 @@ impl FaceBoundRef {
     }
 }
 
+/// What a [`FaceOrSurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceOrSurfaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -8963,6 +10930,8 @@ pub enum FaceOrSurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceOrSurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceOrSurfaceRefView<'m> {
         match self {
             FaceOrSurfaceRef::AdvancedFace(i) => {
@@ -9040,6 +11009,7 @@ impl FaceOrSurfaceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceOrSurfaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -9073,6 +11043,8 @@ impl FaceOrSurfaceRef {
     }
 }
 
+/// What a [`FaceSurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceSurfaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -9080,6 +11052,8 @@ pub enum FaceSurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceSurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceSurfaceRefView<'m> {
         match self {
             FaceSurfaceRef::AdvancedFace(i) => {
@@ -9093,6 +11067,7 @@ impl FaceSurfaceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceSurfaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -9102,12 +11077,16 @@ impl FaceSurfaceRef {
     }
 }
 
+/// What a [`FillAreaStyleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FillAreaStyleRefView<'m> {
     FillAreaStyle(&'m FillAreaStyle),
     Complex(&'m ComplexEntity),
 }
 impl FillAreaStyleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillAreaStyleRefView<'m> {
         match self {
             FillAreaStyleRef::FillAreaStyle(i) => {
@@ -9118,6 +11097,7 @@ impl FillAreaStyleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FillAreaStyleRef::FillAreaStyle(i) => EntityKey::FillAreaStyle(*i),
@@ -9126,6 +11106,8 @@ impl FillAreaStyleRef {
     }
 }
 
+/// What a [`FillAreaStyleTileShapeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FillAreaStyleTileShapeSelectRefView<'m> {
     ExternallyDefinedTile(&'m ExternallyDefinedTile),
@@ -9136,6 +11118,8 @@ pub enum FillAreaStyleTileShapeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FillAreaStyleTileShapeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillAreaStyleTileShapeSelectRefView<'m> {
         match self {
             FillAreaStyleTileShapeSelectRef::ExternallyDefinedTile(i) => {
@@ -9168,6 +11152,7 @@ impl FillAreaStyleTileShapeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FillAreaStyleTileShapeSelectRef::ExternallyDefinedTile(i) => {
@@ -9188,6 +11173,8 @@ impl FillAreaStyleTileShapeSelectRef {
     }
 }
 
+/// What a [`FillStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FillStyleSelectRefView<'m> {
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
@@ -9200,6 +11187,8 @@ pub enum FillStyleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FillStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillStyleSelectRefView<'m> {
         match self {
             FillStyleSelectRef::ExternallyDefinedHatchStyle(i) => {
@@ -9244,6 +11233,7 @@ impl FillStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FillStyleSelectRef::ExternallyDefinedHatchStyle(i) => {
@@ -9266,6 +11256,8 @@ impl FillStyleSelectRef {
     }
 }
 
+/// What a [`FontSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FontSelectRefView<'m> {
     DraughtingPreDefinedTextFont(&'m DraughtingPreDefinedTextFont),
@@ -9275,6 +11267,8 @@ pub enum FontSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FontSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FontSelectRefView<'m> {
         match self {
             FontSelectRef::DraughtingPreDefinedTextFont(i) => {
@@ -9298,6 +11292,7 @@ impl FontSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FontSelectRef::DraughtingPreDefinedTextFont(i) => {
@@ -9311,12 +11306,16 @@ impl FontSelectRef {
     }
 }
 
+/// What a [`GeneralPropertyRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeneralPropertyRefView<'m> {
     GeneralProperty(&'m GeneralProperty),
     Complex(&'m ComplexEntity),
 }
 impl GeneralPropertyRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeneralPropertyRefView<'m> {
         match self {
             GeneralPropertyRef::GeneralProperty(i) => {
@@ -9327,6 +11326,7 @@ impl GeneralPropertyRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeneralPropertyRef::GeneralProperty(i) => EntityKey::GeneralProperty(*i),
@@ -9335,6 +11335,8 @@ impl GeneralPropertyRef {
     }
 }
 
+/// What a [`GeometricItemSpecificUsageSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricItemSpecificUsageSelectRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -9368,6 +11370,8 @@ pub enum GeometricItemSpecificUsageSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricItemSpecificUsageSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricItemSpecificUsageSelectRefView<'m> {
         match self {
             GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
@@ -9515,6 +11519,7 @@ impl GeometricItemSpecificUsageSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
@@ -9592,6 +11597,8 @@ impl GeometricItemSpecificUsageSelectRef {
     }
 }
 
+/// What a [`GeometricModelItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricModelItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -9646,6 +11653,7 @@ pub enum GeometricModelItemRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     FaceSurface(&'m FaceSurface),
@@ -9709,6 +11717,8 @@ pub enum GeometricModelItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricModelItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricModelItemRefView<'m> {
         match self {
             GeometricModelItemRef::AdvancedFace(i) => {
@@ -9900,6 +11910,11 @@ impl GeometricModelItemRef {
             }
             GeometricModelItemRef::Ellipse(i) => {
                 GeometricModelItemRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            GeometricModelItemRef::ExternalImagePlacementInCallout(i) => {
+                GeometricModelItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             GeometricModelItemRef::ExternallyDefinedHatchStyle(i) => {
                 GeometricModelItemRefView::ExternallyDefinedHatchStyle(
@@ -10140,6 +12155,7 @@ impl GeometricModelItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricModelItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -10214,6 +12230,9 @@ impl GeometricModelItemRef {
             GeometricModelItemRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             GeometricModelItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             GeometricModelItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            GeometricModelItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             GeometricModelItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -10307,6 +12326,75 @@ impl GeometricModelItemRef {
     }
 }
 
+/// What a [`GeometricRepresentationContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum GeometricRepresentationContextRefView<'m> {
+    GeometricRepresentationContext(&'m GeometricRepresentationContext),
+    Complex(&'m ComplexEntity),
+}
+impl GeometricRepresentationContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricRepresentationContextRefView<'m> {
+        match self {
+            GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+                GeometricRepresentationContextRefView::GeometricRepresentationContext(
+                    model.geometric_representation_context_arena.get(i.0),
+                )
+            }
+            GeometricRepresentationContextRef::Complex(i) => {
+                GeometricRepresentationContextRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+                EntityKey::GeometricRepresentationContext(*i)
+            }
+            GeometricRepresentationContextRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`GeometricSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum GeometricSetRefView<'m> {
+    GeometricCurveSet(&'m GeometricCurveSet),
+    GeometricSet(&'m GeometricSet),
+    Complex(&'m ComplexEntity),
+}
+impl GeometricSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricSetRefView<'m> {
+        match self {
+            GeometricSetRef::GeometricCurveSet(i) => {
+                GeometricSetRefView::GeometricCurveSet(model.geometric_curve_set_arena.get(i.0))
+            }
+            GeometricSetRef::GeometricSet(i) => {
+                GeometricSetRefView::GeometricSet(model.geometric_set_arena.get(i.0))
+            }
+            GeometricSetRef::Complex(i) => {
+                GeometricSetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            GeometricSetRef::GeometricCurveSet(i) => EntityKey::GeometricCurveSet(*i),
+            GeometricSetRef::GeometricSet(i) => EntityKey::GeometricSet(*i),
+            GeometricSetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`GeometricSetSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricSetSelectRefView<'m> {
     AnnotationText(&'m AnnotationText),
@@ -10364,6 +12452,8 @@ pub enum GeometricSetSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricSetSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricSetSelectRefView<'m> {
         match self {
             GeometricSetSelectRef::AnnotationText(i) => {
@@ -10555,6 +12645,7 @@ impl GeometricSetSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricSetSelectRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
@@ -10622,6 +12713,8 @@ impl GeometricSetSelectRef {
     }
 }
 
+/// What a [`GeometricToleranceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricToleranceRefView<'m> {
     AngularityTolerance(&'m AngularityTolerance),
@@ -10650,6 +12743,8 @@ pub enum GeometricToleranceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricToleranceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricToleranceRefView<'m> {
         match self {
             GeometricToleranceRef::AngularityTolerance(i) => {
@@ -10778,6 +12873,7 @@ impl GeometricToleranceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricToleranceRef::AngularityTolerance(i) => EntityKey::AngularityTolerance(*i),
@@ -10830,6 +12926,8 @@ impl GeometricToleranceRef {
     }
 }
 
+/// What a [`GeometricToleranceTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricToleranceTargetRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -10854,15 +12952,21 @@ pub enum GeometricToleranceTargetRefView<'m> {
     DimensionalSizeWithDatumFeature(&'m DimensionalSizeWithDatumFeature),
     DimensionalSizeWithPath(&'m DimensionalSizeWithPath),
     DirectedDimensionalLocation(&'m DirectedDimensionalLocation),
+    FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     GeneralDatumReference(&'m GeneralDatumReference),
     PlacedDatumTargetFeature(&'m PlacedDatumTargetFeature),
     ProductDefinitionShape(&'m ProductDefinitionShape),
     ShapeAspect(&'m ShapeAspect),
+    ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
+    ShapeAspectDerivingRelationship(&'m ShapeAspectDerivingRelationship),
+    ShapeAspectRelationship(&'m ShapeAspectRelationship),
     ToleranceZone(&'m ToleranceZone),
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
     Complex(&'m ComplexEntity),
 }
 impl GeometricToleranceTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricToleranceTargetRefView<'m> {
         match self {
             GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
@@ -10963,6 +13067,11 @@ impl GeometricToleranceTargetRef {
                     model.directed_dimensional_location_arena.get(i.0),
                 )
             }
+            GeometricToleranceTargetRef::FeatureForDatumTargetRelationship(i) => {
+                GeometricToleranceTargetRefView::FeatureForDatumTargetRelationship(
+                    model.feature_for_datum_target_relationship_arena.get(i.0),
+                )
+            }
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 GeometricToleranceTargetRefView::GeneralDatumReference(
                     model.general_datum_reference_arena.get(i.0),
@@ -10981,6 +13090,21 @@ impl GeometricToleranceTargetRef {
             GeometricToleranceTargetRef::ShapeAspect(i) => {
                 GeometricToleranceTargetRefView::ShapeAspect(model.shape_aspect_arena.get(i.0))
             }
+            GeometricToleranceTargetRef::ShapeAspectAssociativity(i) => {
+                GeometricToleranceTargetRefView::ShapeAspectAssociativity(
+                    model.shape_aspect_associativity_arena.get(i.0),
+                )
+            }
+            GeometricToleranceTargetRef::ShapeAspectDerivingRelationship(i) => {
+                GeometricToleranceTargetRefView::ShapeAspectDerivingRelationship(
+                    model.shape_aspect_deriving_relationship_arena.get(i.0),
+                )
+            }
+            GeometricToleranceTargetRef::ShapeAspectRelationship(i) => {
+                GeometricToleranceTargetRefView::ShapeAspectRelationship(
+                    model.shape_aspect_relationship_arena.get(i.0),
+                )
+            }
             GeometricToleranceTargetRef::ToleranceZone(i) => {
                 GeometricToleranceTargetRefView::ToleranceZone(model.tolerance_zone_arena.get(i.0))
             }
@@ -10994,6 +13118,7 @@ impl GeometricToleranceTargetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
@@ -11042,6 +13167,9 @@ impl GeometricToleranceTargetRef {
             GeometricToleranceTargetRef::DirectedDimensionalLocation(i) => {
                 EntityKey::DirectedDimensionalLocation(*i)
             }
+            GeometricToleranceTargetRef::FeatureForDatumTargetRelationship(i) => {
+                EntityKey::FeatureForDatumTargetRelationship(*i)
+            }
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 EntityKey::GeneralDatumReference(*i)
             }
@@ -11052,6 +13180,15 @@ impl GeometricToleranceTargetRef {
                 EntityKey::ProductDefinitionShape(*i)
             }
             GeometricToleranceTargetRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
+            GeometricToleranceTargetRef::ShapeAspectAssociativity(i) => {
+                EntityKey::ShapeAspectAssociativity(*i)
+            }
+            GeometricToleranceTargetRef::ShapeAspectDerivingRelationship(i) => {
+                EntityKey::ShapeAspectDerivingRelationship(*i)
+            }
+            GeometricToleranceTargetRef::ShapeAspectRelationship(i) => {
+                EntityKey::ShapeAspectRelationship(*i)
+            }
             GeometricToleranceTargetRef::ToleranceZone(i) => EntityKey::ToleranceZone(*i),
             GeometricToleranceTargetRef::ToleranceZoneWithDatum(i) => {
                 EntityKey::ToleranceZoneWithDatum(*i)
@@ -11061,6 +13198,8 @@ impl GeometricToleranceTargetRef {
     }
 }
 
+/// What a [`GroupRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GroupRefView<'m> {
     Group(&'m Group),
@@ -11068,6 +13207,8 @@ pub enum GroupRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GroupRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GroupRefView<'m> {
         match self {
             GroupRef::Group(i) => GroupRefView::Group(model.group_arena.get(i.0)),
@@ -11079,6 +13220,7 @@ impl GroupRef {
             GroupRef::Complex(i) => GroupRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GroupRef::Group(i) => EntityKey::Group(*i),
@@ -11090,6 +13232,8 @@ impl GroupRef {
     }
 }
 
+/// What a [`GroupableItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GroupableItemRefView<'m> {
     ActionMethod(&'m ActionMethod),
@@ -11099,7 +13243,6 @@ pub enum GroupableItemRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
     AngularLocation(&'m AngularLocation),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -11107,7 +13250,6 @@ pub enum GroupableItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -11219,6 +13361,7 @@ pub enum GroupableItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternalSource(&'m ExternalSource),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
@@ -11309,6 +13452,8 @@ pub enum GroupableItemRefView<'m> {
     Point(&'m Point),
     PolyLoop(&'m PolyLoop),
     Polyline(&'m Polyline),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
     PrecisionQualifier(&'m PrecisionQualifier),
     PresentationArea(&'m PresentationArea),
     PresentationRepresentation(&'m PresentationRepresentation),
@@ -11405,6 +13550,8 @@ pub enum GroupableItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GroupableItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GroupableItemRefView<'m> {
         match self {
             GroupableItemRef::ActionMethod(i) => {
@@ -11434,11 +13581,6 @@ impl GroupableItemRef {
                     model.annotation_curve_occurrence_arena.get(i.0),
                 )
             }
-            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
-                GroupableItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
-                )
-            }
             GroupableItemRef::AnnotationOccurrence(i) => {
                 GroupableItemRefView::AnnotationOccurrence(
                     model.annotation_occurrence_arena.get(i.0),
@@ -11463,9 +13605,6 @@ impl GroupableItemRef {
             }
             GroupableItemRef::AnnotationPlane(i) => {
                 GroupableItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            GroupableItemRef::AnnotationSymbol(i) => {
-                GroupableItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             GroupableItemRef::AnnotationSymbolOccurrence(i) => {
                 GroupableItemRefView::AnnotationSymbolOccurrence(
@@ -11878,6 +14017,11 @@ impl GroupableItemRef {
             GroupableItemRef::Ellipse(i) => {
                 GroupableItemRefView::Ellipse(model.ellipse_arena.get(i.0))
             }
+            GroupableItemRef::ExternalImagePlacementInCallout(i) => {
+                GroupableItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             GroupableItemRef::ExternalSource(i) => {
                 GroupableItemRefView::ExternalSource(model.external_source_arena.get(i.0))
             }
@@ -12191,6 +14335,16 @@ impl GroupableItemRef {
             }
             GroupableItemRef::Polyline(i) => {
                 GroupableItemRefView::Polyline(model.polyline_arena.get(i.0))
+            }
+            GroupableItemRef::PositiveLengthMeasureWithUnit(i) => {
+                GroupableItemRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            GroupableItemRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                GroupableItemRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
             }
             GroupableItemRef::PrecisionQualifier(i) => {
                 GroupableItemRefView::PrecisionQualifier(model.precision_qualifier_arena.get(i.0))
@@ -12562,6 +14716,7 @@ impl GroupableItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GroupableItemRef::ActionMethod(i) => EntityKey::ActionMethod(*i),
@@ -12575,9 +14730,6 @@ impl GroupableItemRef {
             GroupableItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             GroupableItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             GroupableItemRef::AnnotationPlaceholderLeaderLine(i) => {
                 EntityKey::AnnotationPlaceholderLeaderLine(*i)
@@ -12589,7 +14741,6 @@ impl GroupableItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             GroupableItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            GroupableItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             GroupableItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -12757,6 +14908,9 @@ impl GroupableItemRef {
             GroupableItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             GroupableItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             GroupableItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            GroupableItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             GroupableItemRef::ExternalSource(i) => EntityKey::ExternalSource(*i),
             GroupableItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
@@ -12895,6 +15049,12 @@ impl GroupableItemRef {
             GroupableItemRef::Point(i) => EntityKey::Point(*i),
             GroupableItemRef::PolyLoop(i) => EntityKey::PolyLoop(*i),
             GroupableItemRef::Polyline(i) => EntityKey::Polyline(*i),
+            GroupableItemRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            GroupableItemRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
+            }
             GroupableItemRef::PrecisionQualifier(i) => EntityKey::PrecisionQualifier(*i),
             GroupableItemRef::PresentationArea(i) => EntityKey::PresentationArea(*i),
             GroupableItemRef::PresentationRepresentation(i) => {
@@ -13041,6 +15201,8 @@ impl GroupableItemRef {
     }
 }
 
+/// What a [`IdAttributeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum IdAttributeSelectRefView<'m> {
     Action(&'m Action),
@@ -13140,6 +15302,7 @@ pub enum IdAttributeSelectRefView<'m> {
     ProductRelatedProductCategory(&'m ProductRelatedProductCategory),
     PropertyDefinition(&'m PropertyDefinition),
     Representation(&'m Representation),
+    RoundHoleBottomCondition(&'m RoundHoleBottomCondition),
     RoundnessTolerance(&'m RoundnessTolerance),
     ShapeAspect(&'m ShapeAspect),
     ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
@@ -13166,6 +15329,8 @@ pub enum IdAttributeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl IdAttributeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> IdAttributeSelectRefView<'m> {
         match self {
             IdAttributeSelectRef::Action(i) => {
@@ -13549,6 +15714,11 @@ impl IdAttributeSelectRef {
             IdAttributeSelectRef::Representation(i) => {
                 IdAttributeSelectRefView::Representation(model.representation_arena.get(i.0))
             }
+            IdAttributeSelectRef::RoundHoleBottomCondition(i) => {
+                IdAttributeSelectRefView::RoundHoleBottomCondition(
+                    model.round_hole_bottom_condition_arena.get(i.0),
+                )
+            }
             IdAttributeSelectRef::RoundnessTolerance(i) => {
                 IdAttributeSelectRefView::RoundnessTolerance(
                     model.roundness_tolerance_arena.get(i.0),
@@ -13653,6 +15823,7 @@ impl IdAttributeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             IdAttributeSelectRef::Action(i) => EntityKey::Action(*i),
@@ -13810,6 +15981,9 @@ impl IdAttributeSelectRef {
             }
             IdAttributeSelectRef::PropertyDefinition(i) => EntityKey::PropertyDefinition(*i),
             IdAttributeSelectRef::Representation(i) => EntityKey::Representation(*i),
+            IdAttributeSelectRef::RoundHoleBottomCondition(i) => {
+                EntityKey::RoundHoleBottomCondition(*i)
+            }
             IdAttributeSelectRef::RoundnessTolerance(i) => EntityKey::RoundnessTolerance(*i),
             IdAttributeSelectRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
             IdAttributeSelectRef::ShapeAspectAssociativity(i) => {
@@ -13858,11 +16032,15 @@ impl IdAttributeSelectRef {
     }
 }
 
+/// What a [`IdentificationRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum IdentificationRoleRefView<'m> {
     IdentificationRole(&'m IdentificationRole),
 }
 impl IdentificationRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> IdentificationRoleRefView<'m> {
         match self {
             IdentificationRoleRef::IdentificationRole(i) => {
@@ -13872,6 +16050,7 @@ impl IdentificationRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             IdentificationRoleRef::IdentificationRole(i) => EntityKey::IdentificationRole(*i),
@@ -13879,11 +16058,12 @@ impl IdentificationRoleRef {
     }
 }
 
+/// What a [`InvisibleItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum InvisibleItemRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -13899,6 +16079,7 @@ pub enum InvisibleItemRefView<'m> {
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
     DraughtingCallout(&'m DraughtingCallout),
     DraughtingModel(&'m DraughtingModel),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     GeometricallyBoundedSurfaceShapeRepresentation(
         &'m GeometricallyBoundedSurfaceShapeRepresentation,
     ),
@@ -13935,6 +16116,8 @@ pub enum InvisibleItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl InvisibleItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> InvisibleItemRefView<'m> {
         match self {
             InvisibleItemRef::AdvancedBrepShapeRepresentation(i) => {
@@ -13945,11 +16128,6 @@ impl InvisibleItemRef {
             InvisibleItemRef::AnnotationCurveOccurrence(i) => {
                 InvisibleItemRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            InvisibleItemRef::AnnotationFillAreaOccurrence(i) => {
-                InvisibleItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             InvisibleItemRef::AnnotationOccurrence(i) => {
@@ -14014,6 +16192,11 @@ impl InvisibleItemRef {
             }
             InvisibleItemRef::DraughtingModel(i) => {
                 InvisibleItemRefView::DraughtingModel(model.draughting_model_arena.get(i.0))
+            }
+            InvisibleItemRef::ExternalImagePlacementInCallout(i) => {
+                InvisibleItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
                 InvisibleItemRefView::GeometricallyBoundedSurfaceShapeRepresentation(
@@ -14129,6 +16312,7 @@ impl InvisibleItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             InvisibleItemRef::AdvancedBrepShapeRepresentation(i) => {
@@ -14136,9 +16320,6 @@ impl InvisibleItemRef {
             }
             InvisibleItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            InvisibleItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             InvisibleItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             InvisibleItemRef::AnnotationPlaceholderOccurrence(i) => {
@@ -14171,6 +16352,9 @@ impl InvisibleItemRef {
             }
             InvisibleItemRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
             InvisibleItemRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
+            InvisibleItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
                 EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)
             }
@@ -14223,12 +16407,16 @@ impl InvisibleItemRef {
     }
 }
 
+/// What a [`ItemDefinedTransformationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ItemDefinedTransformationRefView<'m> {
     ItemDefinedTransformation(&'m ItemDefinedTransformation),
     Complex(&'m ComplexEntity),
 }
 impl ItemDefinedTransformationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ItemDefinedTransformationRefView<'m> {
         match self {
             ItemDefinedTransformationRef::ItemDefinedTransformation(i) => {
@@ -14241,6 +16429,7 @@ impl ItemDefinedTransformationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ItemDefinedTransformationRef::ItemDefinedTransformation(i) => {
@@ -14251,6 +16440,8 @@ impl ItemDefinedTransformationRef {
     }
 }
 
+/// What a [`ItemIdentifiedRepresentationUsageDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -14264,6 +16455,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     AppliedGroupAssignment(&'m AppliedGroupAssignment),
     AppliedPersonAndOrganizationAssignment(&'m AppliedPersonAndOrganizationAssignment),
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
+    BasicRoundHole(&'m BasicRoundHole),
     CentreOfSymmetry(&'m CentreOfSymmetry),
     CharacterizedItemWithinRepresentation(&'m CharacterizedItemWithinRepresentation),
     CharacterizedObject(&'m CharacterizedObject),
@@ -14272,9 +16464,14 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     CoaxialityTolerance(&'m CoaxialityTolerance),
     CommonDatum(&'m CommonDatum),
     CompositeGroupShapeAspect(&'m CompositeGroupShapeAspect),
+    CompositeHole(&'m CompositeHole),
     CompositeShapeAspect(&'m CompositeShapeAspect),
+    CompoundFeature(&'m CompoundFeature),
     ConcentricityTolerance(&'m ConcentricityTolerance),
     ContinuousShapeAspect(&'m ContinuousShapeAspect),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
     CylindricityTolerance(&'m CylindricityTolerance),
     Datum(&'m Datum),
     DatumFeature(&'m DatumFeature),
@@ -14291,6 +16488,9 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     DimensionalSizeWithPath(&'m DimensionalSizeWithPath),
     DirectedDimensionalLocation(&'m DirectedDimensionalLocation),
     DocumentFile(&'m DocumentFile),
+    ExplicitCompositeHole(&'m ExplicitCompositeHole),
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    FeatureDefinition(&'m FeatureDefinition),
     FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     FlatnessTolerance(&'m FlatnessTolerance),
     GeneralDatumReference(&'m GeneralDatumReference),
@@ -14315,6 +16515,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     ProductDefinitionUsage(&'m ProductDefinitionUsage),
     PropertyDefinition(&'m PropertyDefinition),
     PropertyDefinitionRelationship(&'m PropertyDefinitionRelationship),
+    RoundHole(&'m RoundHole),
     RoundnessTolerance(&'m RoundnessTolerance),
     ShapeAspect(&'m ShapeAspect),
     ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
@@ -14330,6 +16531,8 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ItemIdentifiedRepresentationUsageDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -14346,6 +16549,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::AppliedGroupAssignment(model.applied_group_assignment_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::AppliedPersonAndOrganizationAssignment(model.applied_person_and_organization_assignment_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::AssemblyComponentUsage(model.assembly_component_usage_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::BasicRoundHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::BasicRoundHole(model.basic_round_hole_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CentreOfSymmetry(model.centre_of_symmetry_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CharacterizedItemWithinRepresentation(model.characterized_item_within_representation_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CharacterizedObject(model.characterized_object_arena.get(i.0)),
@@ -14354,9 +16558,14 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CoaxialityTolerance(model.coaxiality_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CommonDatum(model.common_datum_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompositeGroupShapeAspect(model.composite_group_shape_aspect_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompositeHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompositeHole(model.composite_hole_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompositeShapeAspect(model.composite_shape_aspect_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompoundFeature(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompoundFeature(model.compound_feature_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ConcentricityTolerance(model.concentricity_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ContinuousShapeAspect(model.continuous_shape_aspect_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterboreHoleDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CounterboreHoleDefinition(model.counterbore_hole_definition_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterdrillHoleDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CounterdrillHoleDefinition(model.counterdrill_hole_definition_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CountersinkHoleDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CountersinkHoleDefinition(model.countersink_hole_definition_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CylindricityTolerance(model.cylindricity_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::Datum(model.datum_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DatumFeature(model.datum_feature_arena.get(i.0)),
@@ -14373,6 +16582,9 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DimensionalSizeWithPath(model.dimensional_size_with_path_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DirectedDimensionalLocation(model.directed_dimensional_location_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DocumentFile(model.document_file_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitCompositeHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ExplicitCompositeHole(model.explicit_composite_hole_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitRoundHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ExplicitRoundHole(model.explicit_round_hole_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::FeatureDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::FeatureDefinition(model.feature_definition_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::FeatureForDatumTargetRelationship(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::FeatureForDatumTargetRelationship(model.feature_for_datum_target_relationship_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::FlatnessTolerance(model.flatness_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::GeneralDatumReference(model.general_datum_reference_arena.get(i.0)),
@@ -14397,6 +16609,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ProductDefinitionUsage(model.product_definition_usage_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::PropertyDefinition(model.property_definition_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::PropertyDefinitionRelationship(model.property_definition_relationship_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::RoundHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::RoundHole(model.round_hole_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::RoundnessTolerance(model.roundness_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ShapeAspect(model.shape_aspect_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ShapeAspectAssociativity(model.shape_aspect_associativity_arena.get(i.0)),
@@ -14412,6 +16625,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(i) => EntityKey::AllAroundShapeAspect(*i),
@@ -14425,6 +16639,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => EntityKey::AppliedGroupAssignment(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => EntityKey::AppliedPersonAndOrganizationAssignment(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => EntityKey::AssemblyComponentUsage(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => EntityKey::CentreOfSymmetry(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => EntityKey::CharacterizedItemWithinRepresentation(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => EntityKey::CharacterizedObject(*i),
@@ -14433,9 +16648,14 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => EntityKey::CoaxialityTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => EntityKey::CommonDatum(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => EntityKey::CompositeGroupShapeAspect(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompositeHole(i) => EntityKey::CompositeHole(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => EntityKey::CompositeShapeAspect(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompoundFeature(i) => EntityKey::CompoundFeature(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => EntityKey::ConcentricityTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => EntityKey::ContinuousShapeAspect(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterboreHoleDefinition(i) => EntityKey::CounterboreHoleDefinition(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterdrillHoleDefinition(i) => EntityKey::CounterdrillHoleDefinition(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CountersinkHoleDefinition(i) => EntityKey::CountersinkHoleDefinition(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => EntityKey::CylindricityTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => EntityKey::Datum(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => EntityKey::DatumFeature(*i),
@@ -14452,6 +16672,9 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => EntityKey::DimensionalSizeWithPath(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => EntityKey::DirectedDimensionalLocation(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => EntityKey::DocumentFile(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitCompositeHole(i) => EntityKey::ExplicitCompositeHole(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::FeatureDefinition(i) => EntityKey::FeatureDefinition(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::FeatureForDatumTargetRelationship(i) => EntityKey::FeatureForDatumTargetRelationship(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => EntityKey::FlatnessTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => EntityKey::GeneralDatumReference(*i),
@@ -14476,6 +16699,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => EntityKey::ProductDefinitionUsage(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => EntityKey::PropertyDefinition(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => EntityKey::PropertyDefinitionRelationship(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::RoundHole(i) => EntityKey::RoundHole(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => EntityKey::RoundnessTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => EntityKey::ShapeAspectAssociativity(*i),
@@ -14493,11 +16717,12 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
     }
 }
 
+/// What a [`ItemIdentifiedRepresentationUsageSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
-pub enum LayeredItemRefView<'m> {
+pub enum ItemIdentifiedRepresentationUsageSelectRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -14505,7 +16730,6 @@ pub enum LayeredItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -14562,6 +16786,485 @@ pub enum LayeredItemRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
+    ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
+    ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
+    Face(&'m Face),
+    FaceBound(&'m FaceBound),
+    FaceOuterBound(&'m FaceOuterBound),
+    FaceSurface(&'m FaceSurface),
+    FillAreaStyleHatching(&'m FillAreaStyleHatching),
+    FillAreaStyleTileColouredRegion(&'m FillAreaStyleTileColouredRegion),
+    FillAreaStyleTileCurveWithStyle(&'m FillAreaStyleTileCurveWithStyle),
+    FillAreaStyleTileSymbolWithStyle(&'m FillAreaStyleTileSymbolWithStyle),
+    FillAreaStyleTiles(&'m FillAreaStyleTiles),
+    GeometricCurveSet(&'m GeometricCurveSet),
+    GeometricRepresentationItem(&'m GeometricRepresentationItem),
+    GeometricSet(&'m GeometricSet),
+    Hyperbola(&'m Hyperbola),
+    IntegerRepresentationItem(&'m IntegerRepresentationItem),
+    IntersectionCurve(&'m IntersectionCurve),
+    LeaderCurve(&'m LeaderCurve),
+    LeaderDirectedCallout(&'m LeaderDirectedCallout),
+    LeaderTerminator(&'m LeaderTerminator),
+    Line(&'m Line),
+    Loop(&'m Loop),
+    ManifoldSolidBrep(&'m ManifoldSolidBrep),
+    MappedItem(&'m MappedItem),
+    MeasureRepresentationItem(&'m MeasureRepresentationItem),
+    OffsetSurface(&'m OffsetSurface),
+    OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
+    OpenShell(&'m OpenShell),
+    OrientedClosedShell(&'m OrientedClosedShell),
+    OrientedEdge(&'m OrientedEdge),
+    OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
+    Path(&'m Path),
+    Pcurve(&'m Pcurve),
+    Placement(&'m Placement),
+    PlanarBox(&'m PlanarBox),
+    PlanarExtent(&'m PlanarExtent),
+    Plane(&'m Plane),
+    Point(&'m Point),
+    PolyLoop(&'m PolyLoop),
+    Polyline(&'m Polyline),
+    QualifiedRepresentationItem(&'m QualifiedRepresentationItem),
+    QuasiUniformCurve(&'m QuasiUniformCurve),
+    QuasiUniformSurface(&'m QuasiUniformSurface),
+    RationalBSplineCurve(&'m RationalBSplineCurve),
+    RationalBSplineSurface(&'m RationalBSplineSurface),
+    RealRepresentationItem(&'m RealRepresentationItem),
+    RepositionedTessellatedItem(&'m RepositionedTessellatedItem),
+    RepresentationItem(&'m RepresentationItem),
+    SeamCurve(&'m SeamCurve),
+    ShellBasedSurfaceModel(&'m ShellBasedSurfaceModel),
+    SolidModel(&'m SolidModel),
+    SphericalSurface(&'m SphericalSurface),
+    StyledItem(&'m StyledItem),
+    Surface(&'m Surface),
+    SurfaceCurve(&'m SurfaceCurve),
+    SurfaceOfLinearExtrusion(&'m SurfaceOfLinearExtrusion),
+    SurfaceOfRevolution(&'m SurfaceOfRevolution),
+    SweptSurface(&'m SweptSurface),
+    SymbolTarget(&'m SymbolTarget),
+    TerminatorSymbol(&'m TerminatorSymbol),
+    TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
+    TessellatedCurveSet(&'m TessellatedCurveSet),
+    TessellatedFace(&'m TessellatedFace),
+    TessellatedGeometricSet(&'m TessellatedGeometricSet),
+    TessellatedItem(&'m TessellatedItem),
+    TessellatedShell(&'m TessellatedShell),
+    TessellatedSolid(&'m TessellatedSolid),
+    TessellatedStructuredItem(&'m TessellatedStructuredItem),
+    TessellatedSurfaceSet(&'m TessellatedSurfaceSet),
+    TextLiteral(&'m TextLiteral),
+    TopologicalRepresentationItem(&'m TopologicalRepresentationItem),
+    ToroidalSurface(&'m ToroidalSurface),
+    TrimmedCurve(&'m TrimmedCurve),
+    TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
+    UniformCurve(&'m UniformCurve),
+    UniformSurface(&'m UniformSurface),
+    ValueRepresentationItem(&'m ValueRepresentationItem),
+    Vector(&'m Vector),
+    Vertex(&'m Vertex),
+    VertexLoop(&'m VertexLoop),
+    VertexPoint(&'m VertexPoint),
+    VertexShell(&'m VertexShell),
+    WireShell(&'m WireShell),
+    ListRepresentationItem(&'m [RepresentationItemRef]),
+    SetRepresentationItem(&'m [RepresentationItemRef]),
+    Complex(&'m ComplexEntity),
+}
+impl ItemIdentifiedRepresentationUsageSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(
+        &'m self,
+        model: &'m StepModel,
+    ) -> ItemIdentifiedRepresentationUsageSelectRefView<'m> {
+        match self {
+            ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => ItemIdentifiedRepresentationUsageSelectRefView::AdvancedFace(model.advanced_face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlaceholderLeaderLine(model.annotation_placeholder_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationSymbolOccurrence(model.annotation_symbol_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationText(model.annotation_text_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationTextCharacter(model.annotation_text_character_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationTextOccurrence(model.annotation_text_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToAnnotationLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationToAnnotationLeaderLine(model.annotation_to_annotation_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToModelLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationToModelLeaderLine(model.annotation_to_model_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPoint(i) => ItemIdentifiedRepresentationUsageSelectRefView::ApllPoint(model.apll_point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPointWithSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ApllPointWithSurface(model.apll_point_with_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AuxiliaryLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AuxiliaryLeaderLine(model.auxiliary_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis1Placement(i) => ItemIdentifiedRepresentationUsageSelectRefView::Axis1Placement(model.axis1_placement_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement2d(i) => ItemIdentifiedRepresentationUsageSelectRefView::Axis2Placement2d(model.axis2_placement2d_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement3d(i) => ItemIdentifiedRepresentationUsageSelectRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineCurve(model.b_spline_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurveWithKnots(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineCurveWithKnots(model.b_spline_curve_with_knots_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurfaceWithKnots(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineSurfaceWithKnots(model.b_spline_surface_with_knots_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BezierCurve(model.bezier_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::BezierSurface(model.bezier_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedCurve(model.bounded_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedPcurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedPcurve(model.bounded_pcurve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedSurface(model.bounded_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurfaceCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedSurfaceCurve(model.bounded_surface_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BrepWithVoids(i) => ItemIdentifiedRepresentationUsageSelectRefView::BrepWithVoids(model.brep_with_voids_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraImage(model.camera_image_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraImage3dWithScale(model.camera_image3d_with_scale_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModel(model.camera_model_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3MultiClipping(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModelD3MultiClipping(model.camera_model_d3_multi_clipping_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModelD3WithHlhsr(model.camera_model_d3_with_hlhsr_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => ItemIdentifiedRepresentationUsageSelectRefView::CartesianPoint(model.cartesian_point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => ItemIdentifiedRepresentationUsageSelectRefView::Circle(model.circle_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ClosedShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::ClosedShell(model.closed_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedFace(i) => ItemIdentifiedRepresentationUsageSelectRefView::ComplexTriangulatedFace(model.complex_triangulated_face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedSurfaceSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::ComplexTriangulatedSurfaceSet(model.complex_triangulated_surface_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::CompositeCurve(model.composite_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeText(i) => ItemIdentifiedRepresentationUsageSelectRefView::CompositeText(model.composite_text_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompoundRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::CompoundRepresentationItem(model.compound_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Conic(i) => ItemIdentifiedRepresentationUsageSelectRefView::Conic(model.conic_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConicalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ConicalSurface(model.conical_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConnectedFaceSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::ConnectedFaceSet(model.connected_face_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ContextDependentOverRidingStyledItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::ContextDependentOverRidingStyledItem(model.context_dependent_over_riding_styled_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CoordinatesList(i) => ItemIdentifiedRepresentationUsageSelectRefView::CoordinatesList(model.coordinates_list_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Curve(i) => ItemIdentifiedRepresentationUsageSelectRefView::Curve(model.curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CylindricalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::CylindricalSurface(model.cylindrical_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedCharacterGlyph(i) => ItemIdentifiedRepresentationUsageSelectRefView::DefinedCharacterGlyph(model.defined_character_glyph_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedSymbol(i) => ItemIdentifiedRepresentationUsageSelectRefView::DefinedSymbol(model.defined_symbol_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DegenerateToroidalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::DegenerateToroidalSurface(model.degenerate_toroidal_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DescriptiveRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::DescriptiveRepresentationItem(model.descriptive_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Direction(i) => ItemIdentifiedRepresentationUsageSelectRefView::Direction(model.direction_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingAnnotationOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::DraughtingAnnotationOccurrence(model.draughting_annotation_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingCallout(i) => ItemIdentifiedRepresentationUsageSelectRefView::DraughtingCallout(model.draughting_callout_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Edge(i) => ItemIdentifiedRepresentationUsageSelectRefView::Edge(model.edge_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::EdgeCurve(model.edge_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => ItemIdentifiedRepresentationUsageSelectRefView::EdgeLoop(model.edge_loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => ItemIdentifiedRepresentationUsageSelectRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternalImagePlacementInCallout(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternallyDefinedTileStyle(model.externally_defined_tile_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Face(i) => ItemIdentifiedRepresentationUsageSelectRefView::Face(model.face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceBound(i) => ItemIdentifiedRepresentationUsageSelectRefView::FaceBound(model.face_bound_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceOuterBound(i) => ItemIdentifiedRepresentationUsageSelectRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::FaceSurface(model.face_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleHatching(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleHatching(model.fill_area_style_hatching_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileColouredRegion(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTileColouredRegion(model.fill_area_style_tile_coloured_region_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileCurveWithStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTileCurveWithStyle(model.fill_area_style_tile_curve_with_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileSymbolWithStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTileSymbolWithStyle(model.fill_area_style_tile_symbol_with_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTiles(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTiles(model.fill_area_style_tiles_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricCurveSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::GeometricCurveSet(model.geometric_curve_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::GeometricRepresentationItem(model.geometric_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::GeometricSet(model.geometric_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Hyperbola(i) => ItemIdentifiedRepresentationUsageSelectRefView::Hyperbola(model.hyperbola_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntegerRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::IntegerRepresentationItem(model.integer_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntersectionCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::LeaderCurve(model.leader_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderDirectedCallout(i) => ItemIdentifiedRepresentationUsageSelectRefView::LeaderDirectedCallout(model.leader_directed_callout_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderTerminator(i) => ItemIdentifiedRepresentationUsageSelectRefView::LeaderTerminator(model.leader_terminator_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Line(i) => ItemIdentifiedRepresentationUsageSelectRefView::Line(model.line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Loop(i) => ItemIdentifiedRepresentationUsageSelectRefView::Loop(model.loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ManifoldSolidBrep(i) => ItemIdentifiedRepresentationUsageSelectRefView::ManifoldSolidBrep(model.manifold_solid_brep_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::MappedItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::MappedItem(model.mapped_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::MeasureRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::MeasureRepresentationItem(model.measure_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OffsetSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::OffsetSurface(model.offset_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OneDirectionRepeatFactor(i) => ItemIdentifiedRepresentationUsageSelectRefView::OneDirectionRepeatFactor(model.one_direction_repeat_factor_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OpenShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::OpenShell(model.open_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => ItemIdentifiedRepresentationUsageSelectRefView::OrientedEdge(model.oriented_edge_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::OverRidingStyledItem(model.over_riding_styled_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Parabola(i) => ItemIdentifiedRepresentationUsageSelectRefView::Parabola(model.parabola_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Path(i) => ItemIdentifiedRepresentationUsageSelectRefView::Path(model.path_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::Pcurve(model.pcurve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => ItemIdentifiedRepresentationUsageSelectRefView::Placement(model.placement_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarBox(i) => ItemIdentifiedRepresentationUsageSelectRefView::PlanarBox(model.planar_box_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarExtent(i) => ItemIdentifiedRepresentationUsageSelectRefView::PlanarExtent(model.planar_extent_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Plane(i) => ItemIdentifiedRepresentationUsageSelectRefView::Plane(model.plane_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Point(i) => ItemIdentifiedRepresentationUsageSelectRefView::Point(model.point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::PolyLoop(i) => ItemIdentifiedRepresentationUsageSelectRefView::PolyLoop(model.poly_loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Polyline(i) => ItemIdentifiedRepresentationUsageSelectRefView::Polyline(model.polyline_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::QualifiedRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::QualifiedRepresentationItem(model.qualified_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::QuasiUniformCurve(model.quasi_uniform_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::QuasiUniformSurface(model.quasi_uniform_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::RationalBSplineCurve(model.rational_b_spline_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::RationalBSplineSurface(model.rational_b_spline_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RealRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::RealRepresentationItem(model.real_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepositionedTessellatedItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::RepositionedTessellatedItem(model.repositioned_tessellated_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::RepresentationItem(model.representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SeamCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::SeamCurve(model.seam_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ShellBasedSurfaceModel(i) => ItemIdentifiedRepresentationUsageSelectRefView::ShellBasedSurfaceModel(model.shell_based_surface_model_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SolidModel(i) => ItemIdentifiedRepresentationUsageSelectRefView::SolidModel(model.solid_model_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SphericalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::SphericalSurface(model.spherical_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::StyledItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::StyledItem(model.styled_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Surface(i) => ItemIdentifiedRepresentationUsageSelectRefView::Surface(model.surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::SurfaceCurve(model.surface_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfLinearExtrusion(i) => ItemIdentifiedRepresentationUsageSelectRefView::SurfaceOfLinearExtrusion(model.surface_of_linear_extrusion_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfRevolution(i) => ItemIdentifiedRepresentationUsageSelectRefView::SurfaceOfRevolution(model.surface_of_revolution_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SweptSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::SweptSurface(model.swept_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SymbolTarget(i) => ItemIdentifiedRepresentationUsageSelectRefView::SymbolTarget(model.symbol_target_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TerminatorSymbol(i) => ItemIdentifiedRepresentationUsageSelectRefView::TerminatorSymbol(model.terminator_symbol_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedAnnotationOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedAnnotationOccurrence(model.tessellated_annotation_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedCurveSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedCurveSet(model.tessellated_curve_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedFace(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedFace(model.tessellated_face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedGeometricSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedGeometricSet(model.tessellated_geometric_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedItem(model.tessellated_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedShell(model.tessellated_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSolid(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedSolid(model.tessellated_solid_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedStructuredItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedStructuredItem(model.tessellated_structured_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSurfaceSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedSurfaceSet(model.tessellated_surface_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TextLiteral(i) => ItemIdentifiedRepresentationUsageSelectRefView::TextLiteral(model.text_literal_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TopologicalRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::TopologicalRepresentationItem(model.topological_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ToroidalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ToroidalSurface(model.toroidal_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TrimmedCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::TrimmedCurve(model.trimmed_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TwoDirectionRepeatFactor(i) => ItemIdentifiedRepresentationUsageSelectRefView::TwoDirectionRepeatFactor(model.two_direction_repeat_factor_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::UniformCurve(model.uniform_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::UniformSurface(model.uniform_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ValueRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::ValueRepresentationItem(model.value_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vector(i) => ItemIdentifiedRepresentationUsageSelectRefView::Vector(model.vector_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vertex(i) => ItemIdentifiedRepresentationUsageSelectRefView::Vertex(model.vertex_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexLoop(i) => ItemIdentifiedRepresentationUsageSelectRefView::VertexLoop(model.vertex_loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => ItemIdentifiedRepresentationUsageSelectRefView::VertexPoint(model.vertex_point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::VertexShell(model.vertex_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::WireShell(model.wire_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(v) => ItemIdentifiedRepresentationUsageSelectRefView::ListRepresentationItem(v),
+            ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(v) => ItemIdentifiedRepresentationUsageSelectRefView::SetRepresentationItem(v),
+            ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => ItemIdentifiedRepresentationUsageSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
+        }
+    }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => Some(EntityKey::AdvancedFace(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => Some(EntityKey::AnnotationCurveOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => Some(EntityKey::AnnotationOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => Some(EntityKey::AnnotationPlaceholderOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => Some(EntityKey::AnnotationPlane(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => Some(EntityKey::AnnotationSymbolOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => Some(EntityKey::AnnotationText(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => Some(EntityKey::AnnotationTextCharacter(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextOccurrence(i) => Some(EntityKey::AnnotationTextOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToAnnotationLeaderLine(i) => Some(EntityKey::AnnotationToAnnotationLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToModelLeaderLine(i) => Some(EntityKey::AnnotationToModelLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPoint(i) => Some(EntityKey::ApllPoint(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPointWithSurface(i) => Some(EntityKey::ApllPointWithSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AuxiliaryLeaderLine(i) => Some(EntityKey::AuxiliaryLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis1Placement(i) => Some(EntityKey::Axis1Placement(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement2d(i) => Some(EntityKey::Axis2Placement2d(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement3d(i) => Some(EntityKey::Axis2Placement3d(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurve(i) => Some(EntityKey::BSplineCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurveWithKnots(i) => Some(EntityKey::BSplineCurveWithKnots(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurface(i) => Some(EntityKey::BSplineSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurfaceWithKnots(i) => Some(EntityKey::BSplineSurfaceWithKnots(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierCurve(i) => Some(EntityKey::BezierCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierSurface(i) => Some(EntityKey::BezierSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedCurve(i) => Some(EntityKey::BoundedCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedPcurve(i) => Some(EntityKey::BoundedPcurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurface(i) => Some(EntityKey::BoundedSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurfaceCurve(i) => Some(EntityKey::BoundedSurfaceCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BrepWithVoids(i) => Some(EntityKey::BrepWithVoids(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage(i) => Some(EntityKey::CameraImage(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => Some(EntityKey::CameraImage3dWithScale(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => Some(EntityKey::CameraModel(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => Some(EntityKey::CameraModelD3(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3MultiClipping(i) => Some(EntityKey::CameraModelD3MultiClipping(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => Some(EntityKey::CameraModelD3WithHlhsr(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => Some(EntityKey::CartesianPoint(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => Some(EntityKey::Circle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ClosedShell(i) => Some(EntityKey::ClosedShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedFace(i) => Some(EntityKey::ComplexTriangulatedFace(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedSurfaceSet(i) => Some(EntityKey::ComplexTriangulatedSurfaceSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeCurve(i) => Some(EntityKey::CompositeCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeText(i) => Some(EntityKey::CompositeText(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompoundRepresentationItem(i) => Some(EntityKey::CompoundRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Conic(i) => Some(EntityKey::Conic(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConicalSurface(i) => Some(EntityKey::ConicalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConnectedFaceSet(i) => Some(EntityKey::ConnectedFaceSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ContextDependentOverRidingStyledItem(i) => Some(EntityKey::ContextDependentOverRidingStyledItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CoordinatesList(i) => Some(EntityKey::CoordinatesList(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Curve(i) => Some(EntityKey::Curve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CylindricalSurface(i) => Some(EntityKey::CylindricalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedCharacterGlyph(i) => Some(EntityKey::DefinedCharacterGlyph(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedSymbol(i) => Some(EntityKey::DefinedSymbol(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DegenerateToroidalSurface(i) => Some(EntityKey::DegenerateToroidalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DescriptiveRepresentationItem(i) => Some(EntityKey::DescriptiveRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Direction(i) => Some(EntityKey::Direction(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingAnnotationOccurrence(i) => Some(EntityKey::DraughtingAnnotationOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingCallout(i) => Some(EntityKey::DraughtingCallout(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Edge(i) => Some(EntityKey::Edge(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeCurve(i) => Some(EntityKey::EdgeCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => Some(EntityKey::EdgeLoop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => Some(EntityKey::ElementarySurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => Some(EntityKey::Ellipse(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternalImagePlacementInCallout(i) => Some(EntityKey::ExternalImagePlacementInCallout(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => Some(EntityKey::ExternallyDefinedHatchStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => Some(EntityKey::ExternallyDefinedTileStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Face(i) => Some(EntityKey::Face(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceBound(i) => Some(EntityKey::FaceBound(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceOuterBound(i) => Some(EntityKey::FaceOuterBound(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceSurface(i) => Some(EntityKey::FaceSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleHatching(i) => Some(EntityKey::FillAreaStyleHatching(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileColouredRegion(i) => Some(EntityKey::FillAreaStyleTileColouredRegion(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileCurveWithStyle(i) => Some(EntityKey::FillAreaStyleTileCurveWithStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileSymbolWithStyle(i) => Some(EntityKey::FillAreaStyleTileSymbolWithStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTiles(i) => Some(EntityKey::FillAreaStyleTiles(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricCurveSet(i) => Some(EntityKey::GeometricCurveSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricRepresentationItem(i) => Some(EntityKey::GeometricRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricSet(i) => Some(EntityKey::GeometricSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Hyperbola(i) => Some(EntityKey::Hyperbola(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntegerRepresentationItem(i) => Some(EntityKey::IntegerRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntersectionCurve(i) => Some(EntityKey::IntersectionCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderCurve(i) => Some(EntityKey::LeaderCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderDirectedCallout(i) => Some(EntityKey::LeaderDirectedCallout(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderTerminator(i) => Some(EntityKey::LeaderTerminator(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Line(i) => Some(EntityKey::Line(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Loop(i) => Some(EntityKey::Loop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ManifoldSolidBrep(i) => Some(EntityKey::ManifoldSolidBrep(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::MappedItem(i) => Some(EntityKey::MappedItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::MeasureRepresentationItem(i) => Some(EntityKey::MeasureRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OffsetSurface(i) => Some(EntityKey::OffsetSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OneDirectionRepeatFactor(i) => Some(EntityKey::OneDirectionRepeatFactor(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OpenShell(i) => Some(EntityKey::OpenShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => Some(EntityKey::OrientedClosedShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => Some(EntityKey::OrientedEdge(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => Some(EntityKey::OverRidingStyledItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Parabola(i) => Some(EntityKey::Parabola(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Path(i) => Some(EntityKey::Path(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => Some(EntityKey::Pcurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => Some(EntityKey::Placement(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarBox(i) => Some(EntityKey::PlanarBox(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarExtent(i) => Some(EntityKey::PlanarExtent(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Plane(i) => Some(EntityKey::Plane(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Point(i) => Some(EntityKey::Point(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::PolyLoop(i) => Some(EntityKey::PolyLoop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Polyline(i) => Some(EntityKey::Polyline(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::QualifiedRepresentationItem(i) => Some(EntityKey::QualifiedRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformCurve(i) => Some(EntityKey::QuasiUniformCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformSurface(i) => Some(EntityKey::QuasiUniformSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineCurve(i) => Some(EntityKey::RationalBSplineCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineSurface(i) => Some(EntityKey::RationalBSplineSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RealRepresentationItem(i) => Some(EntityKey::RealRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepositionedTessellatedItem(i) => Some(EntityKey::RepositionedTessellatedItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepresentationItem(i) => Some(EntityKey::RepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SeamCurve(i) => Some(EntityKey::SeamCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ShellBasedSurfaceModel(i) => Some(EntityKey::ShellBasedSurfaceModel(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SolidModel(i) => Some(EntityKey::SolidModel(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SphericalSurface(i) => Some(EntityKey::SphericalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::StyledItem(i) => Some(EntityKey::StyledItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Surface(i) => Some(EntityKey::Surface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceCurve(i) => Some(EntityKey::SurfaceCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfLinearExtrusion(i) => Some(EntityKey::SurfaceOfLinearExtrusion(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfRevolution(i) => Some(EntityKey::SurfaceOfRevolution(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SweptSurface(i) => Some(EntityKey::SweptSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SymbolTarget(i) => Some(EntityKey::SymbolTarget(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TerminatorSymbol(i) => Some(EntityKey::TerminatorSymbol(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedAnnotationOccurrence(i) => Some(EntityKey::TessellatedAnnotationOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedCurveSet(i) => Some(EntityKey::TessellatedCurveSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedFace(i) => Some(EntityKey::TessellatedFace(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedGeometricSet(i) => Some(EntityKey::TessellatedGeometricSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedItem(i) => Some(EntityKey::TessellatedItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedShell(i) => Some(EntityKey::TessellatedShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSolid(i) => Some(EntityKey::TessellatedSolid(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedStructuredItem(i) => Some(EntityKey::TessellatedStructuredItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSurfaceSet(i) => Some(EntityKey::TessellatedSurfaceSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TextLiteral(i) => Some(EntityKey::TextLiteral(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TopologicalRepresentationItem(i) => Some(EntityKey::TopologicalRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ToroidalSurface(i) => Some(EntityKey::ToroidalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TrimmedCurve(i) => Some(EntityKey::TrimmedCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TwoDirectionRepeatFactor(i) => Some(EntityKey::TwoDirectionRepeatFactor(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformCurve(i) => Some(EntityKey::UniformCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformSurface(i) => Some(EntityKey::UniformSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ValueRepresentationItem(i) => Some(EntityKey::ValueRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vector(i) => Some(EntityKey::Vector(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vertex(i) => Some(EntityKey::Vertex(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexLoop(i) => Some(EntityKey::VertexLoop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => Some(EntityKey::VertexPoint(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => Some(EntityKey::VertexShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => Some(EntityKey::WireShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(_) => None,
+            ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(_) => None,
+            ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
+        }
+    }
+}
+
+/// What a [`LayeredItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum LayeredItemRefView<'m> {
+    AdvancedFace(&'m AdvancedFace),
+    AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
+    AnnotationOccurrence(&'m AnnotationOccurrence),
+    AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
+    AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(
+        &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
+    ),
+    AnnotationPlane(&'m AnnotationPlane),
+    AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
+    AnnotationText(&'m AnnotationText),
+    AnnotationTextCharacter(&'m AnnotationTextCharacter),
+    AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
+    AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
+    AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
+    ApllPoint(&'m ApllPoint),
+    ApllPointWithSurface(&'m ApllPointWithSurface),
+    AuxiliaryLeaderLine(&'m AuxiliaryLeaderLine),
+    Axis1Placement(&'m Axis1Placement),
+    Axis2Placement2d(&'m Axis2Placement2d),
+    Axis2Placement3d(&'m Axis2Placement3d),
+    BSplineCurve(&'m BSplineCurve),
+    BSplineCurveWithKnots(&'m BSplineCurveWithKnots),
+    BSplineSurface(&'m BSplineSurface),
+    BSplineSurfaceWithKnots(&'m BSplineSurfaceWithKnots),
+    BezierCurve(&'m BezierCurve),
+    BezierSurface(&'m BezierSurface),
+    BoundedCurve(&'m BoundedCurve),
+    BoundedPcurve(&'m BoundedPcurve),
+    BoundedSurface(&'m BoundedSurface),
+    BoundedSurfaceCurve(&'m BoundedSurfaceCurve),
+    BrepWithVoids(&'m BrepWithVoids),
+    CameraImage(&'m CameraImage),
+    CameraImage3dWithScale(&'m CameraImage3dWithScale),
+    CameraModel(&'m CameraModel),
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    CartesianPoint(&'m CartesianPoint),
+    Circle(&'m Circle),
+    ClosedShell(&'m ClosedShell),
+    ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
+    ComplexTriangulatedSurfaceSet(&'m ComplexTriangulatedSurfaceSet),
+    CompositeCurve(&'m CompositeCurve),
+    CompositeText(&'m CompositeText),
+    CompoundRepresentationItem(&'m CompoundRepresentationItem),
+    Conic(&'m Conic),
+    ConicalSurface(&'m ConicalSurface),
+    ConnectedFaceSet(&'m ConnectedFaceSet),
+    ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
+    CoordinatesList(&'m CoordinatesList),
+    Curve(&'m Curve),
+    CylindricalSurface(&'m CylindricalSurface),
+    DefinedCharacterGlyph(&'m DefinedCharacterGlyph),
+    DefinedSymbol(&'m DefinedSymbol),
+    DegenerateToroidalSurface(&'m DegenerateToroidalSurface),
+    DescriptiveRepresentationItem(&'m DescriptiveRepresentationItem),
+    Direction(&'m Direction),
+    DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    DraughtingCallout(&'m DraughtingCallout),
+    Edge(&'m Edge),
+    EdgeCurve(&'m EdgeCurve),
+    EdgeLoop(&'m EdgeLoop),
+    ElementarySurface(&'m ElementarySurface),
+    Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -14652,6 +17355,8 @@ pub enum LayeredItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl LayeredItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LayeredItemRefView<'m> {
         match self {
             LayeredItemRef::AdvancedFace(i) => {
@@ -14660,11 +17365,6 @@ impl LayeredItemRef {
             LayeredItemRef::AnnotationCurveOccurrence(i) => {
                 LayeredItemRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            LayeredItemRef::AnnotationFillAreaOccurrence(i) => {
-                LayeredItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             LayeredItemRef::AnnotationOccurrence(i) => {
@@ -14689,9 +17389,6 @@ impl LayeredItemRef {
             }
             LayeredItemRef::AnnotationPlane(i) => {
                 LayeredItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            LayeredItemRef::AnnotationSymbol(i) => {
-                LayeredItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             LayeredItemRef::AnnotationSymbolOccurrence(i) => {
                 LayeredItemRefView::AnnotationSymbolOccurrence(
@@ -14885,6 +17582,11 @@ impl LayeredItemRef {
                 LayeredItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0))
             }
             LayeredItemRef::Ellipse(i) => LayeredItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            LayeredItemRef::ExternalImagePlacementInCallout(i) => {
+                LayeredItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             LayeredItemRef::ExternallyDefinedHatchStyle(i) => {
                 LayeredItemRefView::ExternallyDefinedHatchStyle(
                     model.externally_defined_hatch_style_arena.get(i.0),
@@ -15175,14 +17877,12 @@ impl LayeredItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LayeredItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
             LayeredItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            LayeredItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             LayeredItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             LayeredItemRef::AnnotationPlaceholderLeaderLine(i) => {
@@ -15195,7 +17895,6 @@ impl LayeredItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             LayeredItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            LayeredItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             LayeredItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -15272,6 +17971,9 @@ impl LayeredItemRef {
             LayeredItemRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             LayeredItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             LayeredItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            LayeredItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             LayeredItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -15392,12 +18094,17 @@ impl LayeredItemRef {
     }
 }
 
+/// What a [`LengthMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LengthMeasureWithUnitRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl LengthMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LengthMeasureWithUnitRefView<'m> {
         match self {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
@@ -15405,28 +18112,43 @@ impl LengthMeasureWithUnitRef {
                     model.length_measure_with_unit_arena.get(i.0),
                 )
             }
+            LengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                LengthMeasureWithUnitRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
             LengthMeasureWithUnitRef::Complex(i) => {
                 LengthMeasureWithUnitRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
                 EntityKey::LengthMeasureWithUnit(*i)
+            }
+            LengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
             }
             LengthMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`LengthOrPlaneAngleMeasureWithUnitSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
     PlaneAngleMeasureWithUnit(&'m PlaneAngleMeasureWithUnit),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -15442,6 +18164,16 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
                     model.plane_angle_measure_with_unit_arena.get(i.0),
                 )
             }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                LengthOrPlaneAngleMeasureWithUnitSelectRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                LengthOrPlaneAngleMeasureWithUnitSelectRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
+            }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => {
                 LengthOrPlaneAngleMeasureWithUnitSelectRefView::Complex(
                     model.complex_entity_arena.get(i.0),
@@ -15449,6 +18181,7 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(i) => {
@@ -15457,16 +18190,26 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
             LengthOrPlaneAngleMeasureWithUnitSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 EntityKey::PlaneAngleMeasureWithUnit(*i)
             }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
+            }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`LocalTimeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LocalTimeRefView<'m> {
     LocalTime(&'m LocalTime),
 }
 impl LocalTimeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LocalTimeRefView<'m> {
         match self {
             LocalTimeRef::LocalTime(i) => {
@@ -15474,6 +18217,7 @@ impl LocalTimeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LocalTimeRef::LocalTime(i) => EntityKey::LocalTime(*i),
@@ -15481,6 +18225,8 @@ impl LocalTimeRef {
     }
 }
 
+/// What a [`LoopRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LoopRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
@@ -15490,6 +18236,8 @@ pub enum LoopRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl LoopRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LoopRefView<'m> {
         match self {
             LoopRef::EdgeLoop(i) => LoopRefView::EdgeLoop(model.edge_loop_arena.get(i.0)),
@@ -15499,6 +18247,7 @@ impl LoopRef {
             LoopRef::Complex(i) => LoopRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LoopRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
@@ -15510,6 +18259,8 @@ impl LoopRef {
     }
 }
 
+/// What a [`ManifoldSolidBrepRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ManifoldSolidBrepRefView<'m> {
     BrepWithVoids(&'m BrepWithVoids),
@@ -15517,6 +18268,8 @@ pub enum ManifoldSolidBrepRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ManifoldSolidBrepRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ManifoldSolidBrepRefView<'m> {
         match self {
             ManifoldSolidBrepRef::BrepWithVoids(i) => {
@@ -15532,6 +18285,7 @@ impl ManifoldSolidBrepRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ManifoldSolidBrepRef::BrepWithVoids(i) => EntityKey::BrepWithVoids(*i),
@@ -15541,6 +18295,8 @@ impl ManifoldSolidBrepRef {
     }
 }
 
+/// What a [`MeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum MeasureWithUnitRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
@@ -15548,11 +18304,15 @@ pub enum MeasureWithUnitRefView<'m> {
     MeasureRepresentationItem(&'m MeasureRepresentationItem),
     MeasureWithUnit(&'m MeasureWithUnit),
     PlaneAngleMeasureWithUnit(&'m PlaneAngleMeasureWithUnit),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
     RatioMeasureWithUnit(&'m RatioMeasureWithUnit),
     UncertaintyMeasureWithUnit(&'m UncertaintyMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl MeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> MeasureWithUnitRefView<'m> {
         match self {
             MeasureWithUnitRef::LengthMeasureWithUnit(i) => {
@@ -15578,6 +18338,16 @@ impl MeasureWithUnitRef {
                     model.plane_angle_measure_with_unit_arena.get(i.0),
                 )
             }
+            MeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                MeasureWithUnitRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                MeasureWithUnitRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
+            }
             MeasureWithUnitRef::RatioMeasureWithUnit(i) => {
                 MeasureWithUnitRefView::RatioMeasureWithUnit(
                     model.ratio_measure_with_unit_arena.get(i.0),
@@ -15593,6 +18363,7 @@ impl MeasureWithUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             MeasureWithUnitRef::LengthMeasureWithUnit(i) => EntityKey::LengthMeasureWithUnit(*i),
@@ -15604,6 +18375,12 @@ impl MeasureWithUnitRef {
             MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i) => {
                 EntityKey::PlaneAngleMeasureWithUnit(*i)
             }
+            MeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
+            }
             MeasureWithUnitRef::RatioMeasureWithUnit(i) => EntityKey::RatioMeasureWithUnit(*i),
             MeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 EntityKey::UncertaintyMeasureWithUnit(*i)
@@ -15613,6 +18390,8 @@ impl MeasureWithUnitRef {
     }
 }
 
+/// What a [`MechanicalDesignAndDraughtingRelationshipSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum MechanicalDesignAndDraughtingRelationshipSelectRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -15640,6 +18419,8 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl MechanicalDesignAndDraughtingRelationshipSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -15660,6 +18441,7 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
             MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => MechanicalDesignAndDraughtingRelationshipSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
@@ -15679,6 +18461,8 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
     }
 }
 
+/// What a [`NameAttributeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum NameAttributeSelectRefView<'m> {
     ActionRequestSolution(&'m ActionRequestSolution),
@@ -15703,6 +18487,8 @@ pub enum NameAttributeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl NameAttributeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> NameAttributeSelectRefView<'m> {
         match self {
             NameAttributeSelectRef::ActionRequestSolution(i) => {
@@ -15795,6 +18581,7 @@ impl NameAttributeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             NameAttributeSelectRef::ActionRequestSolution(i) => {
@@ -15843,6 +18630,8 @@ impl NameAttributeSelectRef {
     }
 }
 
+/// What a [`NamedUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum NamedUnitRefView<'m> {
     ContextDependentUnit(&'m ContextDependentUnit),
@@ -15858,6 +18647,8 @@ pub enum NamedUnitRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl NamedUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> NamedUnitRefView<'m> {
         match self {
             NamedUnitRef::ContextDependentUnit(i) => {
@@ -15889,6 +18680,7 @@ impl NamedUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             NamedUnitRef::ContextDependentUnit(i) => EntityKey::ContextDependentUnit(*i),
@@ -15906,11 +18698,15 @@ impl NamedUnitRef {
     }
 }
 
+/// What a [`ObjectRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ObjectRoleRefView<'m> {
     ObjectRole(&'m ObjectRole),
 }
 impl ObjectRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ObjectRoleRefView<'m> {
         match self {
             ObjectRoleRef::ObjectRole(i) => {
@@ -15918,6 +18714,7 @@ impl ObjectRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ObjectRoleRef::ObjectRole(i) => EntityKey::ObjectRole(*i),
@@ -15925,6 +18722,8 @@ impl ObjectRoleRef {
     }
 }
 
+/// What a [`OneDirectionRepeatFactorRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OneDirectionRepeatFactorRefView<'m> {
     OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
@@ -15932,6 +18731,8 @@ pub enum OneDirectionRepeatFactorRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl OneDirectionRepeatFactorRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OneDirectionRepeatFactorRefView<'m> {
         match self {
             OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(i) => {
@@ -15949,6 +18750,7 @@ impl OneDirectionRepeatFactorRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(i) => {
@@ -15962,11 +18764,15 @@ impl OneDirectionRepeatFactorRef {
     }
 }
 
+/// What a [`OrganizationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrganizationRefView<'m> {
     Organization(&'m Organization),
 }
 impl OrganizationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrganizationRefView<'m> {
         match self {
             OrganizationRef::Organization(i) => {
@@ -15974,6 +18780,7 @@ impl OrganizationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrganizationRef::Organization(i) => EntityKey::Organization(*i),
@@ -15981,11 +18788,15 @@ impl OrganizationRef {
     }
 }
 
+/// What a [`OrganizationalProjectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrganizationalProjectRefView<'m> {
     OrganizationalProject(&'m OrganizationalProject),
 }
 impl OrganizationalProjectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrganizationalProjectRefView<'m> {
         match self {
             OrganizationalProjectRef::OrganizationalProject(i) => {
@@ -15995,6 +18806,7 @@ impl OrganizationalProjectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrganizationalProjectRef::OrganizationalProject(i) => {
@@ -16004,12 +18816,16 @@ impl OrganizationalProjectRef {
     }
 }
 
+/// What a [`OrientedClosedShellRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrientedClosedShellRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     Complex(&'m ComplexEntity),
 }
 impl OrientedClosedShellRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrientedClosedShellRefView<'m> {
         match self {
             OrientedClosedShellRef::OrientedClosedShell(i) => {
@@ -16022,6 +18838,7 @@ impl OrientedClosedShellRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrientedClosedShellRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
@@ -16030,12 +18847,16 @@ impl OrientedClosedShellRef {
     }
 }
 
+/// What a [`OrientedEdgeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrientedEdgeRefView<'m> {
     OrientedEdge(&'m OrientedEdge),
     Complex(&'m ComplexEntity),
 }
 impl OrientedEdgeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrientedEdgeRefView<'m> {
         match self {
             OrientedEdgeRef::OrientedEdge(i) => {
@@ -16046,6 +18867,7 @@ impl OrientedEdgeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrientedEdgeRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
@@ -16054,6 +18876,8 @@ impl OrientedEdgeRef {
     }
 }
 
+/// What a [`PcurveOrSurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PcurveOrSurfaceRefView<'m> {
     BSplineSurface(&'m BSplineSurface),
@@ -16080,6 +18904,8 @@ pub enum PcurveOrSurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PcurveOrSurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PcurveOrSurfaceRefView<'m> {
         match self {
             PcurveOrSurfaceRef::BSplineSurface(i) => {
@@ -16162,6 +18988,7 @@ impl PcurveOrSurfaceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PcurveOrSurfaceRef::BSplineSurface(i) => EntityKey::BSplineSurface(*i),
@@ -16196,16 +19023,21 @@ impl PcurveOrSurfaceRef {
     }
 }
 
+/// What a [`PersonRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonRefView<'m> {
     Person(&'m Person),
 }
 impl PersonRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonRefView<'m> {
         match self {
             PersonRef::Person(i) => PersonRefView::Person(model.person_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonRef::Person(i) => EntityKey::Person(*i),
@@ -16213,11 +19045,15 @@ impl PersonRef {
     }
 }
 
+/// What a [`PersonAndOrganizationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonAndOrganizationRefView<'m> {
     PersonAndOrganization(&'m PersonAndOrganization),
 }
 impl PersonAndOrganizationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonAndOrganizationRefView<'m> {
         match self {
             PersonAndOrganizationRef::PersonAndOrganization(i) => {
@@ -16227,6 +19063,7 @@ impl PersonAndOrganizationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonAndOrganizationRef::PersonAndOrganization(i) => {
@@ -16236,6 +19073,8 @@ impl PersonAndOrganizationRef {
     }
 }
 
+/// What a [`PersonAndOrganizationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonAndOrganizationItemRefView<'m> {
     Action(&'m Action),
@@ -16329,6 +19168,8 @@ pub enum PersonAndOrganizationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PersonAndOrganizationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonAndOrganizationItemRefView<'m> {
         match self {
             PersonAndOrganizationItemRef::Action(i) => PersonAndOrganizationItemRefView::Action(model.action_arena.get(i.0)),
@@ -16410,6 +19251,7 @@ impl PersonAndOrganizationItemRef {
             PersonAndOrganizationItemRef::Complex(i) => PersonAndOrganizationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonAndOrganizationItemRef::Action(i) => EntityKey::Action(*i),
@@ -16493,11 +19335,15 @@ impl PersonAndOrganizationItemRef {
     }
 }
 
+/// What a [`PersonAndOrganizationRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonAndOrganizationRoleRefView<'m> {
     PersonAndOrganizationRole(&'m PersonAndOrganizationRole),
 }
 impl PersonAndOrganizationRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonAndOrganizationRoleRefView<'m> {
         match self {
             PersonAndOrganizationRoleRef::PersonAndOrganizationRole(i) => {
@@ -16507,6 +19353,7 @@ impl PersonAndOrganizationRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonAndOrganizationRoleRef::PersonAndOrganizationRole(i) => {
@@ -16516,6 +19363,8 @@ impl PersonAndOrganizationRoleRef {
     }
 }
 
+/// What a [`PersonOrganizationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonOrganizationSelectRefView<'m> {
     Organization(&'m Organization),
@@ -16523,6 +19372,8 @@ pub enum PersonOrganizationSelectRefView<'m> {
     PersonAndOrganization(&'m PersonAndOrganization),
 }
 impl PersonOrganizationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonOrganizationSelectRefView<'m> {
         match self {
             PersonOrganizationSelectRef::Organization(i) => {
@@ -16538,6 +19389,7 @@ impl PersonOrganizationSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonOrganizationSelectRef::Organization(i) => EntityKey::Organization(*i),
@@ -16549,12 +19401,16 @@ impl PersonOrganizationSelectRef {
     }
 }
 
+/// What a [`PlanarBoxRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PlanarBoxRefView<'m> {
     PlanarBox(&'m PlanarBox),
     Complex(&'m ComplexEntity),
 }
 impl PlanarBoxRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PlanarBoxRefView<'m> {
         match self {
             PlanarBoxRef::PlanarBox(i) => {
@@ -16565,6 +19421,7 @@ impl PlanarBoxRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PlanarBoxRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -16573,6 +19430,8 @@ impl PlanarBoxRef {
     }
 }
 
+/// What a [`PlaneOrPlanarBoxRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PlaneOrPlanarBoxRefView<'m> {
     PlanarBox(&'m PlanarBox),
@@ -16580,6 +19439,8 @@ pub enum PlaneOrPlanarBoxRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PlaneOrPlanarBoxRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PlaneOrPlanarBoxRefView<'m> {
         match self {
             PlaneOrPlanarBoxRef::PlanarBox(i) => {
@@ -16593,6 +19454,7 @@ impl PlaneOrPlanarBoxRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PlaneOrPlanarBoxRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -16602,6 +19464,8 @@ impl PlaneOrPlanarBoxRef {
     }
 }
 
+/// What a [`PointRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PointRefView<'m> {
     ApllPoint(&'m ApllPoint),
@@ -16611,6 +19475,8 @@ pub enum PointRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PointRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PointRefView<'m> {
         match self {
             PointRef::ApllPoint(i) => PointRefView::ApllPoint(model.apll_point_arena.get(i.0)),
@@ -16624,6 +19490,7 @@ impl PointRef {
             PointRef::Complex(i) => PointRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PointRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
@@ -16635,12 +19502,87 @@ impl PointRef {
     }
 }
 
+/// What a [`PositiveLengthMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum PositiveLengthMeasureWithUnitRefView<'m> {
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    Complex(&'m ComplexEntity),
+}
+impl PositiveLengthMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> PositiveLengthMeasureWithUnitRefView<'m> {
+        match self {
+            PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                PositiveLengthMeasureWithUnitRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            PositiveLengthMeasureWithUnitRef::Complex(i) => {
+                PositiveLengthMeasureWithUnitRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            PositiveLengthMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`PositivePlaneAngleMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum PositivePlaneAngleMeasureWithUnitRefView<'m> {
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
+    Complex(&'m ComplexEntity),
+}
+impl PositivePlaneAngleMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(
+        &self,
+        model: &'m StepModel,
+    ) -> PositivePlaneAngleMeasureWithUnitRefView<'m> {
+        match self {
+            PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                PositivePlaneAngleMeasureWithUnitRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
+            }
+            PositivePlaneAngleMeasureWithUnitRef::Complex(i) => {
+                PositivePlaneAngleMeasureWithUnitRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
+            }
+            PositivePlaneAngleMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`PresentationAreaRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationAreaRefView<'m> {
     PresentationArea(&'m PresentationArea),
     Complex(&'m ComplexEntity),
 }
 impl PresentationAreaRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationAreaRefView<'m> {
         match self {
             PresentationAreaRef::PresentationArea(i) => {
@@ -16651,6 +19593,7 @@ impl PresentationAreaRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationAreaRef::PresentationArea(i) => EntityKey::PresentationArea(*i),
@@ -16659,6 +19602,8 @@ impl PresentationAreaRef {
     }
 }
 
+/// What a [`PresentationRepresentationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationRepresentationSelectRefView<'m> {
     PresentationArea(&'m PresentationArea),
@@ -16668,6 +19613,8 @@ pub enum PresentationRepresentationSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentationRepresentationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationRepresentationSelectRefView<'m> {
         match self {
             PresentationRepresentationSelectRef::PresentationArea(i) => {
@@ -16697,6 +19644,7 @@ impl PresentationRepresentationSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationRepresentationSelectRef::PresentationArea(i) => {
@@ -16716,12 +19664,16 @@ impl PresentationRepresentationSelectRef {
     }
 }
 
+/// What a [`PresentationSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationSetRefView<'m> {
     PresentationSet(&'m PresentationSet),
     Complex(&'m ComplexEntity),
 }
 impl PresentationSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationSetRefView<'m> {
         match self {
             PresentationSetRef::PresentationSet(i) => {
@@ -16732,6 +19684,7 @@ impl PresentationSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationSetRef::PresentationSet(i) => EntityKey::PresentationSet(*i),
@@ -16740,6 +19693,8 @@ impl PresentationSetRef {
     }
 }
 
+/// What a [`PresentationSizeAssignmentSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationSizeAssignmentSelectRefView<'m> {
     AreaInSet(&'m AreaInSet),
@@ -16748,6 +19703,8 @@ pub enum PresentationSizeAssignmentSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentationSizeAssignmentSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationSizeAssignmentSelectRefView<'m> {
         match self {
             PresentationSizeAssignmentSelectRef::AreaInSet(i) => {
@@ -16770,6 +19727,7 @@ impl PresentationSizeAssignmentSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationSizeAssignmentSelectRef::AreaInSet(i) => EntityKey::AreaInSet(*i),
@@ -16784,6 +19742,8 @@ impl PresentationSizeAssignmentSelectRef {
     }
 }
 
+/// What a [`PresentationStyleAssignmentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationStyleAssignmentRefView<'m> {
     PresentationStyleAssignment(&'m PresentationStyleAssignment),
@@ -16791,6 +19751,8 @@ pub enum PresentationStyleAssignmentRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentationStyleAssignmentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationStyleAssignmentRefView<'m> {
         match self {
             PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
@@ -16808,6 +19770,7 @@ impl PresentationStyleAssignmentRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
@@ -16821,6 +19784,8 @@ impl PresentationStyleAssignmentRef {
     }
 }
 
+/// What a [`PresentedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentedItemRefView<'m> {
     AppliedPresentedItem(&'m AppliedPresentedItem),
@@ -16828,6 +19793,8 @@ pub enum PresentedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentedItemRefView<'m> {
         match self {
             PresentedItemRef::AppliedPresentedItem(i) => {
@@ -16843,6 +19810,7 @@ impl PresentedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentedItemRef::AppliedPresentedItem(i) => EntityKey::AppliedPresentedItem(*i),
@@ -16852,6 +19820,8 @@ impl PresentedItemRef {
     }
 }
 
+/// What a [`PresentedItemSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentedItemSelectRefView<'m> {
     Action(&'m Action),
@@ -16874,6 +19844,8 @@ pub enum PresentedItemSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentedItemSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentedItemSelectRefView<'m> {
         match self {
             PresentedItemSelectRef::Action(i) => {
@@ -16954,6 +19926,7 @@ impl PresentedItemSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentedItemSelectRef::Action(i) => EntityKey::Action(*i),
@@ -16994,18 +19967,23 @@ impl PresentedItemSelectRef {
     }
 }
 
+/// What a [`ProductRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductRefView<'m> {
     Product(&'m Product),
     Complex(&'m ComplexEntity),
 }
 impl ProductRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductRefView<'m> {
         match self {
             ProductRef::Product(i) => ProductRefView::Product(model.product_arena.get(i.0)),
             ProductRef::Complex(i) => ProductRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductRef::Product(i) => EntityKey::Product(*i),
@@ -17014,6 +19992,8 @@ impl ProductRef {
     }
 }
 
+/// What a [`ProductCategoryRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductCategoryRefView<'m> {
     ProductCategory(&'m ProductCategory),
@@ -17021,6 +20001,8 @@ pub enum ProductCategoryRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductCategoryRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductCategoryRefView<'m> {
         match self {
             ProductCategoryRef::ProductCategory(i) => {
@@ -17036,6 +20018,7 @@ impl ProductCategoryRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductCategoryRef::ProductCategory(i) => EntityKey::ProductCategory(*i),
@@ -17047,12 +20030,16 @@ impl ProductCategoryRef {
     }
 }
 
+/// What a [`ProductConceptRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductConceptRefView<'m> {
     ProductConcept(&'m ProductConcept),
     Complex(&'m ComplexEntity),
 }
 impl ProductConceptRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductConceptRefView<'m> {
         match self {
             ProductConceptRef::ProductConcept(i) => {
@@ -17063,6 +20050,7 @@ impl ProductConceptRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductConceptRef::ProductConcept(i) => EntityKey::ProductConcept(*i),
@@ -17071,11 +20059,15 @@ impl ProductConceptRef {
     }
 }
 
+/// What a [`ProductConceptContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductConceptContextRefView<'m> {
     ProductConceptContext(&'m ProductConceptContext),
 }
 impl ProductConceptContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductConceptContextRefView<'m> {
         match self {
             ProductConceptContextRef::ProductConceptContext(i) => {
@@ -17085,6 +20077,7 @@ impl ProductConceptContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductConceptContextRef::ProductConceptContext(i) => {
@@ -17094,6 +20087,8 @@ impl ProductConceptContextRef {
     }
 }
 
+/// What a [`ProductContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductContextRefView<'m> {
     MechanicalContext(&'m MechanicalContext),
@@ -17101,6 +20096,8 @@ pub enum ProductContextRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductContextRefView<'m> {
         match self {
             ProductContextRef::MechanicalContext(i) => {
@@ -17114,6 +20111,7 @@ impl ProductContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductContextRef::MechanicalContext(i) => EntityKey::MechanicalContext(*i),
@@ -17123,6 +20121,8 @@ impl ProductContextRef {
     }
 }
 
+/// What a [`ProductDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionRefView<'m> {
     ProductDefinition(&'m ProductDefinition),
@@ -17130,6 +20130,8 @@ pub enum ProductDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionRefView<'m> {
         match self {
             ProductDefinitionRef::ProductDefinition(i) => {
@@ -17147,6 +20149,7 @@ impl ProductDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionRef::ProductDefinition(i) => EntityKey::ProductDefinition(*i),
@@ -17158,6 +20161,8 @@ impl ProductDefinitionRef {
     }
 }
 
+/// What a [`ProductDefinitionContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionContextRefView<'m> {
     DesignContext(&'m DesignContext),
@@ -17165,6 +20170,8 @@ pub enum ProductDefinitionContextRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionContextRefView<'m> {
         match self {
             ProductDefinitionContextRef::DesignContext(i) => {
@@ -17180,6 +20187,7 @@ impl ProductDefinitionContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionContextRef::DesignContext(i) => EntityKey::DesignContext(*i),
@@ -17191,11 +20199,15 @@ impl ProductDefinitionContextRef {
     }
 }
 
+/// What a [`ProductDefinitionContextRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionContextRoleRefView<'m> {
     ProductDefinitionContextRole(&'m ProductDefinitionContextRole),
 }
 impl ProductDefinitionContextRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionContextRoleRefView<'m> {
         match self {
             ProductDefinitionContextRoleRef::ProductDefinitionContextRole(i) => {
@@ -17205,6 +20217,7 @@ impl ProductDefinitionContextRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionContextRoleRef::ProductDefinitionContextRole(i) => {
@@ -17214,6 +20227,8 @@ impl ProductDefinitionContextRoleRef {
     }
 }
 
+/// What a [`ProductDefinitionFormationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionFormationRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -17223,6 +20238,8 @@ pub enum ProductDefinitionFormationRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionFormationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionFormationRefView<'m> {
         match self {
             ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
@@ -17242,6 +20259,7 @@ impl ProductDefinitionFormationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
@@ -17255,6 +20273,8 @@ impl ProductDefinitionFormationRef {
     }
 }
 
+/// What a [`ProductDefinitionOrReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionOrReferenceRefView<'m> {
     GenericProductDefinitionReference(&'m GenericProductDefinitionReference),
@@ -17264,6 +20284,8 @@ pub enum ProductDefinitionOrReferenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionOrReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionOrReferenceRefView<'m> {
         match self {
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(i) => {
@@ -17293,6 +20315,7 @@ impl ProductDefinitionOrReferenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(i) => {
@@ -17312,6 +20335,8 @@ impl ProductDefinitionOrReferenceRef {
     }
 }
 
+/// What a [`ProductDefinitionRelationshipRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionRelationshipRefView<'m> {
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
@@ -17322,6 +20347,8 @@ pub enum ProductDefinitionRelationshipRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionRelationshipRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionRelationshipRefView<'m> {
         match self {
             ProductDefinitionRelationshipRef::AssemblyComponentUsage(i) => {
@@ -17354,6 +20381,7 @@ impl ProductDefinitionRelationshipRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionRelationshipRef::AssemblyComponentUsage(i) => {
@@ -17376,12 +20404,16 @@ impl ProductDefinitionRelationshipRef {
     }
 }
 
+/// What a [`ProductDefinitionShapeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionShapeRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionShapeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionShapeRefView<'m> {
         match self {
             ProductDefinitionShapeRef::ProductDefinitionShape(i) => {
@@ -17394,6 +20426,7 @@ impl ProductDefinitionShapeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionShapeRef::ProductDefinitionShape(i) => {
@@ -17404,6 +20437,8 @@ impl ProductDefinitionShapeRef {
     }
 }
 
+/// What a [`ProductOrFormationOrDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductOrFormationOrDefinitionRefView<'m> {
     Product(&'m Product),
@@ -17416,6 +20451,8 @@ pub enum ProductOrFormationOrDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductOrFormationOrDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductOrFormationOrDefinitionRefView<'m> {
         match self {
             ProductOrFormationOrDefinitionRef::Product(i) => {
@@ -17450,6 +20487,7 @@ impl ProductOrFormationOrDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductOrFormationOrDefinitionRef::Product(i) => EntityKey::Product(*i),
@@ -17470,6 +20508,8 @@ impl ProductOrFormationOrDefinitionRef {
     }
 }
 
+/// What a [`PropertyDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PropertyDefinitionRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
@@ -17477,6 +20517,8 @@ pub enum PropertyDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PropertyDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PropertyDefinitionRefView<'m> {
         match self {
             PropertyDefinitionRef::ProductDefinitionShape(i) => {
@@ -17494,6 +20536,7 @@ impl PropertyDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PropertyDefinitionRef::ProductDefinitionShape(i) => {
@@ -17505,6 +20548,8 @@ impl PropertyDefinitionRef {
     }
 }
 
+/// What a [`RenderingPropertiesSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RenderingPropertiesSelectRefView<'m> {
     SurfaceStyleReflectanceAmbient(&'m SurfaceStyleReflectanceAmbient),
@@ -17512,6 +20557,8 @@ pub enum RenderingPropertiesSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RenderingPropertiesSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RenderingPropertiesSelectRefView<'m> {
         match self {
             RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(i) => {
@@ -17529,6 +20576,7 @@ impl RenderingPropertiesSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(i) => {
@@ -17542,6 +20590,8 @@ impl RenderingPropertiesSelectRef {
     }
 }
 
+/// What a [`RepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -17577,6 +20627,8 @@ pub enum RepresentationRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationRefView<'m> {
         match self {
             RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
@@ -17686,6 +20738,7 @@ impl RepresentationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
@@ -17741,6 +20794,8 @@ impl RepresentationRef {
     }
 }
 
+/// What a [`RepresentationContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationContextRefView<'m> {
     GeometricRepresentationContext(&'m GeometricRepresentationContext),
@@ -17751,6 +20806,8 @@ pub enum RepresentationContextRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationContextRefView<'m> {
         match self {
             RepresentationContextRef::GeometricRepresentationContext(i) => {
@@ -17783,6 +20840,7 @@ impl RepresentationContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationContextRef::GeometricRepresentationContext(i) => {
@@ -17805,11 +20863,15 @@ impl RepresentationContextRef {
     }
 }
 
+/// What a [`RepresentationContextReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationContextReferenceRefView<'m> {
     RepresentationContextReference(&'m RepresentationContextReference),
 }
 impl RepresentationContextReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationContextReferenceRefView<'m> {
         match self {
             RepresentationContextReferenceRef::RepresentationContextReference(i) => {
@@ -17819,6 +20881,7 @@ impl RepresentationContextReferenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationContextReferenceRef::RepresentationContextReference(i) => {
@@ -17828,11 +20891,12 @@ impl RepresentationContextReferenceRef {
     }
 }
 
+/// What a [`RepresentationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -17840,7 +20904,6 @@ pub enum RepresentationItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -17897,6 +20960,7 @@ pub enum RepresentationItemRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -17984,6 +21048,8 @@ pub enum RepresentationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationItemRefView<'m> {
         match self {
             RepresentationItemRef::AdvancedFace(i) => {
@@ -17992,11 +21058,6 @@ impl RepresentationItemRef {
             RepresentationItemRef::AnnotationCurveOccurrence(i) => {
                 RepresentationItemRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            RepresentationItemRef::AnnotationFillAreaOccurrence(i) => {
-                RepresentationItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             RepresentationItemRef::AnnotationOccurrence(i) => {
@@ -18023,9 +21084,6 @@ impl RepresentationItemRef {
             }
             RepresentationItemRef::AnnotationPlane(i) => {
                 RepresentationItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            RepresentationItemRef::AnnotationSymbol(i) => {
-                RepresentationItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             RepresentationItemRef::AnnotationSymbolOccurrence(i) => {
                 RepresentationItemRefView::AnnotationSymbolOccurrence(
@@ -18244,6 +21302,11 @@ impl RepresentationItemRef {
             }
             RepresentationItemRef::Ellipse(i) => {
                 RepresentationItemRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            RepresentationItemRef::ExternalImagePlacementInCallout(i) => {
+                RepresentationItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             RepresentationItemRef::ExternallyDefinedHatchStyle(i) => {
                 RepresentationItemRefView::ExternallyDefinedHatchStyle(
@@ -18574,14 +21637,12 @@ impl RepresentationItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
             RepresentationItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            RepresentationItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             RepresentationItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             RepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => {
@@ -18594,7 +21655,6 @@ impl RepresentationItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             RepresentationItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            RepresentationItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             RepresentationItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -18683,6 +21743,9 @@ impl RepresentationItemRef {
             RepresentationItemRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             RepresentationItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             RepresentationItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            RepresentationItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             RepresentationItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -18814,6 +21877,8 @@ impl RepresentationItemRef {
     }
 }
 
+/// What a [`RepresentationMapRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationMapRefView<'m> {
     CameraUsage(&'m CameraUsage),
@@ -18821,6 +21886,8 @@ pub enum RepresentationMapRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationMapRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationMapRefView<'m> {
         match self {
             RepresentationMapRef::CameraUsage(i) => {
@@ -18834,6 +21901,7 @@ impl RepresentationMapRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationMapRef::CameraUsage(i) => EntityKey::CameraUsage(*i),
@@ -18843,6 +21911,8 @@ impl RepresentationMapRef {
     }
 }
 
+/// What a [`RepresentationOrRepresentationReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationOrRepresentationReferenceRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -18879,6 +21949,8 @@ pub enum RepresentationOrRepresentationReferenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationOrRepresentationReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -18908,6 +21980,7 @@ impl RepresentationOrRepresentationReferenceRef {
             RepresentationOrRepresentationReferenceRef::Complex(i) => RepresentationOrRepresentationReferenceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
@@ -18936,6 +22009,8 @@ impl RepresentationOrRepresentationReferenceRef {
     }
 }
 
+/// What a [`RepresentedDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentedDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -18973,6 +22048,8 @@ pub enum RepresentedDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentedDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentedDefinitionRefView<'m> {
         match self {
             RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -19122,6 +22199,7 @@ impl RepresentedDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -19199,11 +22277,15 @@ impl RepresentedDefinitionRef {
     }
 }
 
+/// What a [`ResourceRequirementTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ResourceRequirementTypeRefView<'m> {
     ResourceRequirementType(&'m ResourceRequirementType),
 }
 impl ResourceRequirementTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ResourceRequirementTypeRefView<'m> {
         match self {
             ResourceRequirementTypeRef::ResourceRequirementType(i) => {
@@ -19213,6 +22295,7 @@ impl ResourceRequirementTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ResourceRequirementTypeRef::ResourceRequirementType(i) => {
@@ -19222,6 +22305,8 @@ impl ResourceRequirementTypeRef {
     }
 }
 
+/// What a [`RoleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RoleSelectRefView<'m> {
     ActionAssignment(&'m ActionAssignment),
@@ -19244,6 +22329,8 @@ pub enum RoleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RoleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RoleSelectRefView<'m> {
         match self {
             RoleSelectRef::ActionAssignment(i) => {
@@ -19314,6 +22401,7 @@ impl RoleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RoleSelectRef::ActionAssignment(i) => EntityKey::ActionAssignment(*i),
@@ -19344,11 +22432,15 @@ impl RoleSelectRef {
     }
 }
 
+/// What a [`SecurityClassificationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SecurityClassificationRefView<'m> {
     SecurityClassification(&'m SecurityClassification),
 }
 impl SecurityClassificationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SecurityClassificationRefView<'m> {
         match self {
             SecurityClassificationRef::SecurityClassification(i) => {
@@ -19358,6 +22450,7 @@ impl SecurityClassificationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SecurityClassificationRef::SecurityClassification(i) => {
@@ -19367,6 +22460,8 @@ impl SecurityClassificationRef {
     }
 }
 
+/// What a [`SecurityClassificationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SecurityClassificationItemRefView<'m> {
     Action(&'m Action),
@@ -19437,6 +22532,8 @@ pub enum SecurityClassificationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SecurityClassificationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SecurityClassificationItemRefView<'m> {
         match self {
             SecurityClassificationItemRef::Action(i) => SecurityClassificationItemRefView::Action(model.action_arena.get(i.0)),
@@ -19495,6 +22592,7 @@ impl SecurityClassificationItemRef {
             SecurityClassificationItemRef::Complex(i) => SecurityClassificationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SecurityClassificationItemRef::Action(i) => EntityKey::Action(*i),
@@ -19555,11 +22653,15 @@ impl SecurityClassificationItemRef {
     }
 }
 
+/// What a [`SecurityClassificationLevelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SecurityClassificationLevelRefView<'m> {
     SecurityClassificationLevel(&'m SecurityClassificationLevel),
 }
 impl SecurityClassificationLevelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SecurityClassificationLevelRefView<'m> {
         match self {
             SecurityClassificationLevelRef::SecurityClassificationLevel(i) => {
@@ -19569,6 +22671,7 @@ impl SecurityClassificationLevelRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SecurityClassificationLevelRef::SecurityClassificationLevel(i) => {
@@ -19578,6 +22681,8 @@ impl SecurityClassificationLevelRef {
     }
 }
 
+/// What a [`ShapeAspectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeAspectRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -19603,6 +22708,8 @@ pub enum ShapeAspectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ShapeAspectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeAspectRefView<'m> {
         match self {
             ShapeAspectRef::AllAroundShapeAspect(i) => ShapeAspectRefView::AllAroundShapeAspect(
@@ -19680,6 +22787,7 @@ impl ShapeAspectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeAspectRef::AllAroundShapeAspect(i) => EntityKey::AllAroundShapeAspect(*i),
@@ -19715,12 +22823,16 @@ impl ShapeAspectRef {
     }
 }
 
+/// What a [`ShapeDimensionRepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeDimensionRepresentationRefView<'m> {
     ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
     Complex(&'m ComplexEntity),
 }
 impl ShapeDimensionRepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeDimensionRepresentationRefView<'m> {
         match self {
             ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(i) => {
@@ -19733,6 +22845,7 @@ impl ShapeDimensionRepresentationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(i) => {
@@ -19743,6 +22856,8 @@ impl ShapeDimensionRepresentationRef {
     }
 }
 
+/// What a [`ShapeModelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeModelRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -19761,6 +22876,8 @@ pub enum ShapeModelRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ShapeModelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeModelRefView<'m> {
         match self {
             ShapeModelRef::AdvancedBrepShapeRepresentation(i) => {
@@ -19815,6 +22932,7 @@ impl ShapeModelRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeModelRef::AdvancedBrepShapeRepresentation(i) => {
@@ -19847,12 +22965,118 @@ impl ShapeModelRef {
     }
 }
 
+/// What a [`ShapeRepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum ShapeRepresentationRefView<'m> {
+    AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        &'m GeometricallyBoundedSurfaceShapeRepresentation,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        &'m GeometricallyBoundedWireframeShapeRepresentation,
+    ),
+    ManifoldSurfaceShapeRepresentation(&'m ManifoldSurfaceShapeRepresentation),
+    ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
+    ShapeRepresentation(&'m ShapeRepresentation),
+    ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
+    TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
+    Complex(&'m ComplexEntity),
+}
+impl ShapeRepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeRepresentationRefView<'m> {
+        match self {
+            ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                ShapeRepresentationRefView::AdvancedBrepShapeRepresentation(
+                    model.advanced_brep_shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                ShapeRepresentationRefView::GeometricallyBoundedSurfaceShapeRepresentation(
+                    model
+                        .geometrically_bounded_surface_shape_representation_arena
+                        .get(i.0),
+                )
+            }
+            ShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                ShapeRepresentationRefView::GeometricallyBoundedWireframeShapeRepresentation(
+                    model
+                        .geometrically_bounded_wireframe_shape_representation_arena
+                        .get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => {
+                ShapeRepresentationRefView::ManifoldSurfaceShapeRepresentation(
+                    model.manifold_surface_shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ShapeDimensionRepresentation(i) => {
+                ShapeRepresentationRefView::ShapeDimensionRepresentation(
+                    model.shape_dimension_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ShapeRepresentation(i) => {
+                ShapeRepresentationRefView::ShapeRepresentation(
+                    model.shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ShapeRepresentationWithParameters(i) => {
+                ShapeRepresentationRefView::ShapeRepresentationWithParameters(
+                    model.shape_representation_with_parameters_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::TessellatedShapeRepresentation(i) => {
+                ShapeRepresentationRefView::TessellatedShapeRepresentation(
+                    model.tessellated_shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::Complex(i) => {
+                ShapeRepresentationRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                EntityKey::AdvancedBrepShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => {
+                EntityKey::ManifoldSurfaceShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::ShapeDimensionRepresentation(i) => {
+                EntityKey::ShapeDimensionRepresentation(*i)
+            }
+            ShapeRepresentationRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
+            ShapeRepresentationRef::ShapeRepresentationWithParameters(i) => {
+                EntityKey::ShapeRepresentationWithParameters(*i)
+            }
+            ShapeRepresentationRef::TessellatedShapeRepresentation(i) => {
+                EntityKey::TessellatedShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`ShapeRepresentationRelationshipRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeRepresentationRelationshipRefView<'m> {
     ShapeRepresentationRelationship(&'m ShapeRepresentationRelationship),
     Complex(&'m ComplexEntity),
 }
 impl ShapeRepresentationRelationshipRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeRepresentationRelationshipRefView<'m> {
         match self {
             ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(i) => {
@@ -19865,6 +23089,7 @@ impl ShapeRepresentationRelationshipRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(i) => {
@@ -19875,6 +23100,8 @@ impl ShapeRepresentationRelationshipRef {
     }
 }
 
+/// What a [`ShellRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShellRefView<'m> {
     ClosedShell(&'m ClosedShell),
@@ -19885,6 +23112,8 @@ pub enum ShellRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ShellRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShellRefView<'m> {
         match self {
             ShellRef::ClosedShell(i) => {
@@ -19901,6 +23130,7 @@ impl ShellRef {
             ShellRef::Complex(i) => ShellRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShellRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
@@ -19913,6 +23143,8 @@ impl ShellRef {
     }
 }
 
+/// What a [`StartRequestItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StartRequestItemRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -19922,6 +23154,8 @@ pub enum StartRequestItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl StartRequestItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StartRequestItemRefView<'m> {
         match self {
             StartRequestItemRef::ProductDefinitionFormation(i) => {
@@ -19941,6 +23175,7 @@ impl StartRequestItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StartRequestItemRef::ProductDefinitionFormation(i) => {
@@ -19954,12 +23189,16 @@ impl StartRequestItemRef {
     }
 }
 
+/// What a [`StateObservedRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StateObservedRefView<'m> {
     StateObserved(&'m StateObserved),
     Complex(&'m ComplexEntity),
 }
 impl StateObservedRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StateObservedRefView<'m> {
         match self {
             StateObservedRef::StateObserved(i) => {
@@ -19970,6 +23209,7 @@ impl StateObservedRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StateObservedRef::StateObserved(i) => EntityKey::StateObserved(*i),
@@ -19978,12 +23218,16 @@ impl StateObservedRef {
     }
 }
 
+/// What a [`StateTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StateTypeRefView<'m> {
     StateType(&'m StateType),
     Complex(&'m ComplexEntity),
 }
 impl StateTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StateTypeRefView<'m> {
         match self {
             StateTypeRef::StateType(i) => {
@@ -19994,6 +23238,7 @@ impl StateTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StateTypeRef::StateType(i) => EntityKey::StateType(*i),
@@ -20002,12 +23247,13 @@ impl StateTypeRef {
     }
 }
 
+/// What a [`StyleContextSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StyleContextSelectRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -20015,7 +23261,6 @@ pub enum StyleContextSelectRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -20084,6 +23329,7 @@ pub enum StyleContextSelectRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -20204,6 +23450,8 @@ pub enum StyleContextSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl StyleContextSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StyleContextSelectRefView<'m> {
         match self {
             StyleContextSelectRef::AdvancedBrepShapeRepresentation(i) => {
@@ -20217,11 +23465,6 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::AnnotationCurveOccurrence(i) => {
                 StyleContextSelectRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            StyleContextSelectRef::AnnotationFillAreaOccurrence(i) => {
-                StyleContextSelectRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             StyleContextSelectRef::AnnotationOccurrence(i) => {
@@ -20248,9 +23491,6 @@ impl StyleContextSelectRef {
             }
             StyleContextSelectRef::AnnotationPlane(i) => {
                 StyleContextSelectRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            StyleContextSelectRef::AnnotationSymbol(i) => {
-                StyleContextSelectRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             StyleContextSelectRef::AnnotationSymbolOccurrence(i) => {
                 StyleContextSelectRefView::AnnotationSymbolOccurrence(
@@ -20513,6 +23753,11 @@ impl StyleContextSelectRef {
             }
             StyleContextSelectRef::Ellipse(i) => {
                 StyleContextSelectRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            StyleContextSelectRef::ExternalImagePlacementInCallout(i) => {
+                StyleContextSelectRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             StyleContextSelectRef::ExternallyDefinedHatchStyle(i) => {
                 StyleContextSelectRefView::ExternallyDefinedHatchStyle(
@@ -20962,6 +24207,7 @@ impl StyleContextSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StyleContextSelectRef::AdvancedBrepShapeRepresentation(i) => {
@@ -20970,9 +24216,6 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
             StyleContextSelectRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            StyleContextSelectRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             StyleContextSelectRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             StyleContextSelectRef::AnnotationPlaceholderLeaderLine(i) => {
@@ -20985,7 +24228,6 @@ impl StyleContextSelectRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             StyleContextSelectRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            StyleContextSelectRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             StyleContextSelectRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -21096,6 +24338,9 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             StyleContextSelectRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             StyleContextSelectRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            StyleContextSelectRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             StyleContextSelectRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -21282,10 +24527,11 @@ impl StyleContextSelectRef {
     }
 }
 
+/// What a [`StyledItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StyledItemRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -21296,6 +24542,7 @@ pub enum StyledItemRefView<'m> {
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
     ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderTerminator(&'m LeaderTerminator),
     OverRidingStyledItem(&'m OverRidingStyledItem),
@@ -21305,16 +24552,13 @@ pub enum StyledItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl StyledItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StyledItemRefView<'m> {
         match self {
             StyledItemRef::AnnotationCurveOccurrence(i) => {
                 StyledItemRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            StyledItemRef::AnnotationFillAreaOccurrence(i) => {
-                StyledItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             StyledItemRef::AnnotationOccurrence(i) => {
@@ -21357,6 +24601,11 @@ impl StyledItemRef {
                     model.draughting_annotation_occurrence_arena.get(i.0),
                 )
             }
+            StyledItemRef::ExternalImagePlacementInCallout(i) => {
+                StyledItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             StyledItemRef::LeaderCurve(i) => {
                 StyledItemRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
             }
@@ -21382,12 +24631,10 @@ impl StyledItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StyledItemRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
-            StyledItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             StyledItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             StyledItemRef::AnnotationPlaceholderOccurrence(i) => {
                 EntityKey::AnnotationPlaceholderOccurrence(*i)
@@ -21406,6 +24653,9 @@ impl StyledItemRef {
             StyledItemRef::DraughtingAnnotationOccurrence(i) => {
                 EntityKey::DraughtingAnnotationOccurrence(*i)
             }
+            StyledItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             StyledItemRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             StyledItemRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
             StyledItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
@@ -21419,19 +24669,24 @@ impl StyledItemRef {
     }
 }
 
+/// What a [`StyledItemTargetOrRepresentationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
-pub enum StyledItemTargetRefView<'m> {
+pub enum StyledItemTargetOrRepresentationItemRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
     AdvancedFace(&'m AdvancedFace),
+    AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
+    AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
+    AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
+    AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
     AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
     AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
     ApllPoint(&'m ApllPoint),
@@ -21465,10 +24720,12 @@ pub enum StyledItemTargetRefView<'m> {
     ComplexTriangulatedSurfaceSet(&'m ComplexTriangulatedSurfaceSet),
     CompositeCurve(&'m CompositeCurve),
     CompositeText(&'m CompositeText),
+    CompoundRepresentationItem(&'m CompoundRepresentationItem),
     Conic(&'m Conic),
     ConicalSurface(&'m ConicalSurface),
     ConnectedFaceSet(&'m ConnectedFaceSet),
     ConstructiveGeometryRepresentation(&'m ConstructiveGeometryRepresentation),
+    ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
     CoordinatesList(&'m CoordinatesList),
     Curve(&'m Curve),
     CylindricalSurface(&'m CylindricalSurface),
@@ -21476,7 +24733,9 @@ pub enum StyledItemTargetRefView<'m> {
     DefinedSymbol(&'m DefinedSymbol),
     DefinitionalRepresentation(&'m DefinitionalRepresentation),
     DegenerateToroidalSurface(&'m DegenerateToroidalSurface),
+    DescriptiveRepresentationItem(&'m DescriptiveRepresentationItem),
     Direction(&'m Direction),
+    DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
     DraughtingCallout(&'m DraughtingCallout),
     DraughtingModel(&'m DraughtingModel),
     Edge(&'m Edge),
@@ -21484,6 +24743,7 @@ pub enum StyledItemTargetRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -21505,13 +24765,17 @@ pub enum StyledItemTargetRefView<'m> {
         &'m GeometricallyBoundedWireframeShapeRepresentation,
     ),
     Hyperbola(&'m Hyperbola),
+    IntegerRepresentationItem(&'m IntegerRepresentationItem),
     IntersectionCurve(&'m IntersectionCurve),
+    LeaderCurve(&'m LeaderCurve),
     LeaderDirectedCallout(&'m LeaderDirectedCallout),
+    LeaderTerminator(&'m LeaderTerminator),
     Line(&'m Line),
     Loop(&'m Loop),
     ManifoldSolidBrep(&'m ManifoldSolidBrep),
     ManifoldSurfaceShapeRepresentation(&'m ManifoldSurfaceShapeRepresentation),
     MappedItem(&'m MappedItem),
+    MeasureRepresentationItem(&'m MeasureRepresentationItem),
     MechanicalDesignGeometricPresentationRepresentation(
         &'m MechanicalDesignGeometricPresentationRepresentation,
     ),
@@ -21526,6 +24790,7 @@ pub enum StyledItemTargetRefView<'m> {
     OpenShell(&'m OpenShell),
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
+    OverRidingStyledItem(&'m OverRidingStyledItem),
     Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
@@ -21539,12 +24804,15 @@ pub enum StyledItemTargetRefView<'m> {
     PresentationArea(&'m PresentationArea),
     PresentationRepresentation(&'m PresentationRepresentation),
     PresentationView(&'m PresentationView),
+    QualifiedRepresentationItem(&'m QualifiedRepresentationItem),
     QuasiUniformCurve(&'m QuasiUniformCurve),
     QuasiUniformSurface(&'m QuasiUniformSurface),
     RationalBSplineCurve(&'m RationalBSplineCurve),
     RationalBSplineSurface(&'m RationalBSplineSurface),
+    RealRepresentationItem(&'m RealRepresentationItem),
     RepositionedTessellatedItem(&'m RepositionedTessellatedItem),
     Representation(&'m Representation),
+    RepresentationItem(&'m RepresentationItem),
     RepresentationReference(&'m RepresentationReference),
     SeamCurve(&'m SeamCurve),
     ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
@@ -21553,6 +24821,7 @@ pub enum StyledItemTargetRefView<'m> {
     ShellBasedSurfaceModel(&'m ShellBasedSurfaceModel),
     SolidModel(&'m SolidModel),
     SphericalSurface(&'m SphericalSurface),
+    StyledItem(&'m StyledItem),
     Surface(&'m Surface),
     SurfaceCurve(&'m SurfaceCurve),
     SurfaceOfLinearExtrusion(&'m SurfaceOfLinearExtrusion),
@@ -21560,6 +24829,8 @@ pub enum StyledItemTargetRefView<'m> {
     SweptSurface(&'m SweptSurface),
     SymbolRepresentation(&'m SymbolRepresentation),
     SymbolTarget(&'m SymbolTarget),
+    TerminatorSymbol(&'m TerminatorSymbol),
+    TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
     TessellatedCurveSet(&'m TessellatedCurveSet),
     TessellatedFace(&'m TessellatedFace),
     TessellatedGeometricSet(&'m TessellatedGeometricSet),
@@ -21576,835 +24847,378 @@ pub enum StyledItemTargetRefView<'m> {
     TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
     UniformCurve(&'m UniformCurve),
     UniformSurface(&'m UniformSurface),
+    ValueRepresentationItem(&'m ValueRepresentationItem),
     Vector(&'m Vector),
     Vertex(&'m Vertex),
     VertexLoop(&'m VertexLoop),
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
+    SetRepresentationItem(&'m [RepresentationItemRef]),
     Complex(&'m ComplexEntity),
 }
-impl StyledItemTargetRef {
-    pub fn resolve<'m>(&self, model: &'m StepModel) -> StyledItemTargetRefView<'m> {
+impl StyledItemTargetOrRepresentationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(
+        &'m self,
+        model: &'m StepModel,
+    ) -> StyledItemTargetOrRepresentationItemRefView<'m> {
         match self {
-            StyledItemTargetRef::AdvancedBrepShapeRepresentation(i) => {
-                StyledItemTargetRefView::AdvancedBrepShapeRepresentation(
-                    model.advanced_brep_shape_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::AdvancedFace(i) => {
-                StyledItemTargetRefView::AdvancedFace(model.advanced_face_arena.get(i.0))
-            }
-            StyledItemTargetRef::AnnotationPlaceholderLeaderLine(i) => {
-                StyledItemTargetRefView::AnnotationPlaceholderLeaderLine(
-                    model.annotation_placeholder_leader_line_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => {
-                StyledItemTargetRefView::AnnotationPlaceholderOccurrence(
-                    model.annotation_placeholder_occurrence_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                StyledItemTargetRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(
-                    model
-                        .annotation_placeholder_occurrence_with_leader_line_arena
-                        .get(i.0),
-                )
-            }
-            StyledItemTargetRef::AnnotationPlane(i) => {
-                StyledItemTargetRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            StyledItemTargetRef::AnnotationSymbol(i) => {
-                StyledItemTargetRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
-            }
-            StyledItemTargetRef::AnnotationText(i) => {
-                StyledItemTargetRefView::AnnotationText(model.annotation_text_arena.get(i.0))
-            }
-            StyledItemTargetRef::AnnotationTextCharacter(i) => {
-                StyledItemTargetRefView::AnnotationTextCharacter(
-                    model.annotation_text_character_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::AnnotationToAnnotationLeaderLine(i) => {
-                StyledItemTargetRefView::AnnotationToAnnotationLeaderLine(
-                    model.annotation_to_annotation_leader_line_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::AnnotationToModelLeaderLine(i) => {
-                StyledItemTargetRefView::AnnotationToModelLeaderLine(
-                    model.annotation_to_model_leader_line_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::ApllPoint(i) => {
-                StyledItemTargetRefView::ApllPoint(model.apll_point_arena.get(i.0))
-            }
-            StyledItemTargetRef::ApllPointWithSurface(i) => {
-                StyledItemTargetRefView::ApllPointWithSurface(
-                    model.apll_point_with_surface_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::AuxiliaryLeaderLine(i) => {
-                StyledItemTargetRefView::AuxiliaryLeaderLine(
-                    model.auxiliary_leader_line_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::Axis1Placement(i) => {
-                StyledItemTargetRefView::Axis1Placement(model.axis1_placement_arena.get(i.0))
-            }
-            StyledItemTargetRef::Axis2Placement2d(i) => {
-                StyledItemTargetRefView::Axis2Placement2d(model.axis2_placement2d_arena.get(i.0))
-            }
-            StyledItemTargetRef::Axis2Placement3d(i) => {
-                StyledItemTargetRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0))
-            }
-            StyledItemTargetRef::BSplineCurve(i) => {
-                StyledItemTargetRefView::BSplineCurve(model.b_spline_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::BSplineCurveWithKnots(i) => {
-                StyledItemTargetRefView::BSplineCurveWithKnots(
-                    model.b_spline_curve_with_knots_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::BSplineSurface(i) => {
-                StyledItemTargetRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::BSplineSurfaceWithKnots(i) => {
-                StyledItemTargetRefView::BSplineSurfaceWithKnots(
-                    model.b_spline_surface_with_knots_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::BezierCurve(i) => {
-                StyledItemTargetRefView::BezierCurve(model.bezier_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::BezierSurface(i) => {
-                StyledItemTargetRefView::BezierSurface(model.bezier_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::BoundedCurve(i) => {
-                StyledItemTargetRefView::BoundedCurve(model.bounded_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::BoundedPcurve(i) => {
-                StyledItemTargetRefView::BoundedPcurve(model.bounded_pcurve_arena.get(i.0))
-            }
-            StyledItemTargetRef::BoundedSurface(i) => {
-                StyledItemTargetRefView::BoundedSurface(model.bounded_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::BoundedSurfaceCurve(i) => {
-                StyledItemTargetRefView::BoundedSurfaceCurve(
-                    model.bounded_surface_curve_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::BrepWithVoids(i) => {
-                StyledItemTargetRefView::BrepWithVoids(model.brep_with_voids_arena.get(i.0))
-            }
-            StyledItemTargetRef::CameraImage(i) => {
-                StyledItemTargetRefView::CameraImage(model.camera_image_arena.get(i.0))
-            }
-            StyledItemTargetRef::CameraImage3dWithScale(i) => {
-                StyledItemTargetRefView::CameraImage3dWithScale(
-                    model.camera_image3d_with_scale_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::CameraModel(i) => {
-                StyledItemTargetRefView::CameraModel(model.camera_model_arena.get(i.0))
-            }
-            StyledItemTargetRef::CameraModelD3(i) => {
-                StyledItemTargetRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0))
-            }
-            StyledItemTargetRef::CameraModelD3MultiClipping(i) => {
-                StyledItemTargetRefView::CameraModelD3MultiClipping(
-                    model.camera_model_d3_multi_clipping_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
-                StyledItemTargetRefView::CameraModelD3WithHlhsr(
-                    model.camera_model_d3_with_hlhsr_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::CartesianPoint(i) => {
-                StyledItemTargetRefView::CartesianPoint(model.cartesian_point_arena.get(i.0))
-            }
-            StyledItemTargetRef::CharacterizedRepresentation(i) => {
-                StyledItemTargetRefView::CharacterizedRepresentation(
-                    model.characterized_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::Circle(i) => {
-                StyledItemTargetRefView::Circle(model.circle_arena.get(i.0))
-            }
-            StyledItemTargetRef::ClosedShell(i) => {
-                StyledItemTargetRefView::ClosedShell(model.closed_shell_arena.get(i.0))
-            }
-            StyledItemTargetRef::ComplexTriangulatedFace(i) => {
-                StyledItemTargetRefView::ComplexTriangulatedFace(
-                    model.complex_triangulated_face_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::ComplexTriangulatedSurfaceSet(i) => {
-                StyledItemTargetRefView::ComplexTriangulatedSurfaceSet(
-                    model.complex_triangulated_surface_set_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::CompositeCurve(i) => {
-                StyledItemTargetRefView::CompositeCurve(model.composite_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::CompositeText(i) => {
-                StyledItemTargetRefView::CompositeText(model.composite_text_arena.get(i.0))
-            }
-            StyledItemTargetRef::Conic(i) => {
-                StyledItemTargetRefView::Conic(model.conic_arena.get(i.0))
-            }
-            StyledItemTargetRef::ConicalSurface(i) => {
-                StyledItemTargetRefView::ConicalSurface(model.conical_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::ConnectedFaceSet(i) => {
-                StyledItemTargetRefView::ConnectedFaceSet(model.connected_face_set_arena.get(i.0))
-            }
-            StyledItemTargetRef::ConstructiveGeometryRepresentation(i) => {
-                StyledItemTargetRefView::ConstructiveGeometryRepresentation(
-                    model.constructive_geometry_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::CoordinatesList(i) => {
-                StyledItemTargetRefView::CoordinatesList(model.coordinates_list_arena.get(i.0))
-            }
-            StyledItemTargetRef::Curve(i) => {
-                StyledItemTargetRefView::Curve(model.curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::CylindricalSurface(i) => {
-                StyledItemTargetRefView::CylindricalSurface(
-                    model.cylindrical_surface_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::DefinedCharacterGlyph(i) => {
-                StyledItemTargetRefView::DefinedCharacterGlyph(
-                    model.defined_character_glyph_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::DefinedSymbol(i) => {
-                StyledItemTargetRefView::DefinedSymbol(model.defined_symbol_arena.get(i.0))
-            }
-            StyledItemTargetRef::DefinitionalRepresentation(i) => {
-                StyledItemTargetRefView::DefinitionalRepresentation(
-                    model.definitional_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::DegenerateToroidalSurface(i) => {
-                StyledItemTargetRefView::DegenerateToroidalSurface(
-                    model.degenerate_toroidal_surface_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::Direction(i) => {
-                StyledItemTargetRefView::Direction(model.direction_arena.get(i.0))
-            }
-            StyledItemTargetRef::DraughtingCallout(i) => {
-                StyledItemTargetRefView::DraughtingCallout(model.draughting_callout_arena.get(i.0))
-            }
-            StyledItemTargetRef::DraughtingModel(i) => {
-                StyledItemTargetRefView::DraughtingModel(model.draughting_model_arena.get(i.0))
-            }
-            StyledItemTargetRef::Edge(i) => {
-                StyledItemTargetRefView::Edge(model.edge_arena.get(i.0))
-            }
-            StyledItemTargetRef::EdgeCurve(i) => {
-                StyledItemTargetRefView::EdgeCurve(model.edge_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::EdgeLoop(i) => {
-                StyledItemTargetRefView::EdgeLoop(model.edge_loop_arena.get(i.0))
-            }
-            StyledItemTargetRef::ElementarySurface(i) => {
-                StyledItemTargetRefView::ElementarySurface(model.elementary_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::Ellipse(i) => {
-                StyledItemTargetRefView::Ellipse(model.ellipse_arena.get(i.0))
-            }
-            StyledItemTargetRef::ExternallyDefinedHatchStyle(i) => {
-                StyledItemTargetRefView::ExternallyDefinedHatchStyle(
-                    model.externally_defined_hatch_style_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::ExternallyDefinedTileStyle(i) => {
-                StyledItemTargetRefView::ExternallyDefinedTileStyle(
-                    model.externally_defined_tile_style_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::Face(i) => {
-                StyledItemTargetRefView::Face(model.face_arena.get(i.0))
-            }
-            StyledItemTargetRef::FaceBound(i) => {
-                StyledItemTargetRefView::FaceBound(model.face_bound_arena.get(i.0))
-            }
-            StyledItemTargetRef::FaceOuterBound(i) => {
-                StyledItemTargetRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0))
-            }
-            StyledItemTargetRef::FaceSurface(i) => {
-                StyledItemTargetRefView::FaceSurface(model.face_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::FillAreaStyleHatching(i) => {
-                StyledItemTargetRefView::FillAreaStyleHatching(
-                    model.fill_area_style_hatching_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::FillAreaStyleTileColouredRegion(i) => {
-                StyledItemTargetRefView::FillAreaStyleTileColouredRegion(
-                    model.fill_area_style_tile_coloured_region_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::FillAreaStyleTileCurveWithStyle(i) => {
-                StyledItemTargetRefView::FillAreaStyleTileCurveWithStyle(
-                    model.fill_area_style_tile_curve_with_style_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::FillAreaStyleTileSymbolWithStyle(i) => {
-                StyledItemTargetRefView::FillAreaStyleTileSymbolWithStyle(
-                    model.fill_area_style_tile_symbol_with_style_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::FillAreaStyleTiles(i) => {
-                StyledItemTargetRefView::FillAreaStyleTiles(
-                    model.fill_area_style_tiles_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::GeometricCurveSet(i) => {
-                StyledItemTargetRefView::GeometricCurveSet(model.geometric_curve_set_arena.get(i.0))
-            }
-            StyledItemTargetRef::GeometricRepresentationItem(i) => {
-                StyledItemTargetRefView::GeometricRepresentationItem(
-                    model.geometric_representation_item_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::GeometricSet(i) => {
-                StyledItemTargetRefView::GeometricSet(model.geometric_set_arena.get(i.0))
-            }
-            StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                StyledItemTargetRefView::GeometricallyBoundedSurfaceShapeRepresentation(
-                    model
-                        .geometrically_bounded_surface_shape_representation_arena
-                        .get(i.0),
-                )
-            }
-            StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                StyledItemTargetRefView::GeometricallyBoundedWireframeShapeRepresentation(
-                    model
-                        .geometrically_bounded_wireframe_shape_representation_arena
-                        .get(i.0),
-                )
-            }
-            StyledItemTargetRef::Hyperbola(i) => {
-                StyledItemTargetRefView::Hyperbola(model.hyperbola_arena.get(i.0))
-            }
-            StyledItemTargetRef::IntersectionCurve(i) => {
-                StyledItemTargetRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::LeaderDirectedCallout(i) => {
-                StyledItemTargetRefView::LeaderDirectedCallout(
-                    model.leader_directed_callout_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::Line(i) => {
-                StyledItemTargetRefView::Line(model.line_arena.get(i.0))
-            }
-            StyledItemTargetRef::Loop(i) => {
-                StyledItemTargetRefView::Loop(model.loop_arena.get(i.0))
-            }
-            StyledItemTargetRef::ManifoldSolidBrep(i) => {
-                StyledItemTargetRefView::ManifoldSolidBrep(model.manifold_solid_brep_arena.get(i.0))
-            }
-            StyledItemTargetRef::ManifoldSurfaceShapeRepresentation(i) => {
-                StyledItemTargetRefView::ManifoldSurfaceShapeRepresentation(
-                    model.manifold_surface_shape_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::MappedItem(i) => {
-                StyledItemTargetRefView::MappedItem(model.mapped_item_arena.get(i.0))
-            }
-            StyledItemTargetRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                StyledItemTargetRefView::MechanicalDesignGeometricPresentationRepresentation(
-                    model
-                        .mechanical_design_geometric_presentation_representation_arena
-                        .get(i.0),
-                )
-            }
-            StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                StyledItemTargetRefView::MechanicalDesignPresentationRepresentationWithDraughting(
-                    model
-                        .mechanical_design_presentation_representation_with_draughting_arena
-                        .get(i.0),
-                )
-            }
-            StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => {
-                StyledItemTargetRefView::MechanicalDesignShadedPresentationRepresentation(
-                    model
-                        .mechanical_design_shaded_presentation_representation_arena
-                        .get(i.0),
-                )
-            }
-            StyledItemTargetRef::OffsetSurface(i) => {
-                StyledItemTargetRefView::OffsetSurface(model.offset_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
-                StyledItemTargetRefView::OneDirectionRepeatFactor(
-                    model.one_direction_repeat_factor_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::OpenShell(i) => {
-                StyledItemTargetRefView::OpenShell(model.open_shell_arena.get(i.0))
-            }
-            StyledItemTargetRef::OrientedClosedShell(i) => {
-                StyledItemTargetRefView::OrientedClosedShell(
-                    model.oriented_closed_shell_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::OrientedEdge(i) => {
-                StyledItemTargetRefView::OrientedEdge(model.oriented_edge_arena.get(i.0))
-            }
-            StyledItemTargetRef::Parabola(i) => {
-                StyledItemTargetRefView::Parabola(model.parabola_arena.get(i.0))
-            }
-            StyledItemTargetRef::Path(i) => {
-                StyledItemTargetRefView::Path(model.path_arena.get(i.0))
-            }
-            StyledItemTargetRef::Pcurve(i) => {
-                StyledItemTargetRefView::Pcurve(model.pcurve_arena.get(i.0))
-            }
-            StyledItemTargetRef::Placement(i) => {
-                StyledItemTargetRefView::Placement(model.placement_arena.get(i.0))
-            }
-            StyledItemTargetRef::PlanarBox(i) => {
-                StyledItemTargetRefView::PlanarBox(model.planar_box_arena.get(i.0))
-            }
-            StyledItemTargetRef::PlanarExtent(i) => {
-                StyledItemTargetRefView::PlanarExtent(model.planar_extent_arena.get(i.0))
-            }
-            StyledItemTargetRef::Plane(i) => {
-                StyledItemTargetRefView::Plane(model.plane_arena.get(i.0))
-            }
-            StyledItemTargetRef::Point(i) => {
-                StyledItemTargetRefView::Point(model.point_arena.get(i.0))
-            }
-            StyledItemTargetRef::PolyLoop(i) => {
-                StyledItemTargetRefView::PolyLoop(model.poly_loop_arena.get(i.0))
-            }
-            StyledItemTargetRef::Polyline(i) => {
-                StyledItemTargetRefView::Polyline(model.polyline_arena.get(i.0))
-            }
-            StyledItemTargetRef::PresentationArea(i) => {
-                StyledItemTargetRefView::PresentationArea(model.presentation_area_arena.get(i.0))
-            }
-            StyledItemTargetRef::PresentationRepresentation(i) => {
-                StyledItemTargetRefView::PresentationRepresentation(
-                    model.presentation_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::PresentationView(i) => {
-                StyledItemTargetRefView::PresentationView(model.presentation_view_arena.get(i.0))
-            }
-            StyledItemTargetRef::QuasiUniformCurve(i) => {
-                StyledItemTargetRefView::QuasiUniformCurve(model.quasi_uniform_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::QuasiUniformSurface(i) => {
-                StyledItemTargetRefView::QuasiUniformSurface(
-                    model.quasi_uniform_surface_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::RationalBSplineCurve(i) => {
-                StyledItemTargetRefView::RationalBSplineCurve(
-                    model.rational_b_spline_curve_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::RationalBSplineSurface(i) => {
-                StyledItemTargetRefView::RationalBSplineSurface(
-                    model.rational_b_spline_surface_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::RepositionedTessellatedItem(i) => {
-                StyledItemTargetRefView::RepositionedTessellatedItem(
-                    model.repositioned_tessellated_item_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::Representation(i) => {
-                StyledItemTargetRefView::Representation(model.representation_arena.get(i.0))
-            }
-            StyledItemTargetRef::RepresentationReference(i) => {
-                StyledItemTargetRefView::RepresentationReference(
-                    model.representation_reference_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::SeamCurve(i) => {
-                StyledItemTargetRefView::SeamCurve(model.seam_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::ShapeDimensionRepresentation(i) => {
-                StyledItemTargetRefView::ShapeDimensionRepresentation(
-                    model.shape_dimension_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::ShapeRepresentation(i) => {
-                StyledItemTargetRefView::ShapeRepresentation(
-                    model.shape_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::ShapeRepresentationWithParameters(i) => {
-                StyledItemTargetRefView::ShapeRepresentationWithParameters(
-                    model.shape_representation_with_parameters_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::ShellBasedSurfaceModel(i) => {
-                StyledItemTargetRefView::ShellBasedSurfaceModel(
-                    model.shell_based_surface_model_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::SolidModel(i) => {
-                StyledItemTargetRefView::SolidModel(model.solid_model_arena.get(i.0))
-            }
-            StyledItemTargetRef::SphericalSurface(i) => {
-                StyledItemTargetRefView::SphericalSurface(model.spherical_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::Surface(i) => {
-                StyledItemTargetRefView::Surface(model.surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::SurfaceCurve(i) => {
-                StyledItemTargetRefView::SurfaceCurve(model.surface_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::SurfaceOfLinearExtrusion(i) => {
-                StyledItemTargetRefView::SurfaceOfLinearExtrusion(
-                    model.surface_of_linear_extrusion_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::SurfaceOfRevolution(i) => {
-                StyledItemTargetRefView::SurfaceOfRevolution(
-                    model.surface_of_revolution_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::SweptSurface(i) => {
-                StyledItemTargetRefView::SweptSurface(model.swept_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::SymbolRepresentation(i) => {
-                StyledItemTargetRefView::SymbolRepresentation(
-                    model.symbol_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::SymbolTarget(i) => {
-                StyledItemTargetRefView::SymbolTarget(model.symbol_target_arena.get(i.0))
-            }
-            StyledItemTargetRef::TessellatedCurveSet(i) => {
-                StyledItemTargetRefView::TessellatedCurveSet(
-                    model.tessellated_curve_set_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::TessellatedFace(i) => {
-                StyledItemTargetRefView::TessellatedFace(model.tessellated_face_arena.get(i.0))
-            }
-            StyledItemTargetRef::TessellatedGeometricSet(i) => {
-                StyledItemTargetRefView::TessellatedGeometricSet(
-                    model.tessellated_geometric_set_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::TessellatedItem(i) => {
-                StyledItemTargetRefView::TessellatedItem(model.tessellated_item_arena.get(i.0))
-            }
-            StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
-                StyledItemTargetRefView::TessellatedShapeRepresentation(
-                    model.tessellated_shape_representation_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::TessellatedShell(i) => {
-                StyledItemTargetRefView::TessellatedShell(model.tessellated_shell_arena.get(i.0))
-            }
-            StyledItemTargetRef::TessellatedSolid(i) => {
-                StyledItemTargetRefView::TessellatedSolid(model.tessellated_solid_arena.get(i.0))
-            }
-            StyledItemTargetRef::TessellatedStructuredItem(i) => {
-                StyledItemTargetRefView::TessellatedStructuredItem(
-                    model.tessellated_structured_item_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::TessellatedSurfaceSet(i) => {
-                StyledItemTargetRefView::TessellatedSurfaceSet(
-                    model.tessellated_surface_set_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::TextLiteral(i) => {
-                StyledItemTargetRefView::TextLiteral(model.text_literal_arena.get(i.0))
-            }
-            StyledItemTargetRef::TopologicalRepresentationItem(i) => {
-                StyledItemTargetRefView::TopologicalRepresentationItem(
-                    model.topological_representation_item_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::ToroidalSurface(i) => {
-                StyledItemTargetRefView::ToroidalSurface(model.toroidal_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::TrimmedCurve(i) => {
-                StyledItemTargetRefView::TrimmedCurve(model.trimmed_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::TwoDirectionRepeatFactor(i) => {
-                StyledItemTargetRefView::TwoDirectionRepeatFactor(
-                    model.two_direction_repeat_factor_arena.get(i.0),
-                )
-            }
-            StyledItemTargetRef::UniformCurve(i) => {
-                StyledItemTargetRefView::UniformCurve(model.uniform_curve_arena.get(i.0))
-            }
-            StyledItemTargetRef::UniformSurface(i) => {
-                StyledItemTargetRefView::UniformSurface(model.uniform_surface_arena.get(i.0))
-            }
-            StyledItemTargetRef::Vector(i) => {
-                StyledItemTargetRefView::Vector(model.vector_arena.get(i.0))
-            }
-            StyledItemTargetRef::Vertex(i) => {
-                StyledItemTargetRefView::Vertex(model.vertex_arena.get(i.0))
-            }
-            StyledItemTargetRef::VertexLoop(i) => {
-                StyledItemTargetRefView::VertexLoop(model.vertex_loop_arena.get(i.0))
-            }
-            StyledItemTargetRef::VertexPoint(i) => {
-                StyledItemTargetRefView::VertexPoint(model.vertex_point_arena.get(i.0))
-            }
-            StyledItemTargetRef::VertexShell(i) => {
-                StyledItemTargetRefView::VertexShell(model.vertex_shell_arena.get(i.0))
-            }
-            StyledItemTargetRef::WireShell(i) => {
-                StyledItemTargetRefView::WireShell(model.wire_shell_arena.get(i.0))
-            }
-            StyledItemTargetRef::Complex(i) => {
-                StyledItemTargetRefView::Complex(model.complex_entity_arena.get(i.0))
-            }
+            StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::AdvancedBrepShapeRepresentation(model.advanced_brep_shape_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AdvancedFace(i) => StyledItemTargetOrRepresentationItemRefView::AdvancedFace(model.advanced_face_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationCurveOccurrence(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationOccurrence(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationPlaceholderLeaderLine(model.annotation_placeholder_leader_line_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlane(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationSymbolOccurrence(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationSymbolOccurrence(model.annotation_symbol_occurrence_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationText(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationText(model.annotation_text_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationTextCharacter(model.annotation_text_character_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationTextOccurrence(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationTextOccurrence(model.annotation_text_occurrence_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationToAnnotationLeaderLine(model.annotation_to_annotation_leader_line_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationToModelLeaderLine(i) => StyledItemTargetOrRepresentationItemRefView::AnnotationToModelLeaderLine(model.annotation_to_model_leader_line_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ApllPoint(i) => StyledItemTargetOrRepresentationItemRefView::ApllPoint(model.apll_point_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ApllPointWithSurface(i) => StyledItemTargetOrRepresentationItemRefView::ApllPointWithSurface(model.apll_point_with_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::AuxiliaryLeaderLine(i) => StyledItemTargetOrRepresentationItemRefView::AuxiliaryLeaderLine(model.auxiliary_leader_line_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Axis1Placement(i) => StyledItemTargetOrRepresentationItemRefView::Axis1Placement(model.axis1_placement_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i) => StyledItemTargetOrRepresentationItemRefView::Axis2Placement2d(model.axis2_placement2d_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i) => StyledItemTargetOrRepresentationItemRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BSplineCurve(i) => StyledItemTargetOrRepresentationItemRefView::BSplineCurve(model.b_spline_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i) => StyledItemTargetOrRepresentationItemRefView::BSplineCurveWithKnots(model.b_spline_curve_with_knots_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BSplineSurface(i) => StyledItemTargetOrRepresentationItemRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i) => StyledItemTargetOrRepresentationItemRefView::BSplineSurfaceWithKnots(model.b_spline_surface_with_knots_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BezierCurve(i) => StyledItemTargetOrRepresentationItemRefView::BezierCurve(model.bezier_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BezierSurface(i) => StyledItemTargetOrRepresentationItemRefView::BezierSurface(model.bezier_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BoundedCurve(i) => StyledItemTargetOrRepresentationItemRefView::BoundedCurve(model.bounded_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i) => StyledItemTargetOrRepresentationItemRefView::BoundedPcurve(model.bounded_pcurve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BoundedSurface(i) => StyledItemTargetOrRepresentationItemRefView::BoundedSurface(model.bounded_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i) => StyledItemTargetOrRepresentationItemRefView::BoundedSurfaceCurve(model.bounded_surface_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i) => StyledItemTargetOrRepresentationItemRefView::BrepWithVoids(model.brep_with_voids_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CameraImage(i) => StyledItemTargetOrRepresentationItemRefView::CameraImage(model.camera_image_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i) => StyledItemTargetOrRepresentationItemRefView::CameraImage3dWithScale(model.camera_image3d_with_scale_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CameraModel(i) => StyledItemTargetOrRepresentationItemRefView::CameraModel(model.camera_model_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3(i) => StyledItemTargetOrRepresentationItemRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i) => StyledItemTargetOrRepresentationItemRefView::CameraModelD3MultiClipping(model.camera_model_d3_multi_clipping_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i) => StyledItemTargetOrRepresentationItemRefView::CameraModelD3WithHlhsr(model.camera_model_d3_with_hlhsr_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CartesianPoint(i) => StyledItemTargetOrRepresentationItemRefView::CartesianPoint(model.cartesian_point_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::CharacterizedRepresentation(model.characterized_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Circle(i) => StyledItemTargetOrRepresentationItemRefView::Circle(model.circle_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ClosedShell(i) => StyledItemTargetOrRepresentationItemRefView::ClosedShell(model.closed_shell_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i) => StyledItemTargetOrRepresentationItemRefView::ComplexTriangulatedFace(model.complex_triangulated_face_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRefView::ComplexTriangulatedSurfaceSet(model.complex_triangulated_surface_set_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CompositeCurve(i) => StyledItemTargetOrRepresentationItemRefView::CompositeCurve(model.composite_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CompositeText(i) => StyledItemTargetOrRepresentationItemRefView::CompositeText(model.composite_text_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CompoundRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::CompoundRepresentationItem(model.compound_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Conic(i) => StyledItemTargetOrRepresentationItemRefView::Conic(model.conic_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ConicalSurface(i) => StyledItemTargetOrRepresentationItemRefView::ConicalSurface(model.conical_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i) => StyledItemTargetOrRepresentationItemRefView::ConnectedFaceSet(model.connected_face_set_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::ConstructiveGeometryRepresentation(model.constructive_geometry_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ContextDependentOverRidingStyledItem(i) => StyledItemTargetOrRepresentationItemRefView::ContextDependentOverRidingStyledItem(model.context_dependent_over_riding_styled_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CoordinatesList(i) => StyledItemTargetOrRepresentationItemRefView::CoordinatesList(model.coordinates_list_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Curve(i) => StyledItemTargetOrRepresentationItemRefView::Curve(model.curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i) => StyledItemTargetOrRepresentationItemRefView::CylindricalSurface(model.cylindrical_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i) => StyledItemTargetOrRepresentationItemRefView::DefinedCharacterGlyph(model.defined_character_glyph_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i) => StyledItemTargetOrRepresentationItemRefView::DefinedSymbol(model.defined_symbol_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::DefinitionalRepresentation(model.definitional_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i) => StyledItemTargetOrRepresentationItemRefView::DegenerateToroidalSurface(model.degenerate_toroidal_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DescriptiveRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::DescriptiveRepresentationItem(model.descriptive_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Direction(i) => StyledItemTargetOrRepresentationItemRefView::Direction(model.direction_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingAnnotationOccurrence(i) => StyledItemTargetOrRepresentationItemRefView::DraughtingAnnotationOccurrence(model.draughting_annotation_occurrence_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i) => StyledItemTargetOrRepresentationItemRefView::DraughtingCallout(model.draughting_callout_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingModel(i) => StyledItemTargetOrRepresentationItemRefView::DraughtingModel(model.draughting_model_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Edge(i) => StyledItemTargetOrRepresentationItemRefView::Edge(model.edge_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::EdgeCurve(i) => StyledItemTargetOrRepresentationItemRefView::EdgeCurve(model.edge_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => StyledItemTargetOrRepresentationItemRefView::EdgeLoop(model.edge_loop_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => StyledItemTargetOrRepresentationItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Ellipse(i) => StyledItemTargetOrRepresentationItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ExternalImagePlacementInCallout(i) => StyledItemTargetOrRepresentationItemRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => StyledItemTargetOrRepresentationItemRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => StyledItemTargetOrRepresentationItemRefView::ExternallyDefinedTileStyle(model.externally_defined_tile_style_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Face(i) => StyledItemTargetOrRepresentationItemRefView::Face(model.face_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FaceBound(i) => StyledItemTargetOrRepresentationItemRefView::FaceBound(model.face_bound_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i) => StyledItemTargetOrRepresentationItemRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FaceSurface(i) => StyledItemTargetOrRepresentationItemRefView::FaceSurface(model.face_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i) => StyledItemTargetOrRepresentationItemRefView::FillAreaStyleHatching(model.fill_area_style_hatching_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i) => StyledItemTargetOrRepresentationItemRefView::FillAreaStyleTileColouredRegion(model.fill_area_style_tile_coloured_region_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i) => StyledItemTargetOrRepresentationItemRefView::FillAreaStyleTileCurveWithStyle(model.fill_area_style_tile_curve_with_style_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i) => StyledItemTargetOrRepresentationItemRefView::FillAreaStyleTileSymbolWithStyle(model.fill_area_style_tile_symbol_with_style_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i) => StyledItemTargetOrRepresentationItemRefView::FillAreaStyleTiles(model.fill_area_style_tiles_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i) => StyledItemTargetOrRepresentationItemRefView::GeometricCurveSet(model.geometric_curve_set_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::GeometricRepresentationItem(model.geometric_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::GeometricSet(i) => StyledItemTargetOrRepresentationItemRefView::GeometricSet(model.geometric_set_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::GeometricallyBoundedSurfaceShapeRepresentation(model.geometrically_bounded_surface_shape_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::GeometricallyBoundedWireframeShapeRepresentation(model.geometrically_bounded_wireframe_shape_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Hyperbola(i) => StyledItemTargetOrRepresentationItemRefView::Hyperbola(model.hyperbola_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::IntegerRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::IntegerRepresentationItem(model.integer_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i) => StyledItemTargetOrRepresentationItemRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::LeaderCurve(i) => StyledItemTargetOrRepresentationItemRefView::LeaderCurve(model.leader_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i) => StyledItemTargetOrRepresentationItemRefView::LeaderDirectedCallout(model.leader_directed_callout_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::LeaderTerminator(i) => StyledItemTargetOrRepresentationItemRefView::LeaderTerminator(model.leader_terminator_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Line(i) => StyledItemTargetOrRepresentationItemRefView::Line(model.line_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Loop(i) => StyledItemTargetOrRepresentationItemRefView::Loop(model.loop_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i) => StyledItemTargetOrRepresentationItemRefView::ManifoldSolidBrep(model.manifold_solid_brep_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::ManifoldSurfaceShapeRepresentation(model.manifold_surface_shape_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::MappedItem(i) => StyledItemTargetOrRepresentationItemRefView::MappedItem(model.mapped_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::MeasureRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::MeasureRepresentationItem(model.measure_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::MechanicalDesignGeometricPresentationRepresentation(model.mechanical_design_geometric_presentation_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => StyledItemTargetOrRepresentationItemRefView::MechanicalDesignPresentationRepresentationWithDraughting(model.mechanical_design_presentation_representation_with_draughting_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::MechanicalDesignShadedPresentationRepresentation(model.mechanical_design_shaded_presentation_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::OffsetSurface(i) => StyledItemTargetOrRepresentationItemRefView::OffsetSurface(model.offset_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRefView::OneDirectionRepeatFactor(model.one_direction_repeat_factor_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::OpenShell(i) => StyledItemTargetOrRepresentationItemRefView::OpenShell(model.open_shell_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i) => StyledItemTargetOrRepresentationItemRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::OrientedEdge(i) => StyledItemTargetOrRepresentationItemRefView::OrientedEdge(model.oriented_edge_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::OverRidingStyledItem(i) => StyledItemTargetOrRepresentationItemRefView::OverRidingStyledItem(model.over_riding_styled_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Parabola(i) => StyledItemTargetOrRepresentationItemRefView::Parabola(model.parabola_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Path(i) => StyledItemTargetOrRepresentationItemRefView::Path(model.path_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Pcurve(i) => StyledItemTargetOrRepresentationItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Placement(i) => StyledItemTargetOrRepresentationItemRefView::Placement(model.placement_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::PlanarBox(i) => StyledItemTargetOrRepresentationItemRefView::PlanarBox(model.planar_box_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::PlanarExtent(i) => StyledItemTargetOrRepresentationItemRefView::PlanarExtent(model.planar_extent_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Plane(i) => StyledItemTargetOrRepresentationItemRefView::Plane(model.plane_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Point(i) => StyledItemTargetOrRepresentationItemRefView::Point(model.point_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::PolyLoop(i) => StyledItemTargetOrRepresentationItemRefView::PolyLoop(model.poly_loop_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Polyline(i) => StyledItemTargetOrRepresentationItemRefView::Polyline(model.polyline_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::PresentationArea(i) => StyledItemTargetOrRepresentationItemRefView::PresentationArea(model.presentation_area_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::PresentationRepresentation(model.presentation_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::PresentationView(i) => StyledItemTargetOrRepresentationItemRefView::PresentationView(model.presentation_view_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::QualifiedRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::QualifiedRepresentationItem(model.qualified_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i) => StyledItemTargetOrRepresentationItemRefView::QuasiUniformCurve(model.quasi_uniform_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i) => StyledItemTargetOrRepresentationItemRefView::QuasiUniformSurface(model.quasi_uniform_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i) => StyledItemTargetOrRepresentationItemRefView::RationalBSplineCurve(model.rational_b_spline_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i) => StyledItemTargetOrRepresentationItemRefView::RationalBSplineSurface(model.rational_b_spline_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::RealRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::RealRepresentationItem(model.real_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i) => StyledItemTargetOrRepresentationItemRefView::RepositionedTessellatedItem(model.repositioned_tessellated_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Representation(i) => StyledItemTargetOrRepresentationItemRefView::Representation(model.representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::RepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::RepresentationItem(model.representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::RepresentationReference(i) => StyledItemTargetOrRepresentationItemRefView::RepresentationReference(model.representation_reference_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SeamCurve(i) => StyledItemTargetOrRepresentationItemRefView::SeamCurve(model.seam_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::ShapeDimensionRepresentation(model.shape_dimension_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::ShapeRepresentation(model.shape_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i) => StyledItemTargetOrRepresentationItemRefView::ShapeRepresentationWithParameters(model.shape_representation_with_parameters_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i) => StyledItemTargetOrRepresentationItemRefView::ShellBasedSurfaceModel(model.shell_based_surface_model_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SolidModel(i) => StyledItemTargetOrRepresentationItemRefView::SolidModel(model.solid_model_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SphericalSurface(i) => StyledItemTargetOrRepresentationItemRefView::SphericalSurface(model.spherical_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::StyledItem(i) => StyledItemTargetOrRepresentationItemRefView::StyledItem(model.styled_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Surface(i) => StyledItemTargetOrRepresentationItemRefView::Surface(model.surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i) => StyledItemTargetOrRepresentationItemRefView::SurfaceCurve(model.surface_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i) => StyledItemTargetOrRepresentationItemRefView::SurfaceOfLinearExtrusion(model.surface_of_linear_extrusion_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i) => StyledItemTargetOrRepresentationItemRefView::SurfaceOfRevolution(model.surface_of_revolution_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SweptSurface(i) => StyledItemTargetOrRepresentationItemRefView::SweptSurface(model.swept_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::SymbolRepresentation(model.symbol_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SymbolTarget(i) => StyledItemTargetOrRepresentationItemRefView::SymbolTarget(model.symbol_target_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TerminatorSymbol(i) => StyledItemTargetOrRepresentationItemRefView::TerminatorSymbol(model.terminator_symbol_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedAnnotationOccurrence(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedAnnotationOccurrence(model.tessellated_annotation_occurrence_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedCurveSet(model.tessellated_curve_set_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedFace(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedFace(model.tessellated_face_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedGeometricSet(model.tessellated_geometric_set_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedItem(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedItem(model.tessellated_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedShell(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedShell(model.tessellated_shell_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedSolid(model.tessellated_solid_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedStructuredItem(model.tessellated_structured_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRefView::TessellatedSurfaceSet(model.tessellated_surface_set_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TextLiteral(i) => StyledItemTargetOrRepresentationItemRefView::TextLiteral(model.text_literal_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::TopologicalRepresentationItem(model.topological_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i) => StyledItemTargetOrRepresentationItemRefView::ToroidalSurface(model.toroidal_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i) => StyledItemTargetOrRepresentationItemRefView::TrimmedCurve(model.trimmed_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRefView::TwoDirectionRepeatFactor(model.two_direction_repeat_factor_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::UniformCurve(i) => StyledItemTargetOrRepresentationItemRefView::UniformCurve(model.uniform_curve_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::UniformSurface(i) => StyledItemTargetOrRepresentationItemRefView::UniformSurface(model.uniform_surface_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ValueRepresentationItem(i) => StyledItemTargetOrRepresentationItemRefView::ValueRepresentationItem(model.value_representation_item_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Vector(i) => StyledItemTargetOrRepresentationItemRefView::Vector(model.vector_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::Vertex(i) => StyledItemTargetOrRepresentationItemRefView::Vertex(model.vertex_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::VertexLoop(i) => StyledItemTargetOrRepresentationItemRefView::VertexLoop(model.vertex_loop_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => StyledItemTargetOrRepresentationItemRefView::VertexPoint(model.vertex_point_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::VertexShell(i) => StyledItemTargetOrRepresentationItemRefView::VertexShell(model.vertex_shell_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::WireShell(i) => StyledItemTargetOrRepresentationItemRefView::WireShell(model.wire_shell_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(v) => StyledItemTargetOrRepresentationItemRefView::SetRepresentationItem(v),
+            StyledItemTargetOrRepresentationItemRef::Complex(i) => StyledItemTargetOrRepresentationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
-    pub fn entity_key(&self) -> EntityKey {
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
         match self {
-            StyledItemTargetRef::AdvancedBrepShapeRepresentation(i) => {
-                EntityKey::AdvancedBrepShapeRepresentation(*i)
-            }
-            StyledItemTargetRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
-            StyledItemTargetRef::AnnotationPlaceholderLeaderLine(i) => {
-                EntityKey::AnnotationPlaceholderLeaderLine(*i)
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => {
-                EntityKey::AnnotationPlaceholderOccurrence(*i)
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
-            }
-            StyledItemTargetRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            StyledItemTargetRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
-            StyledItemTargetRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
-            StyledItemTargetRef::AnnotationTextCharacter(i) => {
-                EntityKey::AnnotationTextCharacter(*i)
-            }
-            StyledItemTargetRef::AnnotationToAnnotationLeaderLine(i) => {
-                EntityKey::AnnotationToAnnotationLeaderLine(*i)
-            }
-            StyledItemTargetRef::AnnotationToModelLeaderLine(i) => {
-                EntityKey::AnnotationToModelLeaderLine(*i)
-            }
-            StyledItemTargetRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
-            StyledItemTargetRef::ApllPointWithSurface(i) => EntityKey::ApllPointWithSurface(*i),
-            StyledItemTargetRef::AuxiliaryLeaderLine(i) => EntityKey::AuxiliaryLeaderLine(*i),
-            StyledItemTargetRef::Axis1Placement(i) => EntityKey::Axis1Placement(*i),
-            StyledItemTargetRef::Axis2Placement2d(i) => EntityKey::Axis2Placement2d(*i),
-            StyledItemTargetRef::Axis2Placement3d(i) => EntityKey::Axis2Placement3d(*i),
-            StyledItemTargetRef::BSplineCurve(i) => EntityKey::BSplineCurve(*i),
-            StyledItemTargetRef::BSplineCurveWithKnots(i) => EntityKey::BSplineCurveWithKnots(*i),
-            StyledItemTargetRef::BSplineSurface(i) => EntityKey::BSplineSurface(*i),
-            StyledItemTargetRef::BSplineSurfaceWithKnots(i) => {
-                EntityKey::BSplineSurfaceWithKnots(*i)
-            }
-            StyledItemTargetRef::BezierCurve(i) => EntityKey::BezierCurve(*i),
-            StyledItemTargetRef::BezierSurface(i) => EntityKey::BezierSurface(*i),
-            StyledItemTargetRef::BoundedCurve(i) => EntityKey::BoundedCurve(*i),
-            StyledItemTargetRef::BoundedPcurve(i) => EntityKey::BoundedPcurve(*i),
-            StyledItemTargetRef::BoundedSurface(i) => EntityKey::BoundedSurface(*i),
-            StyledItemTargetRef::BoundedSurfaceCurve(i) => EntityKey::BoundedSurfaceCurve(*i),
-            StyledItemTargetRef::BrepWithVoids(i) => EntityKey::BrepWithVoids(*i),
-            StyledItemTargetRef::CameraImage(i) => EntityKey::CameraImage(*i),
-            StyledItemTargetRef::CameraImage3dWithScale(i) => EntityKey::CameraImage3dWithScale(*i),
-            StyledItemTargetRef::CameraModel(i) => EntityKey::CameraModel(*i),
-            StyledItemTargetRef::CameraModelD3(i) => EntityKey::CameraModelD3(*i),
-            StyledItemTargetRef::CameraModelD3MultiClipping(i) => {
-                EntityKey::CameraModelD3MultiClipping(*i)
-            }
-            StyledItemTargetRef::CameraModelD3WithHlhsr(i) => EntityKey::CameraModelD3WithHlhsr(*i),
-            StyledItemTargetRef::CartesianPoint(i) => EntityKey::CartesianPoint(*i),
-            StyledItemTargetRef::CharacterizedRepresentation(i) => {
-                EntityKey::CharacterizedRepresentation(*i)
-            }
-            StyledItemTargetRef::Circle(i) => EntityKey::Circle(*i),
-            StyledItemTargetRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
-            StyledItemTargetRef::ComplexTriangulatedFace(i) => {
-                EntityKey::ComplexTriangulatedFace(*i)
-            }
-            StyledItemTargetRef::ComplexTriangulatedSurfaceSet(i) => {
-                EntityKey::ComplexTriangulatedSurfaceSet(*i)
-            }
-            StyledItemTargetRef::CompositeCurve(i) => EntityKey::CompositeCurve(*i),
-            StyledItemTargetRef::CompositeText(i) => EntityKey::CompositeText(*i),
-            StyledItemTargetRef::Conic(i) => EntityKey::Conic(*i),
-            StyledItemTargetRef::ConicalSurface(i) => EntityKey::ConicalSurface(*i),
-            StyledItemTargetRef::ConnectedFaceSet(i) => EntityKey::ConnectedFaceSet(*i),
-            StyledItemTargetRef::ConstructiveGeometryRepresentation(i) => {
-                EntityKey::ConstructiveGeometryRepresentation(*i)
-            }
-            StyledItemTargetRef::CoordinatesList(i) => EntityKey::CoordinatesList(*i),
-            StyledItemTargetRef::Curve(i) => EntityKey::Curve(*i),
-            StyledItemTargetRef::CylindricalSurface(i) => EntityKey::CylindricalSurface(*i),
-            StyledItemTargetRef::DefinedCharacterGlyph(i) => EntityKey::DefinedCharacterGlyph(*i),
-            StyledItemTargetRef::DefinedSymbol(i) => EntityKey::DefinedSymbol(*i),
-            StyledItemTargetRef::DefinitionalRepresentation(i) => {
-                EntityKey::DefinitionalRepresentation(*i)
-            }
-            StyledItemTargetRef::DegenerateToroidalSurface(i) => {
-                EntityKey::DegenerateToroidalSurface(*i)
-            }
-            StyledItemTargetRef::Direction(i) => EntityKey::Direction(*i),
-            StyledItemTargetRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
-            StyledItemTargetRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
-            StyledItemTargetRef::Edge(i) => EntityKey::Edge(*i),
-            StyledItemTargetRef::EdgeCurve(i) => EntityKey::EdgeCurve(*i),
-            StyledItemTargetRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
-            StyledItemTargetRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
-            StyledItemTargetRef::Ellipse(i) => EntityKey::Ellipse(*i),
-            StyledItemTargetRef::ExternallyDefinedHatchStyle(i) => {
-                EntityKey::ExternallyDefinedHatchStyle(*i)
-            }
-            StyledItemTargetRef::ExternallyDefinedTileStyle(i) => {
-                EntityKey::ExternallyDefinedTileStyle(*i)
-            }
-            StyledItemTargetRef::Face(i) => EntityKey::Face(*i),
-            StyledItemTargetRef::FaceBound(i) => EntityKey::FaceBound(*i),
-            StyledItemTargetRef::FaceOuterBound(i) => EntityKey::FaceOuterBound(*i),
-            StyledItemTargetRef::FaceSurface(i) => EntityKey::FaceSurface(*i),
-            StyledItemTargetRef::FillAreaStyleHatching(i) => EntityKey::FillAreaStyleHatching(*i),
-            StyledItemTargetRef::FillAreaStyleTileColouredRegion(i) => {
-                EntityKey::FillAreaStyleTileColouredRegion(*i)
-            }
-            StyledItemTargetRef::FillAreaStyleTileCurveWithStyle(i) => {
-                EntityKey::FillAreaStyleTileCurveWithStyle(*i)
-            }
-            StyledItemTargetRef::FillAreaStyleTileSymbolWithStyle(i) => {
-                EntityKey::FillAreaStyleTileSymbolWithStyle(*i)
-            }
-            StyledItemTargetRef::FillAreaStyleTiles(i) => EntityKey::FillAreaStyleTiles(*i),
-            StyledItemTargetRef::GeometricCurveSet(i) => EntityKey::GeometricCurveSet(*i),
-            StyledItemTargetRef::GeometricRepresentationItem(i) => {
-                EntityKey::GeometricRepresentationItem(*i)
-            }
-            StyledItemTargetRef::GeometricSet(i) => EntityKey::GeometricSet(*i),
-            StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
-                EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)
-            }
-            StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
-                EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i)
-            }
-            StyledItemTargetRef::Hyperbola(i) => EntityKey::Hyperbola(*i),
-            StyledItemTargetRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
-            StyledItemTargetRef::LeaderDirectedCallout(i) => EntityKey::LeaderDirectedCallout(*i),
-            StyledItemTargetRef::Line(i) => EntityKey::Line(*i),
-            StyledItemTargetRef::Loop(i) => EntityKey::Loop(*i),
-            StyledItemTargetRef::ManifoldSolidBrep(i) => EntityKey::ManifoldSolidBrep(*i),
-            StyledItemTargetRef::ManifoldSurfaceShapeRepresentation(i) => {
-                EntityKey::ManifoldSurfaceShapeRepresentation(*i)
-            }
-            StyledItemTargetRef::MappedItem(i) => EntityKey::MappedItem(*i),
-            StyledItemTargetRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                EntityKey::MechanicalDesignGeometricPresentationRepresentation(*i)
-            }
-            StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(*i)
-            }
-            StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => {
-                EntityKey::MechanicalDesignShadedPresentationRepresentation(*i)
-            }
-            StyledItemTargetRef::OffsetSurface(i) => EntityKey::OffsetSurface(*i),
-            StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
-                EntityKey::OneDirectionRepeatFactor(*i)
-            }
-            StyledItemTargetRef::OpenShell(i) => EntityKey::OpenShell(*i),
-            StyledItemTargetRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
-            StyledItemTargetRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
-            StyledItemTargetRef::Parabola(i) => EntityKey::Parabola(*i),
-            StyledItemTargetRef::Path(i) => EntityKey::Path(*i),
-            StyledItemTargetRef::Pcurve(i) => EntityKey::Pcurve(*i),
-            StyledItemTargetRef::Placement(i) => EntityKey::Placement(*i),
-            StyledItemTargetRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
-            StyledItemTargetRef::PlanarExtent(i) => EntityKey::PlanarExtent(*i),
-            StyledItemTargetRef::Plane(i) => EntityKey::Plane(*i),
-            StyledItemTargetRef::Point(i) => EntityKey::Point(*i),
-            StyledItemTargetRef::PolyLoop(i) => EntityKey::PolyLoop(*i),
-            StyledItemTargetRef::Polyline(i) => EntityKey::Polyline(*i),
-            StyledItemTargetRef::PresentationArea(i) => EntityKey::PresentationArea(*i),
-            StyledItemTargetRef::PresentationRepresentation(i) => {
-                EntityKey::PresentationRepresentation(*i)
-            }
-            StyledItemTargetRef::PresentationView(i) => EntityKey::PresentationView(*i),
-            StyledItemTargetRef::QuasiUniformCurve(i) => EntityKey::QuasiUniformCurve(*i),
-            StyledItemTargetRef::QuasiUniformSurface(i) => EntityKey::QuasiUniformSurface(*i),
-            StyledItemTargetRef::RationalBSplineCurve(i) => EntityKey::RationalBSplineCurve(*i),
-            StyledItemTargetRef::RationalBSplineSurface(i) => EntityKey::RationalBSplineSurface(*i),
-            StyledItemTargetRef::RepositionedTessellatedItem(i) => {
-                EntityKey::RepositionedTessellatedItem(*i)
-            }
-            StyledItemTargetRef::Representation(i) => EntityKey::Representation(*i),
-            StyledItemTargetRef::RepresentationReference(i) => {
-                EntityKey::RepresentationReference(*i)
-            }
-            StyledItemTargetRef::SeamCurve(i) => EntityKey::SeamCurve(*i),
-            StyledItemTargetRef::ShapeDimensionRepresentation(i) => {
-                EntityKey::ShapeDimensionRepresentation(*i)
-            }
-            StyledItemTargetRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
-            StyledItemTargetRef::ShapeRepresentationWithParameters(i) => {
-                EntityKey::ShapeRepresentationWithParameters(*i)
-            }
-            StyledItemTargetRef::ShellBasedSurfaceModel(i) => EntityKey::ShellBasedSurfaceModel(*i),
-            StyledItemTargetRef::SolidModel(i) => EntityKey::SolidModel(*i),
-            StyledItemTargetRef::SphericalSurface(i) => EntityKey::SphericalSurface(*i),
-            StyledItemTargetRef::Surface(i) => EntityKey::Surface(*i),
-            StyledItemTargetRef::SurfaceCurve(i) => EntityKey::SurfaceCurve(*i),
-            StyledItemTargetRef::SurfaceOfLinearExtrusion(i) => {
-                EntityKey::SurfaceOfLinearExtrusion(*i)
-            }
-            StyledItemTargetRef::SurfaceOfRevolution(i) => EntityKey::SurfaceOfRevolution(*i),
-            StyledItemTargetRef::SweptSurface(i) => EntityKey::SweptSurface(*i),
-            StyledItemTargetRef::SymbolRepresentation(i) => EntityKey::SymbolRepresentation(*i),
-            StyledItemTargetRef::SymbolTarget(i) => EntityKey::SymbolTarget(*i),
-            StyledItemTargetRef::TessellatedCurveSet(i) => EntityKey::TessellatedCurveSet(*i),
-            StyledItemTargetRef::TessellatedFace(i) => EntityKey::TessellatedFace(*i),
-            StyledItemTargetRef::TessellatedGeometricSet(i) => {
-                EntityKey::TessellatedGeometricSet(*i)
-            }
-            StyledItemTargetRef::TessellatedItem(i) => EntityKey::TessellatedItem(*i),
-            StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
-                EntityKey::TessellatedShapeRepresentation(*i)
-            }
-            StyledItemTargetRef::TessellatedShell(i) => EntityKey::TessellatedShell(*i),
-            StyledItemTargetRef::TessellatedSolid(i) => EntityKey::TessellatedSolid(*i),
-            StyledItemTargetRef::TessellatedStructuredItem(i) => {
-                EntityKey::TessellatedStructuredItem(*i)
-            }
-            StyledItemTargetRef::TessellatedSurfaceSet(i) => EntityKey::TessellatedSurfaceSet(*i),
-            StyledItemTargetRef::TextLiteral(i) => EntityKey::TextLiteral(*i),
-            StyledItemTargetRef::TopologicalRepresentationItem(i) => {
-                EntityKey::TopologicalRepresentationItem(*i)
-            }
-            StyledItemTargetRef::ToroidalSurface(i) => EntityKey::ToroidalSurface(*i),
-            StyledItemTargetRef::TrimmedCurve(i) => EntityKey::TrimmedCurve(*i),
-            StyledItemTargetRef::TwoDirectionRepeatFactor(i) => {
-                EntityKey::TwoDirectionRepeatFactor(*i)
-            }
-            StyledItemTargetRef::UniformCurve(i) => EntityKey::UniformCurve(*i),
-            StyledItemTargetRef::UniformSurface(i) => EntityKey::UniformSurface(*i),
-            StyledItemTargetRef::Vector(i) => EntityKey::Vector(*i),
-            StyledItemTargetRef::Vertex(i) => EntityKey::Vertex(*i),
-            StyledItemTargetRef::VertexLoop(i) => EntityKey::VertexLoop(*i),
-            StyledItemTargetRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
-            StyledItemTargetRef::VertexShell(i) => EntityKey::VertexShell(*i),
-            StyledItemTargetRef::WireShell(i) => EntityKey::WireShell(*i),
-            StyledItemTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+            StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i) => Some(EntityKey::AdvancedBrepShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::AdvancedFace(i) => Some(EntityKey::AdvancedFace(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationCurveOccurrence(i) => Some(EntityKey::AnnotationCurveOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationOccurrence(i) => Some(EntityKey::AnnotationOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(i) => Some(EntityKey::AnnotationPlaceholderOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlane(i) => Some(EntityKey::AnnotationPlane(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationSymbolOccurrence(i) => Some(EntityKey::AnnotationSymbolOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationText(i) => Some(EntityKey::AnnotationText(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i) => Some(EntityKey::AnnotationTextCharacter(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationTextOccurrence(i) => Some(EntityKey::AnnotationTextOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => Some(EntityKey::AnnotationToAnnotationLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationToModelLeaderLine(i) => Some(EntityKey::AnnotationToModelLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::ApllPoint(i) => Some(EntityKey::ApllPoint(*i)),
+            StyledItemTargetOrRepresentationItemRef::ApllPointWithSurface(i) => Some(EntityKey::ApllPointWithSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::AuxiliaryLeaderLine(i) => Some(EntityKey::AuxiliaryLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::Axis1Placement(i) => Some(EntityKey::Axis1Placement(*i)),
+            StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i) => Some(EntityKey::Axis2Placement2d(*i)),
+            StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i) => Some(EntityKey::Axis2Placement3d(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineCurve(i) => Some(EntityKey::BSplineCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i) => Some(EntityKey::BSplineCurveWithKnots(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineSurface(i) => Some(EntityKey::BSplineSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i) => Some(EntityKey::BSplineSurfaceWithKnots(*i)),
+            StyledItemTargetOrRepresentationItemRef::BezierCurve(i) => Some(EntityKey::BezierCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BezierSurface(i) => Some(EntityKey::BezierSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedCurve(i) => Some(EntityKey::BoundedCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i) => Some(EntityKey::BoundedPcurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedSurface(i) => Some(EntityKey::BoundedSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i) => Some(EntityKey::BoundedSurfaceCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i) => Some(EntityKey::BrepWithVoids(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraImage(i) => Some(EntityKey::CameraImage(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i) => Some(EntityKey::CameraImage3dWithScale(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModel(i) => Some(EntityKey::CameraModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3(i) => Some(EntityKey::CameraModelD3(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i) => Some(EntityKey::CameraModelD3MultiClipping(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i) => Some(EntityKey::CameraModelD3WithHlhsr(*i)),
+            StyledItemTargetOrRepresentationItemRef::CartesianPoint(i) => Some(EntityKey::CartesianPoint(*i)),
+            StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i) => Some(EntityKey::CharacterizedRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::Circle(i) => Some(EntityKey::Circle(*i)),
+            StyledItemTargetOrRepresentationItemRef::ClosedShell(i) => Some(EntityKey::ClosedShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i) => Some(EntityKey::ComplexTriangulatedFace(*i)),
+            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i) => Some(EntityKey::ComplexTriangulatedSurfaceSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::CompositeCurve(i) => Some(EntityKey::CompositeCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::CompositeText(i) => Some(EntityKey::CompositeText(*i)),
+            StyledItemTargetOrRepresentationItemRef::CompoundRepresentationItem(i) => Some(EntityKey::CompoundRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Conic(i) => Some(EntityKey::Conic(*i)),
+            StyledItemTargetOrRepresentationItemRef::ConicalSurface(i) => Some(EntityKey::ConicalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i) => Some(EntityKey::ConnectedFaceSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i) => Some(EntityKey::ConstructiveGeometryRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::ContextDependentOverRidingStyledItem(i) => Some(EntityKey::ContextDependentOverRidingStyledItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::CoordinatesList(i) => Some(EntityKey::CoordinatesList(*i)),
+            StyledItemTargetOrRepresentationItemRef::Curve(i) => Some(EntityKey::Curve(*i)),
+            StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i) => Some(EntityKey::CylindricalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i) => Some(EntityKey::DefinedCharacterGlyph(*i)),
+            StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i) => Some(EntityKey::DefinedSymbol(*i)),
+            StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i) => Some(EntityKey::DefinitionalRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i) => Some(EntityKey::DegenerateToroidalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::DescriptiveRepresentationItem(i) => Some(EntityKey::DescriptiveRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Direction(i) => Some(EntityKey::Direction(*i)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingAnnotationOccurrence(i) => Some(EntityKey::DraughtingAnnotationOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i) => Some(EntityKey::DraughtingCallout(*i)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingModel(i) => Some(EntityKey::DraughtingModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::Edge(i) => Some(EntityKey::Edge(*i)),
+            StyledItemTargetOrRepresentationItemRef::EdgeCurve(i) => Some(EntityKey::EdgeCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => Some(EntityKey::EdgeLoop(*i)),
+            StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => Some(EntityKey::ElementarySurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::Ellipse(i) => Some(EntityKey::Ellipse(*i)),
+            StyledItemTargetOrRepresentationItemRef::ExternalImagePlacementInCallout(i) => Some(EntityKey::ExternalImagePlacementInCallout(*i)),
+            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => Some(EntityKey::ExternallyDefinedHatchStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => Some(EntityKey::ExternallyDefinedTileStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::Face(i) => Some(EntityKey::Face(*i)),
+            StyledItemTargetOrRepresentationItemRef::FaceBound(i) => Some(EntityKey::FaceBound(*i)),
+            StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i) => Some(EntityKey::FaceOuterBound(*i)),
+            StyledItemTargetOrRepresentationItemRef::FaceSurface(i) => Some(EntityKey::FaceSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i) => Some(EntityKey::FillAreaStyleHatching(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i) => Some(EntityKey::FillAreaStyleTileColouredRegion(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i) => Some(EntityKey::FillAreaStyleTileCurveWithStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i) => Some(EntityKey::FillAreaStyleTileSymbolWithStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i) => Some(EntityKey::FillAreaStyleTiles(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i) => Some(EntityKey::GeometricCurveSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i) => Some(EntityKey::GeometricRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricSet(i) => Some(EntityKey::GeometricSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => Some(EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => Some(EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::Hyperbola(i) => Some(EntityKey::Hyperbola(*i)),
+            StyledItemTargetOrRepresentationItemRef::IntegerRepresentationItem(i) => Some(EntityKey::IntegerRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i) => Some(EntityKey::IntersectionCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::LeaderCurve(i) => Some(EntityKey::LeaderCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i) => Some(EntityKey::LeaderDirectedCallout(*i)),
+            StyledItemTargetOrRepresentationItemRef::LeaderTerminator(i) => Some(EntityKey::LeaderTerminator(*i)),
+            StyledItemTargetOrRepresentationItemRef::Line(i) => Some(EntityKey::Line(*i)),
+            StyledItemTargetOrRepresentationItemRef::Loop(i) => Some(EntityKey::Loop(*i)),
+            StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i) => Some(EntityKey::ManifoldSolidBrep(*i)),
+            StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i) => Some(EntityKey::ManifoldSurfaceShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::MappedItem(i) => Some(EntityKey::MappedItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::MeasureRepresentationItem(i) => Some(EntityKey::MeasureRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => Some(EntityKey::MechanicalDesignGeometricPresentationRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => Some(EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => Some(EntityKey::MechanicalDesignShadedPresentationRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::OffsetSurface(i) => Some(EntityKey::OffsetSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i) => Some(EntityKey::OneDirectionRepeatFactor(*i)),
+            StyledItemTargetOrRepresentationItemRef::OpenShell(i) => Some(EntityKey::OpenShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i) => Some(EntityKey::OrientedClosedShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::OrientedEdge(i) => Some(EntityKey::OrientedEdge(*i)),
+            StyledItemTargetOrRepresentationItemRef::OverRidingStyledItem(i) => Some(EntityKey::OverRidingStyledItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Parabola(i) => Some(EntityKey::Parabola(*i)),
+            StyledItemTargetOrRepresentationItemRef::Path(i) => Some(EntityKey::Path(*i)),
+            StyledItemTargetOrRepresentationItemRef::Pcurve(i) => Some(EntityKey::Pcurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::Placement(i) => Some(EntityKey::Placement(*i)),
+            StyledItemTargetOrRepresentationItemRef::PlanarBox(i) => Some(EntityKey::PlanarBox(*i)),
+            StyledItemTargetOrRepresentationItemRef::PlanarExtent(i) => Some(EntityKey::PlanarExtent(*i)),
+            StyledItemTargetOrRepresentationItemRef::Plane(i) => Some(EntityKey::Plane(*i)),
+            StyledItemTargetOrRepresentationItemRef::Point(i) => Some(EntityKey::Point(*i)),
+            StyledItemTargetOrRepresentationItemRef::PolyLoop(i) => Some(EntityKey::PolyLoop(*i)),
+            StyledItemTargetOrRepresentationItemRef::Polyline(i) => Some(EntityKey::Polyline(*i)),
+            StyledItemTargetOrRepresentationItemRef::PresentationArea(i) => Some(EntityKey::PresentationArea(*i)),
+            StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i) => Some(EntityKey::PresentationRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::PresentationView(i) => Some(EntityKey::PresentationView(*i)),
+            StyledItemTargetOrRepresentationItemRef::QualifiedRepresentationItem(i) => Some(EntityKey::QualifiedRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i) => Some(EntityKey::QuasiUniformCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i) => Some(EntityKey::QuasiUniformSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i) => Some(EntityKey::RationalBSplineCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i) => Some(EntityKey::RationalBSplineSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::RealRepresentationItem(i) => Some(EntityKey::RealRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i) => Some(EntityKey::RepositionedTessellatedItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Representation(i) => Some(EntityKey::Representation(*i)),
+            StyledItemTargetOrRepresentationItemRef::RepresentationItem(i) => Some(EntityKey::RepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::RepresentationReference(i) => Some(EntityKey::RepresentationReference(*i)),
+            StyledItemTargetOrRepresentationItemRef::SeamCurve(i) => Some(EntityKey::SeamCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i) => Some(EntityKey::ShapeDimensionRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i) => Some(EntityKey::ShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i) => Some(EntityKey::ShapeRepresentationWithParameters(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i) => Some(EntityKey::ShellBasedSurfaceModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::SolidModel(i) => Some(EntityKey::SolidModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::SphericalSurface(i) => Some(EntityKey::SphericalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::StyledItem(i) => Some(EntityKey::StyledItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Surface(i) => Some(EntityKey::Surface(*i)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i) => Some(EntityKey::SurfaceCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i) => Some(EntityKey::SurfaceOfLinearExtrusion(*i)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i) => Some(EntityKey::SurfaceOfRevolution(*i)),
+            StyledItemTargetOrRepresentationItemRef::SweptSurface(i) => Some(EntityKey::SweptSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i) => Some(EntityKey::SymbolRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::SymbolTarget(i) => Some(EntityKey::SymbolTarget(*i)),
+            StyledItemTargetOrRepresentationItemRef::TerminatorSymbol(i) => Some(EntityKey::TerminatorSymbol(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedAnnotationOccurrence(i) => Some(EntityKey::TessellatedAnnotationOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i) => Some(EntityKey::TessellatedCurveSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedFace(i) => Some(EntityKey::TessellatedFace(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i) => Some(EntityKey::TessellatedGeometricSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedItem(i) => Some(EntityKey::TessellatedItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i) => Some(EntityKey::TessellatedShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedShell(i) => Some(EntityKey::TessellatedShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i) => Some(EntityKey::TessellatedSolid(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i) => Some(EntityKey::TessellatedStructuredItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i) => Some(EntityKey::TessellatedSurfaceSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::TextLiteral(i) => Some(EntityKey::TextLiteral(*i)),
+            StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i) => Some(EntityKey::TopologicalRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i) => Some(EntityKey::ToroidalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i) => Some(EntityKey::TrimmedCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i) => Some(EntityKey::TwoDirectionRepeatFactor(*i)),
+            StyledItemTargetOrRepresentationItemRef::UniformCurve(i) => Some(EntityKey::UniformCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::UniformSurface(i) => Some(EntityKey::UniformSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::ValueRepresentationItem(i) => Some(EntityKey::ValueRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Vector(i) => Some(EntityKey::Vector(*i)),
+            StyledItemTargetOrRepresentationItemRef::Vertex(i) => Some(EntityKey::Vertex(*i)),
+            StyledItemTargetOrRepresentationItemRef::VertexLoop(i) => Some(EntityKey::VertexLoop(*i)),
+            StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => Some(EntityKey::VertexPoint(*i)),
+            StyledItemTargetOrRepresentationItemRef::VertexShell(i) => Some(EntityKey::VertexShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::WireShell(i) => Some(EntityKey::WireShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(_) => None,
+            StyledItemTargetOrRepresentationItemRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
         }
     }
 }
 
+/// What a [`SupportedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SupportedItemRefView<'m> {
     Action(&'m Action),
@@ -22413,6 +25227,8 @@ pub enum SupportedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SupportedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SupportedItemRefView<'m> {
         match self {
             SupportedItemRef::Action(i) => {
@@ -22429,6 +25245,7 @@ impl SupportedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SupportedItemRef::Action(i) => EntityKey::Action(*i),
@@ -22439,6 +25256,8 @@ impl SupportedItemRef {
     }
 }
 
+/// What a [`SurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceRefView<'m> {
     BSplineSurface(&'m BSplineSurface),
@@ -22463,6 +25282,8 @@ pub enum SurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceRefView<'m> {
         match self {
             SurfaceRef::BSplineSurface(i) => {
@@ -22521,6 +25342,7 @@ impl SurfaceRef {
             SurfaceRef::Complex(i) => SurfaceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceRef::BSplineSurface(i) => EntityKey::BSplineSurface(*i),
@@ -22547,11 +25369,15 @@ impl SurfaceRef {
     }
 }
 
+/// What a [`SurfaceRenderingPropertiesRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceRenderingPropertiesRefView<'m> {
     SurfaceRenderingProperties(&'m SurfaceRenderingProperties),
 }
 impl SurfaceRenderingPropertiesRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceRenderingPropertiesRefView<'m> {
         match self {
             SurfaceRenderingPropertiesRef::SurfaceRenderingProperties(i) => {
@@ -22561,6 +25387,7 @@ impl SurfaceRenderingPropertiesRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceRenderingPropertiesRef::SurfaceRenderingProperties(i) => {
@@ -22570,6 +25397,8 @@ impl SurfaceRenderingPropertiesRef {
     }
 }
 
+/// What a [`SurfaceSideStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceSideStyleSelectRefView<'m> {
     PreDefinedSurfaceSideStyle(&'m PreDefinedSurfaceSideStyle),
@@ -22577,6 +25406,8 @@ pub enum SurfaceSideStyleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SurfaceSideStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceSideStyleSelectRefView<'m> {
         match self {
             SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(i) => {
@@ -22594,6 +25425,7 @@ impl SurfaceSideStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(i) => {
@@ -22605,6 +25437,8 @@ impl SurfaceSideStyleSelectRef {
     }
 }
 
+/// What a [`SurfaceStyleElementSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceStyleElementSelectRefView<'m> {
     SurfaceStyleBoundary(&'m SurfaceStyleBoundary),
@@ -22618,6 +25452,8 @@ pub enum SurfaceStyleElementSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SurfaceStyleElementSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceStyleElementSelectRefView<'m> {
         match self {
             SurfaceStyleElementSelectRef::SurfaceStyleBoundary(i) => {
@@ -22665,6 +25501,7 @@ impl SurfaceStyleElementSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceStyleElementSelectRef::SurfaceStyleBoundary(i) => {
@@ -22696,11 +25533,15 @@ impl SurfaceStyleElementSelectRef {
     }
 }
 
+/// What a [`SymbolStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SymbolStyleSelectRefView<'m> {
     SymbolColour(&'m SymbolColour),
 }
 impl SymbolStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SymbolStyleSelectRefView<'m> {
         match self {
             SymbolStyleSelectRef::SymbolColour(i) => {
@@ -22708,6 +25549,7 @@ impl SymbolStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SymbolStyleSelectRef::SymbolColour(i) => EntityKey::SymbolColour(*i),
@@ -22715,25 +25557,70 @@ impl SymbolStyleSelectRef {
     }
 }
 
+/// What a [`SymbolTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SymbolTargetRefView<'m> {
     SymbolTarget(&'m SymbolTarget),
+    Complex(&'m ComplexEntity),
 }
 impl SymbolTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SymbolTargetRefView<'m> {
         match self {
             SymbolTargetRef::SymbolTarget(i) => {
                 SymbolTargetRefView::SymbolTarget(model.symbol_target_arena.get(i.0))
             }
+            SymbolTargetRef::Complex(i) => {
+                SymbolTargetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SymbolTargetRef::SymbolTarget(i) => EntityKey::SymbolTarget(*i),
+            SymbolTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`TessellatedGeometricSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum TessellatedGeometricSetRefView<'m> {
+    TessellatedGeometricSet(&'m TessellatedGeometricSet),
+    Complex(&'m ComplexEntity),
+}
+impl TessellatedGeometricSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedGeometricSetRefView<'m> {
+        match self {
+            TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
+                TessellatedGeometricSetRefView::TessellatedGeometricSet(
+                    model.tessellated_geometric_set_arena.get(i.0),
+                )
+            }
+            TessellatedGeometricSetRef::Complex(i) => {
+                TessellatedGeometricSetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
+                EntityKey::TessellatedGeometricSet(*i)
+            }
+            TessellatedGeometricSetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+/// What a [`TessellatedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TessellatedItemRefView<'m> {
     ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
@@ -22751,6 +25638,8 @@ pub enum TessellatedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl TessellatedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedItemRefView<'m> {
         match self {
             TessellatedItemRef::ComplexTriangulatedFace(i) => {
@@ -22808,6 +25697,7 @@ impl TessellatedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TessellatedItemRef::ComplexTriangulatedFace(i) => {
@@ -22837,6 +25727,8 @@ impl TessellatedItemRef {
     }
 }
 
+/// What a [`TessellatedStructuredItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TessellatedStructuredItemRefView<'m> {
     ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
@@ -22845,6 +25737,8 @@ pub enum TessellatedStructuredItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl TessellatedStructuredItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedStructuredItemRefView<'m> {
         match self {
             TessellatedStructuredItemRef::ComplexTriangulatedFace(i) => {
@@ -22867,6 +25761,7 @@ impl TessellatedStructuredItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TessellatedStructuredItemRef::ComplexTriangulatedFace(i) => {
@@ -22881,6 +25776,8 @@ impl TessellatedStructuredItemRef {
     }
 }
 
+/// What a [`TextOrCharacterRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TextOrCharacterRefView<'m> {
     AnnotationText(&'m AnnotationText),
@@ -22891,6 +25788,8 @@ pub enum TextOrCharacterRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl TextOrCharacterRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TextOrCharacterRefView<'m> {
         match self {
             TextOrCharacterRef::AnnotationText(i) => {
@@ -22917,6 +25816,7 @@ impl TextOrCharacterRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TextOrCharacterRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
@@ -22931,12 +25831,16 @@ impl TextOrCharacterRef {
     }
 }
 
+/// What a [`ToleranceMethodDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceMethodDefinitionRefView<'m> {
     LimitsAndFits(&'m LimitsAndFits),
     ToleranceValue(&'m ToleranceValue),
 }
 impl ToleranceMethodDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceMethodDefinitionRefView<'m> {
         match self {
             ToleranceMethodDefinitionRef::LimitsAndFits(i) => {
@@ -22951,6 +25855,7 @@ impl ToleranceMethodDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceMethodDefinitionRef::LimitsAndFits(i) => EntityKey::LimitsAndFits(*i),
@@ -22959,12 +25864,17 @@ impl ToleranceMethodDefinitionRef {
     }
 }
 
+/// What a [`ToleranceSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceSelectRefView<'m> {
     ApproximationToleranceDeviation(&'m ApproximationToleranceDeviation),
     ApproximationToleranceParameter(&'m ApproximationToleranceParameter),
+    Complex(&'m ComplexEntity),
 }
 impl ToleranceSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceSelectRefView<'m> {
         match self {
             ToleranceSelectRef::ApproximationToleranceDeviation(i) => {
@@ -22977,8 +25887,12 @@ impl ToleranceSelectRef {
                     model.approximation_tolerance_parameter_arena.get(i.0),
                 )
             }
+            ToleranceSelectRef::Complex(i) => {
+                ToleranceSelectRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceSelectRef::ApproximationToleranceDeviation(i) => {
@@ -22987,10 +25901,70 @@ impl ToleranceSelectRef {
             ToleranceSelectRef::ApproximationToleranceParameter(i) => {
                 EntityKey::ApproximationToleranceParameter(*i)
             }
+            ToleranceSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`ToleranceValueRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum ToleranceValueRefView<'m> {
+    ToleranceValue(&'m ToleranceValue),
+}
+impl ToleranceValueRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceValueRefView<'m> {
+        match self {
+            ToleranceValueRef::ToleranceValue(i) => {
+                ToleranceValueRefView::ToleranceValue(model.tolerance_value_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ToleranceValueRef::ToleranceValue(i) => EntityKey::ToleranceValue(*i),
+        }
+    }
+}
+
+/// What a [`ToleranceValueOrLimitsAndFitsRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum ToleranceValueOrLimitsAndFitsRefView<'m> {
+    LimitsAndFits(&'m LimitsAndFits),
+    ToleranceValue(&'m ToleranceValue),
+}
+impl ToleranceValueOrLimitsAndFitsRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceValueOrLimitsAndFitsRefView<'m> {
+        match self {
+            ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => {
+                ToleranceValueOrLimitsAndFitsRefView::LimitsAndFits(
+                    model.limits_and_fits_arena.get(i.0),
+                )
+            }
+            ToleranceValueOrLimitsAndFitsRef::ToleranceValue(i) => {
+                ToleranceValueOrLimitsAndFitsRefView::ToleranceValue(
+                    model.tolerance_value_arena.get(i.0),
+                )
+            }
+        }
+    }
+    /// The key of the entity this reference names.
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => EntityKey::LimitsAndFits(*i),
+            ToleranceValueOrLimitsAndFitsRef::ToleranceValue(i) => EntityKey::ToleranceValue(*i),
+        }
+    }
+}
+
+/// What a [`ToleranceZoneRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceZoneRefView<'m> {
     ToleranceZone(&'m ToleranceZone),
@@ -22998,6 +25972,8 @@ pub enum ToleranceZoneRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ToleranceZoneRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneRefView<'m> {
         match self {
             ToleranceZoneRef::ToleranceZone(i) => {
@@ -23013,6 +25989,7 @@ impl ToleranceZoneRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceZoneRef::ToleranceZone(i) => EntityKey::ToleranceZone(*i),
@@ -23022,11 +25999,15 @@ impl ToleranceZoneRef {
     }
 }
 
+/// What a [`ToleranceZoneFormRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceZoneFormRefView<'m> {
     ToleranceZoneForm(&'m ToleranceZoneForm),
 }
 impl ToleranceZoneFormRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneFormRefView<'m> {
         match self {
             ToleranceZoneFormRef::ToleranceZoneForm(i) => {
@@ -23036,6 +26017,7 @@ impl ToleranceZoneFormRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceZoneFormRef::ToleranceZoneForm(i) => EntityKey::ToleranceZoneForm(*i),
@@ -23043,6 +26025,8 @@ impl ToleranceZoneFormRef {
     }
 }
 
+/// What a [`ToleranceZoneTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceZoneTargetRefView<'m> {
     AngularLocation(&'m AngularLocation),
@@ -23082,6 +26066,8 @@ pub enum ToleranceZoneTargetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ToleranceZoneTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneTargetRefView<'m> {
         match self {
             ToleranceZoneTargetRef::AngularLocation(i) => {
@@ -23259,6 +26245,7 @@ impl ToleranceZoneTargetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceZoneTargetRef::AngularLocation(i) => EntityKey::AngularLocation(*i),
@@ -23340,12 +26327,69 @@ impl ToleranceZoneTargetRef {
     }
 }
 
+/// What a [`TransformationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
+#[derive(Clone, Copy, Debug)]
+pub enum TransformationRefView<'m> {
+    FunctionallyDefinedTransformation(&'m FunctionallyDefinedTransformation),
+    ItemDefinedTransformation(&'m ItemDefinedTransformation),
+    SetItemDefinedTransformation(&'m [ItemDefinedTransformationRef]),
+    ListItemDefinedTransformation(&'m [ItemDefinedTransformationRef]),
+    Complex(&'m ComplexEntity),
+}
+impl TransformationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
+    pub fn resolve<'m>(&'m self, model: &'m StepModel) -> TransformationRefView<'m> {
+        match self {
+            TransformationRef::FunctionallyDefinedTransformation(i) => {
+                TransformationRefView::FunctionallyDefinedTransformation(
+                    model.functionally_defined_transformation_arena.get(i.0),
+                )
+            }
+            TransformationRef::ItemDefinedTransformation(i) => {
+                TransformationRefView::ItemDefinedTransformation(
+                    model.item_defined_transformation_arena.get(i.0),
+                )
+            }
+            TransformationRef::SetItemDefinedTransformation(v) => {
+                TransformationRefView::SetItemDefinedTransformation(v)
+            }
+            TransformationRef::ListItemDefinedTransformation(v) => {
+                TransformationRefView::ListItemDefinedTransformation(v)
+            }
+            TransformationRef::Complex(i) => {
+                TransformationRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            TransformationRef::FunctionallyDefinedTransformation(i) => {
+                Some(EntityKey::FunctionallyDefinedTransformation(*i))
+            }
+            TransformationRef::ItemDefinedTransformation(i) => {
+                Some(EntityKey::ItemDefinedTransformation(*i))
+            }
+            TransformationRef::SetItemDefinedTransformation(_) => None,
+            TransformationRef::ListItemDefinedTransformation(_) => None,
+            TransformationRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
+        }
+    }
+}
+
+/// What a [`TwoDirectionRepeatFactorRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TwoDirectionRepeatFactorRefView<'m> {
     TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
     Complex(&'m ComplexEntity),
 }
 impl TwoDirectionRepeatFactorRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TwoDirectionRepeatFactorRefView<'m> {
         match self {
             TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
@@ -23358,6 +26402,7 @@ impl TwoDirectionRepeatFactorRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
@@ -23368,11 +26413,16 @@ impl TwoDirectionRepeatFactorRef {
     }
 }
 
+/// What a [`UncertaintyMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum UncertaintyMeasureWithUnitRefView<'m> {
     UncertaintyMeasureWithUnit(&'m UncertaintyMeasureWithUnit),
+    Complex(&'m ComplexEntity),
 }
 impl UncertaintyMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> UncertaintyMeasureWithUnitRefView<'m> {
         match self {
             UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
@@ -23380,17 +26430,24 @@ impl UncertaintyMeasureWithUnitRef {
                     model.uncertainty_measure_with_unit_arena.get(i.0),
                 )
             }
+            UncertaintyMeasureWithUnitRef::Complex(i) => {
+                UncertaintyMeasureWithUnitRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 EntityKey::UncertaintyMeasureWithUnit(*i)
             }
+            UncertaintyMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`UnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum UnitRefView<'m> {
     AreaUnit(&'m AreaUnit),
@@ -23409,6 +26466,8 @@ pub enum UnitRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl UnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> UnitRefView<'m> {
         match self {
             UnitRef::AreaUnit(i) => UnitRefView::AreaUnit(model.area_unit_arena.get(i.0)),
@@ -23435,6 +26494,7 @@ impl UnitRef {
             UnitRef::Complex(i) => UnitRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             UnitRef::AreaUnit(i) => EntityKey::AreaUnit(*i),
@@ -23455,6 +26515,8 @@ impl UnitRef {
     }
 }
 
+/// What a [`ValueQualifierRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ValueQualifierRefView<'m> {
     PrecisionQualifier(&'m PrecisionQualifier),
@@ -23463,6 +26525,8 @@ pub enum ValueQualifierRefView<'m> {
     ValueFormatTypeQualifier(&'m ValueFormatTypeQualifier),
 }
 impl ValueQualifierRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ValueQualifierRefView<'m> {
         match self {
             ValueQualifierRef::PrecisionQualifier(i) => {
@@ -23483,6 +26547,7 @@ impl ValueQualifierRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ValueQualifierRef::PrecisionQualifier(i) => EntityKey::PrecisionQualifier(*i),
@@ -23495,18 +26560,23 @@ impl ValueQualifierRef {
     }
 }
 
+/// What a [`VectorRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VectorRefView<'m> {
     Vector(&'m Vector),
     Complex(&'m ComplexEntity),
 }
 impl VectorRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VectorRefView<'m> {
         match self {
             VectorRef::Vector(i) => VectorRefView::Vector(model.vector_arena.get(i.0)),
             VectorRef::Complex(i) => VectorRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VectorRef::Vector(i) => EntityKey::Vector(*i),
@@ -23515,11 +26585,15 @@ impl VectorRef {
     }
 }
 
+/// What a [`VersionedActionRequestRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VersionedActionRequestRefView<'m> {
     VersionedActionRequest(&'m VersionedActionRequest),
 }
 impl VersionedActionRequestRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VersionedActionRequestRefView<'m> {
         match self {
             VersionedActionRequestRef::VersionedActionRequest(i) => {
@@ -23529,6 +26603,7 @@ impl VersionedActionRequestRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VersionedActionRequestRef::VersionedActionRequest(i) => {
@@ -23538,6 +26613,8 @@ impl VersionedActionRequestRef {
     }
 }
 
+/// What a [`VertexRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VertexRefView<'m> {
     Vertex(&'m Vertex),
@@ -23545,6 +26622,8 @@ pub enum VertexRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl VertexRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VertexRefView<'m> {
         match self {
             VertexRef::Vertex(i) => VertexRefView::Vertex(model.vertex_arena.get(i.0)),
@@ -23554,6 +26633,7 @@ impl VertexRef {
             VertexRef::Complex(i) => VertexRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VertexRef::Vertex(i) => EntityKey::Vertex(*i),
@@ -23563,31 +26643,45 @@ impl VertexRef {
     }
 }
 
+/// What a [`VertexLoopRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VertexLoopRefView<'m> {
     VertexLoop(&'m VertexLoop),
+    Complex(&'m ComplexEntity),
 }
 impl VertexLoopRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VertexLoopRefView<'m> {
         match self {
             VertexLoopRef::VertexLoop(i) => {
                 VertexLoopRefView::VertexLoop(model.vertex_loop_arena.get(i.0))
             }
+            VertexLoopRef::Complex(i) => {
+                VertexLoopRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VertexLoopRef::VertexLoop(i) => EntityKey::VertexLoop(*i),
+            VertexLoopRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
 
+/// What a [`ViewVolumeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ViewVolumeRefView<'m> {
     ViewVolume(&'m ViewVolume),
     Complex(&'m ComplexEntity),
 }
 impl ViewVolumeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ViewVolumeRefView<'m> {
         match self {
             ViewVolumeRef::ViewVolume(i) => {
@@ -23598,6 +26692,7 @@ impl ViewVolumeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ViewVolumeRef::ViewVolume(i) => EntityKey::ViewVolume(*i),
@@ -23606,6 +26701,8 @@ impl ViewVolumeRef {
     }
 }
 
+/// What a [`WorkItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum WorkItemRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -23615,6 +26712,8 @@ pub enum WorkItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl WorkItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> WorkItemRefView<'m> {
         match self {
             WorkItemRef::ProductDefinitionFormation(i) => {
@@ -23634,6 +26733,7 @@ impl WorkItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             WorkItemRef::ProductDefinitionFormation(i) => EntityKey::ProductDefinitionFormation(*i),

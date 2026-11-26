@@ -181,7 +181,7 @@ macro_rules! entity {
 }
 "#;
 
-pub fn emit_model(ir: &ModelIr) -> String {
+pub fn emit_model(ir: &ModelIr, narrowing: &crate::author_narrow::AuthorNarrowing) -> String {
     let mut s = String::from(HEADER);
     s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n//! Public as `step_io::model`, whose docs describe it.\n\n");
 
@@ -356,12 +356,17 @@ impl TextDedup {
     }
 }
 
-/// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
-/// `value` is int-or-real because EXPRESS `number` members (count_measure,
-/// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
+/// A measure's number as written, integer or real: EXPRESS `number` members
+/// such as `count_measure` admit both, and the token is kept (`2` stays `2`,
+/// not `2.0`).
 #[derive(Debug, Clone, PartialEq)]
 pub enum MeasureScalar { Int(i64), Real(f64) }
-impl MeasureScalar { pub fn as_f64(&self) -> f64 { match self { Self::Int(i) => *i as f64, Self::Real(r) => *r } } }
+impl MeasureScalar {
+    /// The number as an `f64`.
+    pub fn as_f64(&self) -> f64 { match self { Self::Int(i) => *i as f64, Self::Real(r) => *r } }
+}
+/// A value of a SELECT of measure types: `type_name` is `Some` for the typed
+/// form `TYPE(v)`, `None` for a bare value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureValue { pub type_name: Option<Text>, pub value: MeasureScalar }
 
@@ -414,15 +419,15 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     for se in &ir.simples {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
-            se.rust
+            "/// The id of one `{}` entity: its index among the model's `{}` entities.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
+            se.name, se.name, se.rust
         )
         .unwrap();
     }
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexEntityId(pub u32);"
+            "/// The id of a complex instance: its index among the model's complex instances.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexEntityId(pub u32);"
         )
         .unwrap();
     }
@@ -431,7 +436,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     // EntityKey: one variant per arena (read idmap value).
     writeln!(
         s,
-        "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub enum EntityKey {{"
+        "/// Any entity of a [`StepModel`]: its type (the variant) and its id.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub enum EntityKey {{"
     )
     .unwrap();
     for se in &ir.simples {
@@ -493,6 +498,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     for re in refs {
         emit_ref_enum(&mut s, re);
     }
+    emit_author_ref_enums(&mut s, ir, narrowing);
 
     // Simple structs.
     for se in &ir.simples {
@@ -547,7 +553,11 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     }
 
     // Top-level StepModel.
-    writeln!(s, "#[derive(Debug, Default)]\npub struct StepModel {{").unwrap();
+    writeln!(
+        s,
+        "/// A STEP file's entities, held by type, with its HEADER. [`read`](crate::read)\n/// returns one, [`Ap242Author`](crate::Ap242Author) builds one and\n/// [`write`](crate::write) writes one out; see [`crate::model`].\n#[derive(Debug, Default)]\npub struct StepModel {{"
+    )
+    .unwrap();
     // The file's HEADER section (hand-written module; accessor lives there).
     writeln!(s, "    pub(crate) header: crate::header::FileHeader,").unwrap();
     writeln!(s, "    pub(crate) texts: Texts,").unwrap();
@@ -622,10 +632,13 @@ pub fn emit_walk(ir: &ModelIr) -> String {
     s
 }
 
-/// Emit `resolve.rs`: forward reference resolution. For every **pure
-/// entity-reference** enum (only `simple_arms`, no aggregate/enum/scalar select
-/// arms), emit a `{R}View<'m>` (the borrowed concrete target per variant) and
-/// `{R}::resolve(model) -> {R}View`. This is the forward dual of `RefGraph`'s
+/// Emit `resolve.rs`: forward reference resolution. For every
+/// entity-reference enum (`simple_arms`, possibly aggregate arms, no
+/// enum/scalar select arms), emit a `{R}View<'m>` (the borrowed concrete target
+/// per variant, an aggregate arm's elements as a slice) and
+/// `{R}::resolve(model) -> {R}View`, plus `entity_key()`: public where every
+/// arm is a single entity, crate-internal and `None` for an aggregate value
+/// where some arm is an aggregate. This is the forward dual of `RefGraph`'s
 /// backward `referrers`: follow a reference you hold to the object it points at,
 /// uniformly across every navigation ref — so consumers (the kernel, handles)
 /// never hand-write the per-variant `match … => model.<arena>.get(..)` switch.
@@ -633,29 +646,39 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
     let mut s = String::from(HEADER);
     s.push_str("use super::model::*;\n\n");
     for re in ir.ref_enums.values() {
-        // Pure entity refs only: a non-empty simple-arm set and no aggregate /
-        // enum / scalar select arms (those hold Vec/enum/scalar, not a single
-        // entity — a different view shape, deferred).
-        if re.simple_arms.is_empty()
-            || !re.aggregate.is_empty()
-            || !re.enum_arms.is_empty()
-            || !re.scalar_arms.is_empty()
-        {
+        // Entity refs, and aggregate members of them: a non-empty simple-arm
+        // set and no enum / scalar select arms (those hold an enum or scalar,
+        // not an entity — a different view shape, deferred). An aggregate arm
+        // views as its elements, each resolved in turn.
+        if re.simple_arms.is_empty() || !re.enum_arms.is_empty() || !re.scalar_arms.is_empty() {
             continue;
         }
         let r = &re.rust;
-        writeln!(s, "#[derive(Clone, Copy, Debug)]\npub enum {r}View<'m> {{").unwrap();
+        writeln!(
+            s,
+            "/// What a [`{r}`] names, borrowed from the model: the entity, or an\n/// aggregate's elements.\n#[derive(Clone, Copy, Debug)]\npub enum {r}View<'m> {{"
+        )
+        .unwrap();
         for (variant, target) in &re.simple_arms {
             writeln!(s, "    {variant}(&'m {target}),").unwrap();
+        }
+        for (variant, elem, _) in &re.aggregate {
+            writeln!(s, "    {variant}(&'m [{elem}]),").unwrap();
         }
         if re.has_complex {
             writeln!(s, "    Complex(&'m ComplexEntity),").unwrap();
         }
         writeln!(s, "}}").unwrap();
         writeln!(s, "impl {r} {{").unwrap();
+        // An aggregate arm's elements live in the value itself, not the model.
+        let this = if re.aggregate.is_empty() {
+            "&self"
+        } else {
+            "&'m self"
+        };
         writeln!(
             s,
-            "    pub fn resolve<'m>(&self, model: &'m StepModel) -> {r}View<'m> {{"
+            "    /// The entity this reference names, borrowed from `model`. Panics for\n    /// an id `model` does not have, such as one from another model.\n    pub fn resolve<'m>({this}, model: &'m StepModel) -> {r}View<'m> {{"
         )
         .unwrap();
         writeln!(s, "        match self {{").unwrap();
@@ -667,6 +690,9 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
             )
             .unwrap();
         }
+        for (variant, _, _) in &re.aggregate {
+            writeln!(s, "            {r}::{variant}(v) => {r}View::{variant}(v),").unwrap();
+        }
         if re.has_complex {
             writeln!(
                 s,
@@ -677,20 +703,39 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         writeln!(s, "        }}").unwrap();
         writeln!(s, "    }}").unwrap();
         // entity_key(): the ref's target entity as an EntityKey (identity key for
-        // maps / dedup). Same per-arm mapping as the writer's `deps_*`.
-        writeln!(s, "    pub fn entity_key(&self) -> EntityKey {{").unwrap();
+        // maps / dedup). Same per-arm mapping as the writer's `deps_*`. An
+        // aggregate value is no single entity: where some arm is one, the
+        // method is crate-internal and gives `None` for it.
+        let aggregate = !re.aggregate.is_empty();
+        if aggregate {
+            writeln!(
+                s,
+                "    /// The key of the entity this reference names; `None` for an\n    /// aggregate value, whose elements carry their own keys.\n    pub(crate) fn entity_key(&self) -> Option<EntityKey> {{"
+            )
+            .unwrap();
+        } else {
+            writeln!(
+                s,
+                "    /// The key of the entity this reference names.\n    pub fn entity_key(&self) -> EntityKey {{"
+            )
+            .unwrap();
+        }
+        let (some, close) = if aggregate { ("Some(", ")") } else { ("", "") };
         writeln!(s, "        match self {{").unwrap();
         for (variant, target) in &re.simple_arms {
             writeln!(
                 s,
-                "            {r}::{variant}(i) => EntityKey::{target}(*i),"
+                "            {r}::{variant}(i) => {some}EntityKey::{target}(*i){close},"
             )
             .unwrap();
+        }
+        for (variant, _, _) in &re.aggregate {
+            writeln!(s, "            {r}::{variant}(_) => None,").unwrap();
         }
         if re.has_complex {
             writeln!(
                 s,
-                "            {r}::Complex(i) => EntityKey::ComplexEntity(*i),"
+                "            {r}::Complex(i) => {some}EntityKey::ComplexEntity(*i){close},"
             )
             .unwrap();
         }
@@ -718,7 +763,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     // only PartialEq. Clone at the few deref sites; compiler flags any missed.
     writeln!(
         s,
-        "#[derive(Debug, Clone, PartialEq)]\npub enum {} {{",
+        "/// A reference to one of the types an attribute admits, one arm per type.\n#[derive(Debug, Clone, PartialEq)]\npub enum {} {{",
         re.rust
     )
     .unwrap();
@@ -785,6 +830,80 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     )
     .unwrap();
     writeln!(s, "    }} }}\n}}\n").unwrap();
+}
+
+/// The reference enums `Ap242Author` takes where AP242 edition 4 is narrower
+/// than the model, and the conversions into the model's enums.
+fn emit_author_ref_enums(
+    s: &mut String,
+    ir: &ModelIr,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
+) {
+    for (rust, (what, re)) in &narrowing.new_enums {
+        writeln!(
+            s,
+            "/// A reference to what AP242 edition 4 allows {what}, where the\n/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)\n/// takes it and stores it as the model's wider reference.\n#[derive(Debug, Clone, PartialEq)]\npub enum {rust} {{"
+        )
+        .unwrap();
+        for (variant, target) in &re.simple_arms {
+            writeln!(s, "    {variant}({target}Id),").unwrap();
+        }
+        for (variant, elem, _) in &re.aggregate {
+            writeln!(s, "    {variant}(Vec<{elem}>),").unwrap();
+        }
+        if re.has_complex {
+            writeln!(s, "    Complex(ComplexEntityId),").unwrap();
+        }
+        writeln!(s, "}}\n").unwrap();
+    }
+    for (narrow, wide) in &narrowing.conversions {
+        let n = narrowing
+            .new_enums
+            .get(narrow)
+            .map(|(_, re)| re)
+            .or_else(|| ir.ref_enums.values().find(|re| re.rust == *narrow))
+            .expect("narrow enum");
+        let w = ir
+            .ref_enums
+            .values()
+            .find(|re| re.rust == *wide)
+            .expect("wide enum");
+        writeln!(s, "impl From<{narrow}> for {wide} {{\n    fn from(r: {narrow}) -> Self {{\n        match r {{").unwrap();
+        for (variant, target) in &n.simple_arms {
+            let to = w
+                .simple_arms
+                .iter()
+                .find(|(_, t)| t == target)
+                .unwrap_or_else(|| panic!("{narrow}::{variant} has no arm in {wide}"));
+            writeln!(
+                s,
+                "            {narrow}::{variant}(i) => {wide}::{}(i),",
+                to.0
+            )
+            .unwrap();
+        }
+        for (variant, _, wire) in &n.aggregate {
+            let to = w
+                .aggregate
+                .iter()
+                .find(|(_, _, t)| t == wire)
+                .unwrap_or_else(|| panic!("{narrow}::{variant} has no arm in {wide}"));
+            writeln!(
+                s,
+                "            {narrow}::{variant}(v) => {wide}::{}(v.into_iter().map(Into::into).collect()),",
+                to.0
+            )
+            .unwrap();
+        }
+        if n.has_complex {
+            assert!(
+                w.has_complex,
+                "{narrow} holds complex entities, {wide} does not"
+            );
+            writeln!(s, "            {narrow}::Complex(i) => {wide}::Complex(i),").unwrap();
+        }
+        writeln!(s, "        }}\n    }}\n}}\n").unwrap();
+    }
 }
 
 /// snake_case plural-ish arena field name for a struct rust name.
@@ -956,16 +1075,25 @@ fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Resu
     // ---- per-slot ref allow-list (nonstandard-ref detection) ----
     // For each ref slot of each entity/part: the standard target types this slot
     // admits (`allowed` = the ref-enum's simple arms as sorted SIMPLE_NAMES
-    // indices, plus `complex_ok` for a part-bag target). A ref whose target type
-    // is in the closure but not in this list sits in a slot that does not admit
+    // indices; `complex_fits` = the sorted complex part names that make a
+    // complex instance fit the slot, empty if none can). A ref whose target is
+    // in the closure but admitted by neither sits in a slot that does not admit
     // it = a schema-violating (nonstandard) reference.
-    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [u16], pub complex_ok: bool, pub is_vec: bool }\n\n");
+    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [u16], pub complex_fits: &'static [&'static str], pub is_vec: bool }\n\n");
     let rust_to_index: std::collections::HashMap<&str, usize> = ir
         .simples
         .iter()
         .enumerate()
         .map(|(i, se)| (se.rust.as_str(), i))
         .collect();
+    // Each target's fitting complex parts, emitted once and shared by every
+    // slot of that target.
+    for (target, re) in &ir.ref_enums {
+        if let Some(fits) = complex_fits(re) {
+            writeln!(s, "const {}: &[&str] = &[{fits}];", fits_const(target)).unwrap();
+        }
+    }
+    s.push('\n');
     // Simple entities are keyed by their SIMPLE_NAMES index, complex parts by
     // their COMPLEX_PART_NAMES index.
     emit_ref_slot_table(
@@ -984,6 +1112,36 @@ fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Resu
         &rust_to_index,
         ir.parts.iter().enumerate().map(|(i, p)| (i, &p.fields)),
     );
+
+    // ---- complex-part redeclarations of another part's attribute ----
+    // A complex instance holding part `by` must satisfy `by`'s narrowing of the
+    // attribute at `idx` of part `owner` (both COMPLEX_PART_NAMES indices).
+    // Only redeclarations every edition shares are listed, so no legal input
+    // of any edition is refused.
+    s.push_str("#[derive(Clone, Copy)]\npub struct ComplexNarrowing { pub owner: u16, pub idx: usize, pub by: u16, pub allowed: &'static [u16], pub fits: &'static [&'static str] }\n\n");
+    let rows: Vec<String> = ir
+        .complex_narrowings
+        .iter()
+        .map(|n| {
+            let allowed: Vec<String> = n.allowed.iter().map(usize::to_string).collect();
+            let fits: Vec<String> = n.fits.iter().map(|f| format!("{f:?}")).collect();
+            format!(
+                "ComplexNarrowing{{owner:{},idx:{},by:{},allowed:&[{}],fits:&[{}]}}",
+                n.owner,
+                n.idx,
+                n.by,
+                allowed.join(","),
+                fits.join(",")
+            )
+        })
+        .collect();
+    writeln!(
+        s,
+        "const COMPLEX_NARROWINGS: &[ComplexNarrowing] = &[{}];",
+        rows.join(",")
+    )
+    .unwrap();
+    s.push_str("/// The narrowings other parts may make of attribute `idx` of part `owner`.\npub fn complex_narrowings(owner: u16, idx: usize) -> &'static [ComplexNarrowing] {\n    let start = COMPLEX_NARROWINGS.partition_point(|n| (n.owner, n.idx) < (owner, idx));\n    let end = COMPLEX_NARROWINGS.partition_point(|n| (n.owner, n.idx) <= (owner, idx));\n    &COMPLEX_NARROWINGS[start..end]\n}\n\n");
 
     // ---- attribute positions resolved in pass 2 ----
     // The reader keeps these slots (and any other slot holding a reference)
@@ -2272,11 +2430,31 @@ fn scalar_wire_of(ir: &ModelIr, k: &Kind) -> Option<String> {
     }
 }
 
+/// The complex parts that fit a reference to `re`'s target, sorted and
+/// quoted for a `&[&str]` literal; `None` if no complex instance can.
+fn complex_fits(re: &RefEnum) -> Option<String> {
+    let mut fits: Vec<&str> = re.complex_parts.iter().map(String::as_str).collect();
+    fits.sort_unstable();
+    fits.dedup();
+    (!fits.is_empty()).then(|| {
+        fits.iter()
+            .map(|p| format!("{p:?}"))
+            .collect::<Vec<_>>()
+            .join(",")
+    })
+}
+
+/// The name of the const holding `target`'s fitting complex parts.
+fn fits_const(target: &str) -> String {
+    format!("FITS_{}", target.to_uppercase())
+}
+
 /// Emit a `fn {fname}({param}) -> &'static [RefSlot]` table: one RefSlot per ref
 /// slot (`Ref` / `Vec<Ref>`), carrying the slot index, the admitted target types'
-/// SIMPLE_NAMES indices (the ref-enum's simple arms), complex-target flag, and
-/// vec flag. Non-ref slots are omitted. `ents` yields each entity's match
-/// pattern (a SIMPLE_NAMES index or a quoted part name) with its fields.
+/// SIMPLE_NAMES indices (the ref-enum's simple arms), the complex parts that
+/// fit it, and vec flag. Non-ref slots are omitted. `ents` yields each
+/// entity's match pattern (a SIMPLE_NAMES index or a quoted part name) with
+/// its fields.
 fn emit_ref_slot_table<'a>(
     s: &mut String,
     fname: &str,
@@ -2309,11 +2487,15 @@ fn emit_ref_slot_table<'a>(
                 allowed.sort_unstable();
                 allowed.dedup();
                 let allowed: Vec<String> = allowed.iter().map(usize::to_string).collect();
+                let fits = if re.complex_parts.is_empty() {
+                    "&[]".to_owned()
+                } else {
+                    fits_const(target)
+                };
                 Some(format!(
-                    "RefSlot{{idx:{idx},name:\"{}\",allowed:&[{}],complex_ok:{},is_vec:{is_vec}}}",
+                    "RefSlot{{idx:{idx},name:\"{}\",allowed:&[{}],complex_fits:{fits},is_vec:{is_vec}}}",
                     f.name,
                     allowed.join(","),
-                    re.has_complex,
                 ))
             })
             .collect();
@@ -2560,6 +2742,19 @@ pub fn emit_schema(targets: &[(&str, &str, &crate::schema::ProfileToml)]) -> Str
         }
         s.push_str("];\n\n");
 
+        let apd = &p.meta.apd;
+        writeln!(
+            s,
+            "/// The output schema's `APPLICATION_PROTOCOL_DEFINITION` values.\n\
+             pub const {prefix}_APD_STATUS: &str = {:?};\n\
+             pub const {prefix}_APD_NAME: &str = {:?};\n\
+             pub const {prefix}_APD_YEAR: i64 = {};\n\
+             /// The `application` of the output schema's `APPLICATION_CONTEXT`.\n\
+             pub const {prefix}_APD_DESCRIPTION: &str = {:?};\n",
+            apd.status, apd.name, apd.year, apd.description
+        )
+        .unwrap();
+
         writeln!(
             s,
             "/// The schema identity the authoring layer stamps on its output header.\n\
@@ -2802,24 +2997,27 @@ fn author_check_expr(
 }
 
 /// Emit `src/generated/author.rs`: the strict AP242 authoring layer. One
-/// constructor per AP242-legal simple entity; reference parameters are
-/// validated (legal variant + in-bounds id) at insertion. Entities outside
-/// the legal set get no constructor at all — unrepresentable through this
-/// API. Complex part-bags go through the rule-based `add_complex` assembler:
-/// the part-name set is validated against schema rules (legality, supertype
+/// constructor per AP242-legal simple entity that is not ABSTRACT; reference
+/// parameters are validated (legal variant + in-bounds id) at insertion.
+/// Entities outside the legal set get no constructor at all — unrepresentable
+/// through this API — and an ABSTRACT one only enters as a complex part.
+/// Complex part-bags go through the rule-based `add_complex` assembler: the
+/// part-name set is validated against schema rules (legality, supertype
 /// -chain completeness, connectivity, ONEOF exclusivity from the profile's
-/// `[[oneof]]` groups), then every reference field is checked.
+/// `[[oneof]]` groups, a subtype part beside each ABSTRACT part), then every
+/// reference field is checked.
 pub fn emit_author(
     ir: &ModelIr,
     profile: &crate::schema::ProfileToml,
     schema: &crate::schema::Schema,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
 ) -> String {
     let legal: std::collections::BTreeSet<String> =
         profile.entity.keys().map(|k| k.to_uppercase()).collect();
 
     let mut s = String::from(HEADER);
     s.push_str("//! The strict authoring layer — [`Ap242Author`], one validated\n");
-    s.push_str("//! constructor per AP242 entity.\n\n");
+    s.push_str("//! constructor per AP242 entity step-io models that is not `ABSTRACT`.\n\n");
     s.push_str("use super::model::*;\n\n");
 
     // Error type.
@@ -2830,14 +3028,17 @@ pub fn emit_author(
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum AuthorError {
-    /// The referenced entity kind is not legal in AP242.
+    /// An entity kind that is not in AP242: a reference's target, or a part
+    /// of a complex instance.
     NotAp242 { entity: &'static str },
     /// The referenced id does not point at an existing entity.
     DanglingRef { entity: &'static str },
     /// The part set of a complex instance violates a schema rule.
     InvalidComplex { reason: &'static str },
     /// An aggregate attribute's element count is outside the schema's
-    /// cardinality bounds (e.g. `SET [1:?]` given an empty set).
+    /// cardinality bounds (e.g. `SET [1:?]` given an empty set). For a list
+    /// held in a SELECT, `entity` is the list type (such as
+    /// `COMMON_DATUM_LIST`) and `attribute` is `"value"`.
     Cardinality {
         entity: &'static str,
         attribute: &'static str,
@@ -2856,6 +3057,17 @@ pub enum AuthorError {
     /// Builder input breaks a rule of the standard: a B-spline whose knots do
     /// not fit its degree and control points, a mesh index past its points.
     InvalidInput { reason: &'static str },
+    /// A reference AP242 narrows in `entity` — by a `SELF\supertype.attribute`
+    /// redeclaration, a SELECT with fewer members than other editions', or a
+    /// `WHERE` rule that limits its type — names a type the narrower attribute
+    /// does not allow. Raised where the type of the argument cannot rule it
+    /// out: an argument that is a complex instance, the parts given to
+    /// [`Ap242Author::add_complex`], and a self-referencing constructor's
+    /// struct.
+    NarrowedReference {
+        entity: &'static str,
+        attribute: &'static str,
+    },
 }
 
 impl std::fmt::Display for AuthorError {
@@ -2890,6 +3102,9 @@ impl std::fmt::Display for AuthorError {
                 write!(f, "{entity}.{attribute}: not a finite number")
             }
             AuthorError::InvalidInput { reason } => write!(f, "invalid input: {reason}"),
+            AuthorError::NarrowedReference { entity, attribute } => {
+                write!(f, "{entity}.{attribute}: a reference AP242 does not allow there")
+            }
         }
     }
 }
@@ -2898,12 +3113,15 @@ impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
 /// only through the generated constructors, which check every value against
-/// the schema's types, the size of each aggregate attribute and of each list
-/// nested in one (such as a row of B-spline control points), every reference
+/// the schema's types, the size of each aggregate attribute, of each list
+/// nested in one (such as a row of B-spline control points) and of each list
+/// held in a SELECT (such as a `COMMON_DATUM_LIST`), every reference
 /// for an entity of a fitting type that exists in this model, every complex
-/// instance against the schema's rules for combining types, and every real
-/// for being finite. They do not check `WHERE` rules, and an id from another
-/// author that is in range here is taken as one of this model's.
+/// instance against the schema's rules for combining types, every real for
+/// being finite, and the `WHERE` rules that limit which types a reference may
+/// be ([the crate documentation](crate#writing-step) says which). They do
+/// not check the other `WHERE` rules, and an id from another author that is
+/// in range here is taken as one of this model's.
 /// [`Ap242Author::finish`] returns the model, for [`write`](crate::write) to
 /// send out as Part 21 text.
 #[derive(Default)]
@@ -2913,6 +3131,7 @@ pub struct Ap242Author {
 }
 
 impl Ap242Author {
+    /// An empty author: no entities, and a header with every field empty.
     pub fn new() -> Self {
         Self::default()
     }
@@ -2930,11 +3149,11 @@ impl Ap242Author {
     }
 
     /// The authored model, its header's `FILE_SCHEMA` stamped AP242 (edition
-    /// 2 IS) — the authoring layer's schema. Write it out with
+    /// 4 IS) — the authoring layer's schema. Write it out with
     /// [`write`](crate::write).
     #[must_use]
     pub fn finish(mut self) -> StepModel {
-        self.model.header.schema = super::schema::ap242e2_schema_id();
+        self.model.header.schema = super::schema::ap242e4_schema_id();
         self.model
     }
 
@@ -2951,17 +3170,23 @@ impl Ap242Author {
     // Constructors for legal simple entities.
     let mut generated = 0usize;
     for se in &ir.simples {
-        if !legal.contains(&se.name) {
+        if !legal.contains(&se.name) || narrowing.abstract_entities.contains(&se.name) {
             continue;
         }
         generated += 1;
         let params = idents(&se.fields);
+        let narrow_of = |f: &Field| narrowing.params.get(&(se.rust.clone(), f.name.clone()));
         let mut sig = String::new();
         for (ident, f) in &params {
             if f.derived {
                 continue;
             }
-            write!(sig, ", {ident}: {}", author_param_type(ir, f)).unwrap();
+            let ty = author_param_type(ir, f);
+            let ty = match narrow_of(f) {
+                Some(n) => replace_type_name(&ty, &n.wide, &n.narrow),
+                None => ty,
+            };
+            write!(sig, ", {ident}: {ty}").unwrap();
         }
         writeln!(s, "\n    /// `{}` — strict AP242 constructor.", se.name).unwrap();
         writeln!(
@@ -2975,6 +3200,8 @@ impl Ap242Author {
             if f.derived {
                 continue;
             }
+            let f =
+                &with_target_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
             s.push_str(&author_card_check(&se.name, &f.name, ident, f, false));
             s.push_str(&author_finite_check(
                 &se.name,
@@ -2994,7 +3221,18 @@ impl Ap242Author {
                 "&self.model",
                 0,
             );
+            // A narrower argument is checked as its own type.
+            let check = match narrow_of(f) {
+                Some(n) => check.replace(
+                    &format!("check_{}(", snake_name(&n.wide)),
+                    &format!("check_{}(", snake_name(&n.narrow)),
+                ),
+                None => check,
+            };
             s.push_str(&check);
+            if let Some((r, rules)) = narrowing.part_rules.get(&(se.rust.clone(), f.name.clone())) {
+                s.push_str(&part_rule_check(r, rules, f, ident, &se.name));
+            }
         }
         for (ident, f) in &params {
             if !f.derived {
@@ -3014,7 +3252,20 @@ impl Ap242Author {
                 continue;
             }
             let plain = ident.trim_start_matches("r#");
-            if plain == ident {
+            if narrow_of(f).is_some() {
+                // Store the narrower argument as the model's wider reference.
+                let conv = match (&f.kind, f.optional || f.derivable) {
+                    (Kind::Vec(_), false) => {
+                        format!("{ident}.into_iter().map(Into::into).collect()")
+                    }
+                    (Kind::Vec(_), true) => {
+                        format!("{ident}.map(|v| v.into_iter().map(Into::into).collect())")
+                    }
+                    (_, false) => format!("{ident}.into()"),
+                    (_, true) => format!("{ident}.map(Into::into)"),
+                };
+                write!(s, " {plain}: {conv},").unwrap();
+            } else if plain == ident {
                 write!(s, " {ident},").unwrap();
             } else {
                 write!(s, " {plain}: {ident},").unwrap();
@@ -3023,15 +3274,18 @@ impl Ap242Author {
         s.push_str(" })))\n    }\n");
     }
 
-    // Self-referencing (cyclic) variants: for entities whose ref fields can
-    // target their own type, a closure-based constructor hands out the id the
+    // Self-referencing (cyclic) variants: for entities whose constructor
+    // types (AP242 edition 4's, where narrower) can target their own type,
+    // a closure-based constructor hands out the id the
     // entity will get before it exists, then validates after the push and
     // rolls back on error. The case seen in real files is
     // DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.applies_to referencing itself.
     let mut cyclic_checks = String::new();
     let mut cyclic = 0usize;
     for se in &ir.simples {
-        if !legal.contains(&se.name) || !self_ref_capable(ir, se) {
+        if !narrowing.self_referencing.contains(&se.rust)
+            || narrowing.abstract_entities.contains(&se.name)
+        {
             continue;
         }
         cyclic += 1;
@@ -3066,6 +3320,11 @@ impl Ap242Author {
                 continue;
             }
             let expr = format!("model.{}.items[id as usize].{ident}", arena_field(&se.rust));
+            let f =
+                &with_target_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
+            if let Some(n) = narrowing.cyclic.get(&(se.rust.clone(), f.name.clone())) {
+                cyclic_checks.push_str(&narrowed_check(ir, n, f, &expr, false, &se.name));
+            }
             cyclic_checks.push_str(&author_card_check(&se.name, &f.name, &expr, f, false));
             cyclic_checks.push_str(&author_finite_check(
                 &se.name,
@@ -3094,15 +3353,17 @@ impl Ap242Author {
             r#"
     /// Complex (multi-part) instance — rule-based strict AP242 assembler.
     /// The part-name set is validated by the schema name-set rule (legality,
-    /// supertype-chain completeness, connectivity, ONEOF exclusivity), then
-    /// every reference field is checked; parts are stored in Part 21 order
-    /// (alphabetical).
+    /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
+    /// subtype part beside each `ABSTRACT` part), then every part's fields are
+    /// checked (types, sizes, references, finite reals, narrowings); parts are
+    /// stored in Part 21 order (alphabetical).
     pub fn add_complex(&mut self, mut parts: Vec<PartialEntity>) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
         for p in &parts {
             check_partial_entity(&self.model, p)?;
         }
+        check_complex_narrowings(&self.model, &parts)?;
         parts.sort_by(|a, b| part_name(a).cmp(part_name(b)));
         Ok(ComplexEntityId(self.model.complex_entity_arena.push(ComplexEntity { parts })))
     }
@@ -3117,39 +3378,34 @@ impl Ap242Author {
     );
 
     if ir.has_part_bag {
-        emit_author_complex(ir, &legal, profile, schema, &mut s);
+        emit_author_complex(ir, &legal, profile, schema, narrowing, &mut s);
+        emit_complex_narrowings(ir, narrowing, &mut s);
     }
 
     // Reference checks, one per ref enum: legality is decided at generation
     // time (a static match arm), bounds at run time.
-    emit_author_ref_checks(ir, &legal, &mut s);
+    emit_author_ref_checks(ir, narrowing, &legal, &mut s);
     s
 }
 
-/// Whether any of `se`'s ref fields (through Vec/Option nesting, and one
-/// level into aggregate SELECT members) has an arm targeting `se` itself —
-/// i.e. a self-reference is type-representable, so the entity gets an
-/// `add_*_cyclic` variant.
-fn self_ref_capable(ir: &ModelIr, se: &SimpleEnt) -> bool {
-    fn kind_hits(ir: &ModelIr, k: &Kind, rust: &str) -> bool {
-        match k {
-            Kind::Ref(t) => {
-                let re = &ir.ref_enums[t];
-                re.simple_arms.iter().any(|(_, target)| target == rust)
-                    || re.aggregate.iter().any(|(_, elem_rust, _)| {
-                        ir.ref_enums.values().any(|e| {
-                            e.rust == *elem_rust
-                                && e.simple_arms.iter().any(|(_, target)| target == rust)
-                        })
+/// Whether a field of kind `k` (through Vec/Option nesting, and one level
+/// into aggregate SELECT members) has an arm targeting the entity `rust` —
+/// whether it can hold a reference to that entity.
+pub(crate) fn kind_hits(ir: &ModelIr, k: &Kind, rust: &str) -> bool {
+    match k {
+        Kind::Ref(t) => {
+            let re = &ir.ref_enums[t];
+            re.simple_arms.iter().any(|(_, target)| target == rust)
+                || re.aggregate.iter().any(|(_, elem_rust, _)| {
+                    ir.ref_enums.values().any(|e| {
+                        e.rust == *elem_rust
+                            && e.simple_arms.iter().any(|(_, target)| target == rust)
                     })
-            }
-            Kind::Vec(inner) => kind_hits(ir, inner, rust),
-            _ => false,
+                })
         }
+        Kind::Vec(inner) => kind_hits(ir, inner, rust),
+        _ => false,
     }
-    se.fields
-        .iter()
-        .any(|f| !f.derived && kind_hits(ir, &f.kind, &se.rust))
 }
 
 /// The complex-assembler support items for `author.rs`: `part_name`, the
@@ -3160,6 +3416,7 @@ fn emit_author_complex(
     legal: &std::collections::BTreeSet<String>,
     profile: &crate::schema::ProfileToml,
     schema: &crate::schema::Schema,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
     s: &mut String,
 ) {
     // part_name: PartialEntity variant -> UPPER STEP keyword (mirrors the model's
@@ -3180,16 +3437,18 @@ fn emit_author_complex(
     }
     s.push_str("    }\n}\n\n");
 
-    // PART_INFO: sorted by UPPER part name -> (AP242-legal, transitive
-    // supertypes UPPER). Ancestors are the full universal-schema parent
-    // closure — a complex instance must carry every supertype as a part
-    // (Part 21 external mapping), so an ancestor outside the part world can
-    // never be satisfied and correctly makes such combinations unbuildable.
+    // PART_INFO: sorted by UPPER part name -> (AP242-legal, ABSTRACT in
+    // AP242, transitive supertypes UPPER). Ancestors are the full
+    // universal-schema parent closure — a complex instance must carry every
+    // supertype as a part (Part 21 external mapping), so an ancestor outside
+    // the part world can never be satisfied and correctly makes such
+    // combinations unbuildable.
     let part_world: std::collections::BTreeSet<&str> =
         ir.parts.iter().map(|p| p.name.as_str()).collect();
     s.push_str(
-        "/// `(part, AP242-legal, transitive supertypes)`, sorted by part name.\n\
-         static PART_INFO: &[(&str, bool, &[&str])] = &[\n",
+        "/// `(part, AP242-legal, ABSTRACT in AP242, transitive supertypes)`,\n\
+         /// sorted by part name.\n\
+         static PART_INFO: &[(&str, bool, bool, &[&str])] = &[\n",
     );
     // BTreeMap keyed by the UPPER name: `ir.parts` is ordered by the lowercase
     // schema name, which differs from UPPER byte order ('_' sorts above
@@ -3214,7 +3473,8 @@ fn emit_author_complex(
         info.insert(&p.name, (legal.contains(&p.name), ancestors));
     }
     for (name, (is_legal, ancestors)) in &info {
-        write!(s, "    ({name:?}, {is_legal}, &[").unwrap();
+        let is_abstract = narrowing.abstract_entities.contains(*name);
+        write!(s, "    ({name:?}, {is_legal}, {is_abstract}, &[").unwrap();
         for a in ancestors {
             write!(s, "{a:?}, ").unwrap();
         }
@@ -3273,22 +3533,25 @@ fn emit_author_complex(
 /// AP242-legal, no duplicates, supertype chains complete (each part's
 /// transitive supertypes all present — Part 21 external mapping), the set
 /// connected through those chains (one inheritance graph, no disjoint
-/// clusters), and no ONEOF group drawn from two branches. Reference fields
-/// are checked separately by [`Ap242Author::add_complex`].
+/// clusters), no ONEOF group drawn from two branches, and beside each
+/// `ABSTRACT` part a part of one of its subtypes. Reference fields are
+/// checked separately by [`Ap242Author::add_complex`].
 pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
     if names.is_empty() {
         return Err(AuthorError::InvalidComplex { reason: "empty part list" });
     }
     let mut ancestor_sets: Vec<&'static [&'static str]> = Vec::with_capacity(names.len());
+    let mut abstracts: Vec<bool> = Vec::with_capacity(names.len());
     for n in names {
         let Ok(ix) = PART_INFO.binary_search_by_key(n, |e| e.0) else {
             return Err(AuthorError::NotAp242 { entity: n });
         };
-        let (_, is_legal, ancestors) = PART_INFO[ix];
+        let (_, is_legal, is_abstract, ancestors) = PART_INFO[ix];
         if !is_legal {
             return Err(AuthorError::NotAp242 { entity: n });
         }
         ancestor_sets.push(ancestors);
+        abstracts.push(is_abstract);
     }
     let mut sorted = names.to_vec();
     sorted.sort_unstable();
@@ -3330,6 +3593,11 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                     return Err(AuthorError::InvalidComplex { reason: "oneof conflict" });
                 }
             }
+        }
+    }
+    for (n, &is_abstract) in names.iter().zip(&abstracts) {
+        if is_abstract && !ancestor_sets.iter().any(|a| a.contains(n)) {
+            return Err(AuthorError::InvalidComplex { reason: "abstract part without a subtype part" });
         }
     }
     Ok(())
@@ -3389,10 +3657,250 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
     s.push_str("        _ => {}\n    }\n    Ok(())\n}\n\n");
 }
 
+/// `ty` with the type name `from` replaced by `to` (whole names only).
+fn replace_type_name(ty: &str, from: &str, to: &str) -> String {
+    ty.split_inclusive(['<', '>', ' ', ','])
+        .map(|piece| {
+            let name = piece.trim_end_matches(['<', '>', ' ', ',']);
+            if name == from {
+                format!("{to}{}", &piece[name.len()..])
+            } else {
+                piece.to_string()
+            }
+        })
+        .collect()
+}
+
+/// `f` with AP242 edition 4's outer aggregate bounds, where they differ.
+fn with_target_bounds(f: &Field, bounds: Option<&(u32, Option<u32>)>) -> Field {
+    let mut f = f.clone();
+    if let Some(&(min, max)) = bounds {
+        f.min = min;
+        f.max = max;
+    }
+    f
+}
+
+/// Code returning `NarrowedReference` unless the reference(s) at `expr`
+/// (a model-typed field `f`) are among `n`'s arms or complex parts, or an
+/// admitted aggregate arm whose every element is.
+fn narrowed_check(
+    ir: &ModelIr,
+    n: &crate::author_narrow::RuntimeNarrowing,
+    f: &Field,
+    expr: &str,
+    expr_is_ref: bool,
+    entity_upper: &str,
+) -> String {
+    let err = format!(
+        "return Err(AuthorError::NarrowedReference {{ entity: {entity_upper:?}, attribute: {:?} }})",
+        f.name
+    );
+    let one = |v: &str| narrowed_match(ir, n, v, &err);
+    let amp = if expr_is_ref { "" } else { "&" };
+    let body = match f.kind {
+        Kind::Vec(_) => format!("for v in x.iter() {{\n{}}}\n", one("v")),
+        _ => one("x"),
+    };
+    if f.optional || f.derivable {
+        format!("        if let Some(x) = {amp}{expr} {{\n{body}        }}\n")
+    } else {
+        format!("        {{ let x = {amp}{expr};\n{body}        }}\n")
+    }
+}
+
+/// Code: a `match` on the reference `v` running `err` unless it is among
+/// `n`'s arms or complex parts, or an admitted aggregate arm whose every
+/// element is.
+fn narrowed_match(
+    ir: &ModelIr,
+    n: &crate::author_narrow::RuntimeNarrowing,
+    v: &str,
+    err: &str,
+) -> String {
+    let w = &n.wide;
+    let wide = ir
+        .ref_enums
+        .values()
+        .find(|re| re.rust == *w)
+        .expect("wide enum");
+    let arms: Vec<String> = wide
+        .simple_arms
+        .iter()
+        .filter(|(_, t)| n.allowed.contains(t))
+        .map(|(v, _)| format!("{w}::{v}(_)"))
+        .collect();
+    let fits: Vec<String> = n.fits.iter().map(|p| format!("{p:?}")).collect();
+    let part_conds: String = n
+        .part_rules
+        .iter()
+        .map(|r| match r {
+            crate::author_narrow::PartRule::NoneOf(s) => {
+                format!(" && !{}", any_part_in(s))
+            }
+            crate::author_narrow::PartRule::ExactlyOneOf(gs) => {
+                format!(" && {} == 1", groups_held(gs))
+            }
+        })
+        .collect();
+    let complex = if wide.has_complex {
+        format!(
+            "{w}::Complex(i) => {{ if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| [{}].contains(&part_name(p))){part_conds}) {{ {err} }} }}\n",
+            fits.join(", ")
+        )
+    } else {
+        String::new()
+    };
+    let ok = if arms.is_empty() {
+        String::new()
+    } else {
+        format!("{} => {{}}\n", arms.join(" | "))
+    };
+    let aggregates: String = wide
+        .aggregate
+        .iter()
+        .filter_map(|(variant, _, _)| {
+            let en = n.aggregates.get(variant)?;
+            Some(format!(
+                "{w}::{variant}(es) => {{ for e in es.iter() {{\n{}}} }}\n",
+                narrowed_match(ir, en, "e", err)
+            ))
+        })
+        .collect();
+    // Only excluded parts narrow it: every arm is matched above.
+    let exhaustive = arms.len() == wide.simple_arms.len()
+        && wide
+            .aggregate
+            .iter()
+            .all(|(variant, _, _)| n.aggregates.contains_key(variant))
+        && wide.enum_arms.is_empty()
+        && wide.scalar_arms.is_empty();
+    let rest = if exhaustive {
+        String::new()
+    } else {
+        format!("_ => {err},\n")
+    };
+    format!("match {v} {{\n{ok}{aggregates}{complex}{rest}}}\n")
+}
+
+/// Code: whether complex `c` has a part in `parts`.
+fn any_part_in(parts: &std::collections::BTreeSet<String>) -> String {
+    let parts: Vec<String> = parts.iter().map(|p| format!("{p:?}")).collect();
+    format!(
+        "c.parts.iter().any(|p| [{}].contains(&part_name(p)))",
+        parts.join(", ")
+    )
+}
+
+/// Code: how many of `groups` hold a part of complex `c`.
+fn groups_held(groups: &[std::collections::BTreeSet<String>]) -> String {
+    let groups: Vec<String> = groups
+        .iter()
+        .map(|g| {
+            let parts: Vec<String> = g.iter().map(|p| format!("{p:?}")).collect();
+            format!("&[{}][..]", parts.join(", "))
+        })
+        .collect();
+    format!(
+        "[{}].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count()",
+        groups.join(", ")
+    )
+}
+
+/// A constructor's check that a complex argument (or element) of enum `r`
+/// meets what WHERE rules ask of its parts.
+fn part_rule_check(
+    r: &str,
+    rules: &[crate::author_narrow::PartRule],
+    f: &Field,
+    ident: &str,
+    entity_upper: &str,
+) -> String {
+    let one = |v: &str| {
+        rules
+            .iter()
+            .map(|rule| {
+                let broken = match rule {
+                    crate::author_narrow::PartRule::NoneOf(s) => any_part_in(s),
+                    crate::author_narrow::PartRule::ExactlyOneOf(gs) => {
+                        format!("{} != 1", groups_held(gs))
+                    }
+                };
+                format!(
+                    "if matches!({v}, {r}::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| {broken})) {{ return Err(AuthorError::NarrowedReference {{ entity: {entity_upper:?}, attribute: {:?} }}); }}\n",
+                    f.name
+                )
+            })
+            .collect::<String>()
+    };
+    let body = match f.kind {
+        Kind::Vec(_) => format!("for v in x.iter() {{\n{}}}\n", one("v")),
+        _ => one("x"),
+    };
+    if f.optional || f.derivable {
+        format!("        if let Some(x) = &{ident} {{\n{body}        }}\n")
+    } else {
+        format!("        {{ let x = &{ident};\n{body}        }}\n")
+    }
+}
+
+/// `check_complex_narrowings`: for each AP242 edition 4 narrowing of a
+/// complex part's field that holds when the instance has part `by`.
+fn emit_complex_narrowings(
+    ir: &ModelIr,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
+    s: &mut String,
+) {
+    s.push_str("fn check_complex_narrowings(model: &StepModel, parts: &[PartialEntity]) -> Result<(), AuthorError> {\n");
+    for c in &narrowing.complex {
+        let owner = ir
+            .parts
+            .iter()
+            .find(|p| p.rust == c.owner)
+            .expect("owner part");
+        let by = ir.parts.iter().find(|p| p.rust == c.by).expect("by part");
+        let (ident, f) = idents(&owner.fields)
+            .into_iter()
+            .nth(c.idx)
+            .expect("owner field");
+        let check = narrowed_check(ir, &c.check, f, &ident, true, &by.name);
+        // A WHERE rule's condition on SELF's type: which parts it holds.
+        let held = |names: &std::collections::BTreeSet<String>| {
+            let arms = names
+                .iter()
+                .map(|n| {
+                    let p = ir.parts.iter().find(|p| &p.name == n).expect("part");
+                    format!("PartialEntity::{} {{ .. }}", p.rust)
+                })
+                .collect::<Vec<_>>()
+                .join(" | ");
+            format!("parts.iter().any(|p| matches!(p, {arms}))")
+        };
+        let mut cond = format!(
+            "parts.iter().any(|p| matches!(p, PartialEntity::{} {{ .. }}))",
+            c.by
+        );
+        for w in &c.when {
+            cond += &format!(" && {}", held(w));
+        }
+        if !c.unless.is_empty() {
+            cond += &format!(" && !{}", held(&c.unless));
+        }
+        writeln!(
+            s,
+            "    if {cond} {{\n        for p in parts {{\n            if let PartialEntity::{} {{ {ident}, .. }} = p {{\n{check}            }}\n        }}\n    }}",
+            c.owner
+        )
+        .unwrap();
+    }
+    s.push_str("    Ok(())\n}\n\n");
+}
+
 /// Reference checks, one per ref enum: legality decided at generation time
 /// (a static match arm), bounds at run time.
 fn emit_author_ref_checks(
     ir: &ModelIr,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
     legal: &std::collections::BTreeSet<String>,
     s: &mut String,
 ) {
@@ -3401,7 +3909,21 @@ fn emit_author_ref_checks(
         .iter()
         .map(|se| (se.rust.as_str(), se.name.as_str()))
         .collect();
-    for (target, re) in &ir.ref_enums {
+    // What a complex value that fits none of the enum's types is not.
+    let model_enums = ir
+        .ref_enums
+        .iter()
+        .map(|(t, re)| (format!("not a {}", t.to_uppercase()), re));
+    let new_enums = narrowing.new_enums.values().map(|(what, re)| {
+        let inner = what.split('`').nth(1).unwrap_or(what).to_uppercase();
+        let reason = if what.starts_with("as ") {
+            format!("not a {inner}")
+        } else {
+            format!("not allowed in {inner}")
+        };
+        (reason, re)
+    });
+    for (reason, re) in model_enums.chain(new_enums) {
         let r = &re.rust;
         writeln!(
             s,
@@ -3427,10 +3949,26 @@ fn emit_author_ref_checks(
                 .unwrap();
             }
         }
-        for (variant, elem_rust, _wire) in &re.aggregate {
+        for (variant, elem_rust, wire) in &re.aggregate {
+            let mut size = String::new();
+            if let Some(&(min, max)) = narrowing.aggregate_bounds.get(&wire.to_lowercase()) {
+                let mut cond = Vec::new();
+                if min > 0 {
+                    cond.push(format!("v.len() < {min}"));
+                }
+                if let Some(max) = max {
+                    cond.push(format!("v.len() > {max}"));
+                }
+                if !cond.is_empty() {
+                    size = format!(
+                        "if {} {{ return Err(AuthorError::Cardinality {{ entity: {wire:?}, attribute: \"value\", got: v.len(), min: {min}, max: {max:?} }}); }} ",
+                        cond.join(" || ")
+                    );
+                }
+            }
             writeln!(
                 s,
-                "        {r}::{variant}(v) => {{ for e in v {{ check_{}(model, e)?; }} }}",
+                "        {r}::{variant}(v) => {{ {size}for e in v {{ check_{}(model, e)?; }} }}",
                 snake_name(elem_rust)
             )
             .unwrap();
@@ -3456,10 +3994,9 @@ fn emit_author_ref_checks(
                 .map(|p| format!("{p:?}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let target = target.to_uppercase();
             writeln!(
                 s,
-                "        {r}::Complex(i) => {{ let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: \"not a {target}\" }}); }} }}"
+                "        {r}::Complex(i) => {{ let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: {reason:?} }}); }} }}"
             )
             .unwrap();
         }
@@ -3468,7 +4005,7 @@ fn emit_author_ref_checks(
 }
 
 /// Emit `docs/entities.md`: the universal-entity coverage matrix. Rows = every
-/// `universal.toml` entity (alphabetical); columns = the six source AP schemas
+/// `universal.toml` entity (alphabetical); columns = the source AP schemas
 /// (`o` = that AP's EXPRESS declares the entity) plus step-io read (`o` = in
 /// the coverage closure, i.e. modeled by the generated `StepModel`) and
 /// step-io write (`o` = read-supported and legal in the output target).
@@ -3478,14 +4015,23 @@ pub fn emit_entity_matrix(
     target_stem: &str,
     target: &crate::schema::ProfileToml,
 ) -> String {
-    const APS: [&str; 6] = [
-        "ap203e1", "ap203e2", "ap214e3", "ap242e1", "ap242e2", "ap242e3",
+    const APS: [&str; 7] = [
+        "ap203e1", "ap203e2", "ap214e3", "ap242e1", "ap242e2", "ap242e3", "ap242e4",
     ];
     fn mark(b: bool) -> &'static str {
         if b { "o" } else { "x" }
     }
+    // A schema the columns leave out would vanish from the table unnoticed.
+    for (name, ent) in &schema.entity {
+        for s in &ent.schemas {
+            assert!(
+                APS.contains(&s.as_str()),
+                "{name}: schema {s} has no column in docs/entities.md"
+            );
+        }
+    }
 
-    let mut ap_counts = [0usize; 6];
+    let mut ap_counts = [0usize; APS.len()];
     let mut read_count = 0usize;
     let mut write_count = 0usize;
     let mut rows = String::new();
@@ -3507,23 +4053,34 @@ pub fn emit_entity_matrix(
 
     let mut s = String::new();
     s.push_str("# Entity coverage\n\n");
-    s.push_str("<!-- @generated by codegen from schema/universal.toml + codegen/coverage.toml. DO NOT hand-edit. -->\n\n");
+    writeln!(
+        s,
+        "<!-- @generated by codegen from schema/universal.toml + codegen/coverage.toml + schema/{target_stem}.toml. DO NOT hand-edit. -->\n"
+    )
+    .unwrap();
     s.push_str("*Generated by codegen from the schema data — do not edit by hand.*\n\n");
     write!(
         s,
-        "One row per entity, from the six source AP editions merged into the\n\
+        "One row per entity, from the source AP editions merged into the\n\
          universal schema. The AP columns show where each entity is declared;\n\
          the step-io columns show what step-io reads and writes.\n\n\
-         - **ap203e1 … ap242e3** — `o` means that AP edition's EXPRESS schema\n\
+         - **{} … {}** — `o` means that AP edition's EXPRESS schema\n\
          \x20 declares the entity.\n\
          - **step-io (read)** — `o` means the entity is modeled by the generated\n\
-         \x20 `StepModel`: reading a file keeps it. `x` entities are outside the\n\
+         \x20 `StepModel`: reading a file keeps its instances, unless one is\n\
+         \x20 dropped for a bad value or reference (with a reason in the\n\
+         \x20 report). `x` entities are outside the\n\
          \x20 support boundary; on read they are dropped with a reason in the\n\
          \x20 report, never silently.\n\
          - **step-io (write)** — `o` means the entity can appear in step-io\n\
          \x20 output: read-supported and legal in {target_stem}, the output\n\
-         \x20 schema.\n\
-         - ap242e3 has no published IS edition yet.\n\n"
+         \x20 schema. An `ABSTRACT` entity (such as `geometric_tolerance`) has\n\
+         \x20 no constructor of its own; it is written as a part of a complex\n\
+         \x20 instance, beside a part of one of its subtypes.\n\
+         - ap242e3 was published as an IS (ISO 10303-242:2022) and has been\n\
+         \x20 withdrawn; ap242e4 (ISO 10303-242:2025) replaces it.\n\n",
+        APS[0],
+        APS[APS.len() - 1],
     )
     .unwrap();
     writeln!(s, "| | entities |\n|---|---:|").unwrap();
@@ -3536,10 +4093,11 @@ pub fn emit_entity_matrix(
     s.push('\n');
     writeln!(
         s,
-        "| Entity | ap203e1 | ap203e2 | ap214e3 | ap242e1 | ap242e2 | ap242e3 | step-io (read) | step-io (write) |"
+        "| Entity | {} | step-io (read) | step-io (write) |",
+        APS.join(" | ")
     )
     .unwrap();
-    writeln!(s, "|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|").unwrap();
+    writeln!(s, "|---|{}:-:|:-:|", ":-:|".repeat(APS.len())).unwrap();
     s.push_str(&rows);
     s
 }

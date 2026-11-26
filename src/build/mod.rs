@@ -140,6 +140,7 @@ use std::collections::HashSet;
 use crate::Orientation;
 use crate::generated::author::{Ap242Author, AuthorError};
 use crate::generated::model as m;
+use crate::generated::schema;
 use crate::header::FileHeader;
 use crate::scene::{NurbsCurve, NurbsSurface, Rgb};
 
@@ -191,8 +192,9 @@ pub enum LengthUnit {
 pub struct UnitsInput {
     pub length: LengthUnit,
     /// Length uncertainty (modelling precision), in the file's own length
-    /// unit — expected finite and positive (degenerate values are the
-    /// caller's responsibility).
+    /// unit — expected positive. A value that is not finite fails
+    /// [`StepBuilder::new_with`] with [`AuthorError::NonFiniteReal`]; other
+    /// degenerate values are the caller's responsibility.
     pub uncertainty: f64,
 }
 
@@ -599,7 +601,7 @@ struct PendingPart {
     definition: m::ProductDefinitionId,
     shape: m::ProductDefinitionShapeId,
     origin: m::Axis2Placement3dId,
-    items: Vec<m::RepresentationItemRef>,
+    items: Vec<m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef>,
     meshes: Vec<m::TessellatedSolidId>,
     /// The placements of this part's children, by index.
     placements: Vec<usize>,
@@ -631,15 +633,19 @@ struct PendingPlacement {
 /// - [`DanglingRef`](AuthorError::DanglingRef) for an id out of this
 ///   builder's range. An id from another builder that happens to be in range
 ///   is not caught, and stands for whatever this builder holds there;
-/// - [`Cardinality`](AuthorError::Cardinality) for an empty list where the
-///   standard needs at least one item, such as a solid without faces.
+/// - [`Cardinality`](AuthorError::Cardinality) for a list shorter than the
+///   standard allows, such as a solid without faces or a polyline of one
+///   point;
+/// - [`CyclicAssembly`](AuthorError::CyclicAssembly) for a placement that
+///   would make an assembly contain itself ([`place`](Self::place)).
 ///
 /// Any other error indicates a bug in the builder itself. The methods given
 /// nothing that could break a rule — [`new`](Self::new), [`part`](Self::part),
 /// [`part_with`](Self::part_with), [`person_and_org`](Self::person_and_org),
 /// [`document`](Self::document), [`security`](Self::security) and
 /// [`finish`](Self::finish) — return their value as it is, and panic only on
-/// such a bug.
+/// such a bug, or for a [`Part`] from another builder that is out of range
+/// here.
 pub struct StepBuilder {
     author: Ap242Author,
     /// The geometric context of every part not placed in an assembly, and of
@@ -684,11 +690,11 @@ impl StepBuilder {
     pub fn new_with(units: &UnitsInput) -> Result<Self, AuthorError> {
         let mut a = Ap242Author::new();
 
-        let ac = a.add_application_context("managed model based 3d engineering")?;
+        let ac = a.add_application_context(schema::AP242E4_APD_DESCRIPTION)?;
         a.add_application_protocol_definition(
-            "international standard",
-            "ap242_managed_model_based_3d_engineering_mim_lf",
-            2020,
+            schema::AP242E4_APD_STATUS,
+            schema::AP242E4_APD_NAME,
+            schema::AP242E4_APD_YEAR,
             m::ApplicationContextRef::ApplicationContext(ac),
         )?;
         let product_context = a.add_product_context(
@@ -841,9 +847,9 @@ impl StepBuilder {
             m::PresentationStyleSelectRef::SurfaceStyleUsage(usage),
         ])?;
         let item = match target {
-            StyleTarget::Face(f) => m::StyledItemTargetRef::AdvancedFace(f),
-            StyleTarget::Solid(s) => m::StyledItemTargetRef::ManifoldSolidBrep(s),
-            StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
+            StyleTarget::Face(f) => m::Ap242StyledItemItemRef::AdvancedFace(f),
+            StyleTarget::Solid(s) => m::Ap242StyledItemItemRef::ManifoldSolidBrep(s),
+            StyleTarget::VoidSolid(s) => m::Ap242StyledItemItemRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
             "",
@@ -891,9 +897,9 @@ impl StepBuilder {
                 m::NullStyle::Null,
             )])?;
         let item = match target {
-            StyleTarget::Face(f) => m::StyledItemTargetRef::AdvancedFace(f),
-            StyleTarget::Solid(s) => m::StyledItemTargetRef::ManifoldSolidBrep(s),
-            StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
+            StyleTarget::Face(f) => m::Ap242StyledItemItemRef::AdvancedFace(f),
+            StyleTarget::Solid(s) => m::Ap242StyledItemItemRef::ManifoldSolidBrep(s),
+            StyleTarget::VoidSolid(s) => m::Ap242StyledItemItemRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
             "",
@@ -1046,7 +1052,10 @@ impl StepBuilder {
 
     /// NURBS surface geometry; see [`Self::nurbs_curve_geometry`].
     #[allow(clippy::float_cmp)] // exact 1.0 check, as in nurbs_curve_geometry
-    fn nurbs_surface_geometry(&mut self, s: &NurbsSurface) -> Result<m::SurfaceRef, AuthorError> {
+    fn nurbs_surface_geometry(
+        &mut self,
+        s: &NurbsSurface,
+    ) -> Result<m::Ap242AdvancedFaceGeometrySelectRef, AuthorError> {
         let n_u = s.control_points.len();
         let n_v = s.control_points.first().map_or(0, Vec::len);
         if n_v == 0 || s.control_points.iter().any(|row| row.len() != n_v) {
@@ -1088,7 +1097,7 @@ impl StepBuilder {
                 v_knots,
                 m::KnotType::Unspecified,
             )?;
-            Ok(m::SurfaceRef::BSplineSurfaceWithKnots(id))
+            Ok(m::Ap242AdvancedFaceGeometrySelectRef::BSplineSurfaceWithKnots(id))
         } else {
             let no_name = self.author.text("");
             let id = self.author.add_complex(vec![
@@ -1116,7 +1125,7 @@ impl StepBuilder {
                 m::PartialEntity::RepresentationItem { name: no_name },
                 m::PartialEntity::Surface,
             ])?;
-            Ok(m::SurfaceRef::Complex(id))
+            Ok(m::Ap242AdvancedFaceGeometrySelectRef::Complex(id))
         }
     }
 
@@ -1238,14 +1247,17 @@ impl StepBuilder {
     }
 
     /// Emit the geometry entity for a [`SurfaceInput`].
-    fn surface_geometry(&mut self, surface: SurfaceInput) -> Result<m::SurfaceRef, AuthorError> {
+    fn surface_geometry(
+        &mut self,
+        surface: SurfaceInput,
+    ) -> Result<m::Ap242AdvancedFaceGeometrySelectRef, AuthorError> {
         Ok(match surface {
             SurfaceInput::Plane(frame) => {
                 let position = self.placement(&frame)?;
                 let plane = self
                     .author
                     .add_plane("", m::Axis2Placement3dRef::Axis2Placement3d(position))?;
-                m::SurfaceRef::Plane(plane)
+                m::Ap242AdvancedFaceGeometrySelectRef::Plane(plane)
             }
             SurfaceInput::Cylinder(frame, radius) => {
                 let position = self.placement(&frame)?;
@@ -1254,7 +1266,7 @@ impl StepBuilder {
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     radius,
                 )?;
-                m::SurfaceRef::CylindricalSurface(cyl)
+                m::Ap242AdvancedFaceGeometrySelectRef::CylindricalSurface(cyl)
             }
             SurfaceInput::Sphere(frame, radius) => {
                 let position = self.placement(&frame)?;
@@ -1263,7 +1275,7 @@ impl StepBuilder {
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     radius,
                 )?;
-                m::SurfaceRef::SphericalSurface(sphere)
+                m::Ap242AdvancedFaceGeometrySelectRef::SphericalSurface(sphere)
             }
             SurfaceInput::Torus(frame, major_radius, minor_radius) => {
                 let position = self.placement(&frame)?;
@@ -1273,7 +1285,7 @@ impl StepBuilder {
                     major_radius,
                     minor_radius,
                 )?;
-                m::SurfaceRef::ToroidalSurface(torus)
+                m::Ap242AdvancedFaceGeometrySelectRef::ToroidalSurface(torus)
             }
             SurfaceInput::Cone(frame, radius, semi_angle) => {
                 let position = self.placement(&frame)?;
@@ -1283,7 +1295,7 @@ impl StepBuilder {
                     radius,
                     semi_angle,
                 )?;
-                m::SurfaceRef::ConicalSurface(cone)
+                m::Ap242AdvancedFaceGeometrySelectRef::ConicalSurface(cone)
             }
             SurfaceInput::LinearExtrusion(profile, sweep) => {
                 let swept_curve = self.profile_geometry(&profile)?;
@@ -1301,7 +1313,7 @@ impl StepBuilder {
                     swept_curve,
                     m::VectorRef::Vector(vector),
                 )?;
-                m::SurfaceRef::SurfaceOfLinearExtrusion(surf)
+                m::Ap242AdvancedFaceGeometrySelectRef::SurfaceOfLinearExtrusion(surf)
             }
             SurfaceInput::Revolution(profile, origin, axis) => {
                 let swept_curve = self.profile_geometry(&profile)?;
@@ -1318,7 +1330,7 @@ impl StepBuilder {
                     swept_curve,
                     m::Axis1PlacementRef::Axis1Placement(position),
                 )?;
-                m::SurfaceRef::SurfaceOfRevolution(surf)
+                m::Ap242AdvancedFaceGeometrySelectRef::SurfaceOfRevolution(surf)
             }
             SurfaceInput::Nurbs(surface) => self.nurbs_surface_geometry(&surface)?,
         })
@@ -1346,9 +1358,11 @@ impl StepBuilder {
         for bound in bounds {
             let mut edge_list = Vec::with_capacity(bound.edges.len());
             for (edge, along) in bound.edges {
-                let oe =
-                    self.author
-                        .add_oriented_edge("", m::EdgeRef::EdgeCurve(edge), along.flag())?;
+                let oe = self.author.add_oriented_edge(
+                    "",
+                    m::Ap242OrientedEdgeEdgeElementRef::EdgeCurve(edge),
+                    along.flag(),
+                )?;
                 edge_list.push(m::OrientedEdgeRef::OrientedEdge(oe));
             }
             let el = self.author.add_edge_loop("", edge_list)?;
@@ -1392,7 +1406,7 @@ impl StepBuilder {
             .add_manifold_solid_brep(name, m::ClosedShellRef::ClosedShell(shell))?;
         self.parts[part.0]
             .items
-            .push(m::RepresentationItemRef::ManifoldSolidBrep(solid));
+            .push(m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::ManifoldSolidBrep(solid));
         Ok(solid)
     }
 
@@ -1469,7 +1483,7 @@ impl StepBuilder {
             )?;
             let oriented = self.author.add_oriented_closed_shell(
                 "",
-                m::ClosedShellRef::ClosedShell(shell),
+                m::Ap242OrientedClosedShellClosedShellElementRef::ClosedShell(shell),
                 orientation,
             )?;
             void_refs.push(m::OrientedClosedShellRef::OrientedClosedShell(oriented));
@@ -1481,7 +1495,7 @@ impl StepBuilder {
         )?;
         self.parts[part.0]
             .items
-            .push(m::RepresentationItemRef::BrepWithVoids(solid));
+            .push(m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::BrepWithVoids(solid));
         Ok(solid)
     }
 
@@ -1540,7 +1554,7 @@ impl StepBuilder {
         let shape = a.add_product_definition_shape(
             "",
             None,
-            m::CharacterizedDefinitionRef::ProductDefinition(definition),
+            m::Ap242ProductDefinitionShapeDefinitionRef::ProductDefinition(definition),
         )?;
 
         self.parts.push(PendingPart {
@@ -1559,13 +1573,20 @@ impl StepBuilder {
     /// Attach a display mesh to `part`, optionally linked to the b-rep solid
     /// it tessellates (the link is what `MeshGroup::solid()` resolves on the
     /// read side). Triangle indices are 0-based into `points`; the builder
-    /// converts to STEP's 1-based strip encoding. The mesh lands in its own
-    /// `TESSELLATED_SHAPE_REPRESENTATION` on [`finish`](Self::finish).
+    /// converts to STEP's 1-based strip encoding. On [`finish`](Self::finish)
+    /// the part's meshes land in one `TESSELLATED_SHAPE_REPRESENTATION` of
+    /// their own. When the part also has a solid, that representation is
+    /// marked as an alternative representation of the part's shape — a
+    /// `NAME_ATTRIBUTE` 'alternative shape representation' on its
+    /// `SHAPE_DEFINITION_REPRESENTATION`, as the MBx-IF Recommended Practices
+    /// for Alternative Shapes (1.0) describe. The mark belongs to the part, so
+    /// it takes a part's meshes to be its own shape, whether or not
+    /// `of_solid` names a solid, or names one of another part.
     ///
     /// # Errors
     /// [`AuthorError::InvalidInput`] for a mesh without triangles, with a
     /// triangle index not below the number of points, or with per-vertex
-    /// normals that do not number the points.
+    /// normals whose count differs from the points'.
     /// See also [the builder's errors](Self#errors).
     pub fn mesh(
         &mut self,
@@ -1893,7 +1914,7 @@ impl StepBuilder {
                 "",
                 self.styles
                     .iter()
-                    .map(|&s| m::RepresentationItemRef::StyledItem(s))
+                    .map(|&s| m::Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::StyledItem(s))
                     .collect(),
                 m::RepresentationContextRef::Complex(self.ctx),
             )?;
@@ -1906,7 +1927,8 @@ impl StepBuilder {
 /// One part's shape representation in `ctx`, linked to the part's
 /// definition, plus its tessellated representation if it carries display
 /// meshes. A part carrying a solid is emitted as the customary
-/// `ADVANCED_BREP_SHAPE_REPRESENTATION`. `children` are the frames the part's
+/// `ADVANCED_BREP_SHAPE_REPRESENTATION`, and its tessellated representation
+/// is then marked as an alternative one. `children` are the frames the part's
 /// children are placed at.
 fn bind_part(
     a: &mut Ap242Author,
@@ -1915,16 +1937,13 @@ fn bind_part(
     ctx: m::ComplexEntityId,
 ) -> Result<m::RepresentationOrRepresentationReferenceRef, AuthorError> {
     // The origin, then where each child is placed, then the shape.
-    let mut items = vec![m::RepresentationItemRef::Axis2Placement3d(part.origin)];
-    items.extend(children.map(m::RepresentationItemRef::Axis2Placement3d));
+    let mut items =
+        vec![m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::Axis2Placement3d(part.origin)];
+    items.extend(
+        children.map(m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::Axis2Placement3d),
+    );
     items.extend(part.items.iter().cloned());
-    let has_solid = part.items.iter().any(|i| {
-        matches!(
-            i,
-            m::RepresentationItemRef::ManifoldSolidBrep(_)
-                | m::RepresentationItemRef::BrepWithVoids(_)
-        )
-    });
+    let has_solid = !part.items.is_empty();
     let (rep, rep_or_ref) = if has_solid {
         let id = a.add_advanced_brep_shape_representation(
             "",
@@ -1932,24 +1951,29 @@ fn bind_part(
             m::RepresentationContextRef::Complex(ctx),
         )?;
         (
-            m::RepresentationRef::AdvancedBrepShapeRepresentation(id),
+            m::ShapeRepresentationRef::AdvancedBrepShapeRepresentation(id),
             m::RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(id),
         )
     } else {
-        let id =
-            a.add_shape_representation("", items, m::RepresentationContextRef::Complex(ctx))?;
+        let id = a.add_shape_representation(
+            "",
+            items.into_iter().map(Into::into).collect(),
+            m::RepresentationContextRef::Complex(ctx),
+        )?;
         (
-            m::RepresentationRef::ShapeRepresentation(id),
+            m::ShapeRepresentationRef::ShapeRepresentation(id),
             m::RepresentationOrRepresentationReferenceRef::ShapeRepresentation(id),
         )
     };
     a.add_shape_definition_representation(
-        m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
+        m::PropertyDefinitionRef::ProductDefinitionShape(part.shape),
         rep,
     )?;
 
-    // A part with display meshes gets its own tessellated
-    // representation alongside the shape one (multi-SDR per shape).
+    // A part with display meshes gets its own tessellated representation,
+    // bound to the same shape. Beside a solid it is an alternative
+    // representation of that shape, named so on its binding; a part with
+    // meshes only has no other shape, so its meshes are not marked.
     if !part.meshes.is_empty() {
         let tsr = a.add_tessellated_shape_representation(
             "",
@@ -1957,12 +1981,18 @@ fn bind_part(
                 .iter()
                 .map(|&t| m::RepresentationItemRef::TessellatedSolid(t))
                 .collect(),
-            m::RepresentationContextRef::Complex(ctx),
+            m::Ap242GlobalUnitAssignedContextRef::Complex(ctx),
         )?;
-        a.add_shape_definition_representation(
-            m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
-            m::RepresentationRef::TessellatedShapeRepresentation(tsr),
+        let binding = a.add_shape_definition_representation(
+            m::PropertyDefinitionRef::ProductDefinitionShape(part.shape),
+            m::ShapeRepresentationRef::TessellatedShapeRepresentation(tsr),
         )?;
+        if has_solid {
+            a.add_name_attribute(
+                "alternative shape representation",
+                m::NameAttributeSelectRef::ShapeDefinitionRepresentation(binding),
+            )?;
+        }
     }
     Ok(rep_or_ref)
 }
@@ -2013,7 +2043,9 @@ fn bind_placements(
         let pds = a.add_product_definition_shape(
             "Placement",
             Some("Placement of an item"),
-            m::CharacterizedDefinitionRef::NextAssemblyUsageOccurrence(placement.nauo),
+            m::Ap242ProductDefinitionShapeDefinitionRef::NextAssemblyUsageOccurrence(
+                placement.nauo,
+            ),
         )?;
         let idt = a.add_item_defined_transformation(
             "",

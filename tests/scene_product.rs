@@ -276,6 +276,72 @@ fn reads_occurrence_placement_transform() {
     );
 }
 
+/// A placement whose axis is X and whose reference direction is omitted takes
+/// STEP's default for that case, Y, so its transform has a matrix.
+#[test]
+fn an_x_axis_placement_without_a_reference_direction_takes_y() {
+    let assembly = ASSEMBLY.replace(
+        "#55=AXIS2_PLACEMENT_3D('',#52,#53,#54);",
+        "#55=AXIS2_PLACEMENT_3D('',#52,#54,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let t = asm
+        .occurrences()
+        .next()
+        .and_then(|o| o.transform())
+        .expect("a placement transform");
+    assert!(approx(t.to.axis, [1.0, 0.0, 0.0]));
+    assert!(approx(t.to.ref_direction, [0.0, 1.0, 0.0]));
+    assert!(t.matrix().is_some());
+}
+
+/// A transform whose placement has an axis off X by floating-point noise and
+/// no reference direction keeps STEP's `[1, 0, 0]`, which projects to the
+/// noise's side; the matrix comes out.
+#[test]
+fn a_noisy_x_axis_placement_has_a_matrix() {
+    let assembly = ASSEMBLY.replace(
+        "#55=AXIS2_PLACEMENT_3D('',#52,#53,#54);",
+        "#55=AXIS2_PLACEMENT_3D('',#52,#95,$);\n#95=DIRECTION('',(-1.,-6.12323399574E-17,-0.));",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let t = asm
+        .occurrences()
+        .next()
+        .and_then(|o| o.transform())
+        .expect("a placement transform");
+    assert!(approx(t.to.ref_direction, [1.0, 0.0, 0.0]));
+    let m = t.matrix().expect("a matrix");
+    // `from` is the identity, so the first column is the `to` frame's x.
+    assert!(approx([m[0][0], m[1][0], m[2][0]], [0.0, -1.0, 0.0]));
+}
+
+/// An exact X axis that is not of unit length takes STEP's Y default too.
+#[test]
+fn a_long_x_axis_placement_takes_y() {
+    let assembly = ASSEMBLY.replace(
+        "#55=AXIS2_PLACEMENT_3D('',#52,#53,#54);",
+        "#55=AXIS2_PLACEMENT_3D('',#52,#95,$);\n#95=DIRECTION('',(49.,0.,0.));",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let t = asm
+        .occurrences()
+        .next()
+        .and_then(|o| o.transform())
+        .expect("a placement transform");
+    assert!(approx(t.to.ref_direction, [0.0, 1.0, 0.0]));
+    assert!(t.matrix().is_some());
+}
+
 /// A one-level assembly whose part is placed at (10,20,30), turned 90° about z.
 /// `#41` is the assembly's representation, `#51` the part's; `#55` is the
 /// turned frame and `#57` the identity. `links` holds the definitions'
@@ -747,4 +813,123 @@ fn root_definitions_exclude_assembly_children() {
     let roots: Vec<_> = scene.root_definitions().collect();
     assert_eq!(roots.len(), 1);
     assert_eq!(roots[0].product().expect("product").name(), "Assembly");
+}
+
+/// A placement whose transformation is not an `ITEM_DEFINED_TRANSFORMATION`
+/// cannot be followed; the occurrence says so.
+#[test]
+fn a_functionally_defined_placement_is_reported() {
+    let rel = PART_FIRST.replace(
+        "#58=ITEM_DEFINED_TRANSFORMATION('','',#57,#55);",
+        "#58=FUNCTIONALLY_DEFINED_TRANSFORMATION('','');",
+    );
+    let src = turned_placement(BOTH_LINKED, &rel);
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let occ = asm.occurrences().next().expect("one occurrence");
+    assert!(occ.transform().is_none());
+    let warnings = scene.warnings();
+    assert!(
+        warnings.iter().any(|w| w.entity == Some(occ.key())
+            && w.message.contains("FUNCTIONALLY_DEFINED_TRANSFORMATION")),
+        "{warnings:?}"
+    );
+}
+
+/// AP242 edition 4 may name the component through a
+/// `PRODUCT_DEFINITION_OCCURRENCE` of its definition: the tree, the roots and
+/// the placement read the same as when the usage names the definition itself.
+#[test]
+fn an_assembly_through_a_product_definition_occurrence_reads_the_same() {
+    let assembly = ASSEMBLY.replace(
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);",
+        "#29=PRODUCT_DEFINITION_OCCURRENCE('occ-1',$,$,#22,$);\n\
+         #30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#29,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+
+    let roots: Vec<_> = scene
+        .root_definitions()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(roots, ["Assembly"]);
+    let asm = def_for_product(&scene, "Assembly");
+    let children: Vec<_> = asm
+        .children()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(children, ["Part"]);
+    let part = def_for_product(&scene, "Part");
+    let parents: Vec<_> = part
+        .parents()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(parents, ["Assembly"]);
+    let t = asm
+        .occurrences()
+        .next()
+        .and_then(|o| o.transform())
+        .expect("a placement transform");
+    assert!(approx(t.to.origin, [10.0, 20.0, 30.0]));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// A usage with the same definition at both ends lists that definition once
+/// as its own child and once as its own parent.
+#[test]
+fn a_definition_used_in_itself_is_listed_once() {
+    let assembly = ASSEMBLY.replace(
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);",
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-asm','',#12,#12,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let names = |defs: Vec<ProductDef<'_>>| -> Vec<String> {
+        defs.iter()
+            .filter_map(|d| d.product().map(|p| p.name().to_owned()))
+            .collect()
+    };
+    assert_eq!(names(asm.children().collect()), ["Assembly"]);
+    assert_eq!(names(asm.parents().collect()), ["Assembly"]);
+    assert_eq!(asm.occurrences().count(), 1);
+}
+
+/// The assembly end of a usage may also be a `PRODUCT_DEFINITION_OCCURRENCE`.
+#[test]
+fn an_assembly_named_through_a_product_definition_occurrence_has_its_children() {
+    let assembly = ASSEMBLY.replace(
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);",
+        "#29=PRODUCT_DEFINITION_OCCURRENCE('occ-asm',$,$,#12,$);\n\
+         #30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#29,#22,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let roots: Vec<_> = scene
+        .root_definitions()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(roots, ["Assembly"]);
+    let asm = def_for_product(&scene, "Assembly");
+    let children: Vec<_> = asm
+        .children()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(children, ["Part"]);
+    let part = def_for_product(&scene, "Part");
+    let parents: Vec<_> = part
+        .parents()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(parents, ["Assembly"]);
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }

@@ -3,6 +3,7 @@
 //! unsupported kinds return `None`. Curves are reached through anchored
 //! `EDGE_CURVE`s (there is no standalone curve enumerator).
 
+use step_io::model::{BSplineCurveId, EntityKey};
 use step_io::read;
 use step_io::scene::{Curve, CurveKind};
 use step_io::scene::{NurbsCurve, Scene};
@@ -335,6 +336,39 @@ fn unsupported_curve_returns_none() {
         "unsupported kind is silent: {:?}",
         scene.warnings()
     );
+}
+
+/// A bare `B_SPLINE_CURVE` or `B_SPLINE_SURFACE` has no knots: no NURBS, and
+/// a warning that says so.
+#[test]
+fn a_bare_bspline_has_no_knots_to_convert() {
+    let curves = CURVES
+        .replace(
+            "#15=B_SPLINE_CURVE_WITH_KNOTS('',1,(#12,#13,#14),.UNSPECIFIED.,.F.,.F.,(2,1,2),(0.,1.,2.),.UNSPECIFIED.);",
+            "#15=B_SPLINE_CURVE('',1,(#12,#13,#14),.UNSPECIFIED.,.F.,.F.);",
+        )
+        .replace(
+            "#47=PLANE('',#5);",
+            "#47=B_SPLINE_SURFACE('',1,1,((#12,#13),(#14,#1)),.UNSPECIFIED.,.F.,.F.,.F.);",
+        );
+    let src = format!("{HEADER}{curves}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let curve = find(&scene, |c| {
+        c.key() == EntityKey::BSplineCurve(BSplineCurveId(0))
+    });
+    assert!(curve.to_nurbs().is_none());
+    let surface = scene.all_faces().next().expect("the face").surface();
+    assert!(surface.to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 2, "{warnings:?}");
+    for (w, kw) in warnings.iter().zip(["B_SPLINE_CURVE", "B_SPLINE_SURFACE"]) {
+        assert_eq!(
+            w.message,
+            format!("{kw}.to_nurbs: a bare {kw} has no knots to convert")
+        );
+    }
 }
 
 // The uniform-knot family — subtypes that store no knots (a standard rule
@@ -821,6 +855,127 @@ const EDGES: &str = "\
 #58=ADVANCED_FACE('',(#57),#5,.T.);\n\
 #59=CLOSED_SHELL('',(#58));\n\
 #60=MANIFOLD_SOLID_BREP('',#59);\n";
+
+/// A circle on a 2D placement has no 3D frame; converting it says why.
+#[test]
+fn a_circle_on_a_2d_placement_is_reported() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#92,1.0);")
+        + "#92=AXIS2_PLACEMENT_2D('',#93,$);\n#93=CARTESIAN_POINT('',(0.,0.));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    assert!(circle.to_nurbs().is_none());
+    assert!(
+        scene
+            .warnings()
+            .iter()
+            .any(|w| w.entity == Some(circle.key()) && w.message.contains("AXIS2_PLACEMENT_2D")),
+        "{:?}",
+        scene.warnings()
+    );
+}
+
+/// A placement whose axis is X and whose reference direction is omitted takes
+/// STEP's default for that case, Y, so a circle on it still converts.
+#[test]
+fn an_x_axis_placement_without_a_reference_direction_takes_y() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+        + "#90=AXIS2_PLACEMENT_3D('',#1,#91,$);\n#91=DIRECTION('',(2.,0.,0.));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    let nurbs = circle.to_nurbs().expect("the circle converts");
+    assert!(approx(&nurbs.control_points[0], &[0., 1., 0.]));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// An axis off X by floating-point noise alone, as NIST's test files write
+/// it, still takes STEP's `[1, 0, 0]` as the reference direction; projected
+/// from the values as written it keeps the noise's direction, so the frame
+/// comes out (from an axis of any length) instead of degenerating.
+#[test]
+fn a_noisy_x_axis_projects_the_default_reference_direction() {
+    for (axis, x) in [
+        ("(-1.,-6.12323399574E-17,-0.)", [0., -1., 0.]),
+        ("(-1.,6.12323399574E-17,0.)", [0., 1., 0.]),
+        ("(1.,-0.,3.99680288865E-16)", [0., 0., -1.]),
+        ("(-49.,-3.E-15,0.)", [0., -1., 0.]),
+    ] {
+        let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+            + &format!("#90=AXIS2_PLACEMENT_3D('',#1,#91,$);\n#91=DIRECTION('',{axis});\n");
+        let src = format!("{HEADER}{edges}{FOOTER}");
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+        let nurbs = circle.to_nurbs().expect("the circle converts");
+        assert!(approx(&nurbs.control_points[0], &x), "{axis}");
+        assert!(
+            scene.warnings().is_empty(),
+            "{axis}: {:?}",
+            scene.warnings()
+        );
+    }
+}
+
+/// A very long axis does not overflow the frame: the circle's quarter point
+/// lies on its y axis, not at its centre.
+#[test]
+fn a_long_axis_keeps_its_frame() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+        + "#90=AXIS2_PLACEMENT_3D('',#1,#91,$);\n#91=DIRECTION('',(0.,0.,1.E200));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    let nurbs = circle.to_nurbs().expect("the circle converts");
+    assert!(approx(&nurbs.control_points[0], &[1., 0., 0.]));
+    assert!(approx(&nurbs.control_points[2], &[0., 1., 0.]));
+}
+
+/// A reference direction written the same as the axis is parallel to it: the
+/// placement is degenerate, and the conversion says so.
+#[test]
+fn a_reference_direction_along_the_axis_is_degenerate() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+        + "#90=AXIS2_PLACEMENT_3D('',#1,#91,#91);\n#91=DIRECTION('',(0.6,0.8,0.));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    assert!(circle.to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "{warnings:?}");
+    assert!(
+        warnings[0]
+            .message
+            .contains("AXIS2_PLACEMENT_3D is degenerate")
+    );
+}
+
+/// A closed edge against its curve's direction (`same_sense` false) gives the
+/// whole circle the other way round, still from the curve's origin.
+#[test]
+fn a_closed_edge_against_its_curve_runs_backwards() {
+    for (sense, second) in [(".T.", [1., 1., 0.]), (".F.", [1., -1., 0.])] {
+        let edges = EDGES.replace(
+            "#43=EDGE_CURVE('',#22,#22,#8,.T.);",
+            &format!("#43=EDGE_CURVE('',#22,#22,#8,{sense});"),
+        );
+        let src = format!("{HEADER}{edges}{FOOTER}");
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let full = scene
+            .all_edges()
+            .filter_map(|e| e.to_nurbs())
+            .find(|n| n.degree == 2 && n.control_points.len() == 9)
+            .expect("full circle");
+        assert!(approx(&full.control_points[0], &[1., 0., 0.]), "{sense}");
+        assert!(approx(&full.control_points[8], &[1., 0., 0.]), "{sense}");
+        assert!(approx(&full.control_points[1], &second), "{sense}");
+    }
+}
 
 #[test]
 fn edges_convert_to_bounded_nurbs() {

@@ -88,7 +88,8 @@ pub struct Mesh<'m> {
 }
 
 /// The normals of a [`Mesh`], as the file stores them: absent, one normal for
-/// the whole mesh, or one per vertex (parallel to [`Mesh::points`]).
+/// the whole mesh, or one per vertex (parallel to [`Mesh::points`] when its
+/// points are readable).
 #[derive(Clone, Debug, PartialEq)]
 pub enum MeshNormals {
     None,
@@ -195,8 +196,8 @@ impl<'m> Mesh<'m> {
         crate::scene::presentation::is_visible(self.cx, self.key())
     }
 
-    /// A mesh reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item (used
-    /// by `pmi` feature geometry); `None` for an item that is not a mesh.
+    /// A mesh a feature's usage identifies (used by `pmi` feature geometry);
+    /// `None` for an item that is not a mesh.
     pub(crate) fn from_model_item(cx: Ctx<'m>, r: &m::GeometricModelItemRef) -> Option<Self> {
         let which = match r {
             m::GeometricModelItemRef::ComplexTriangulatedFace(i) => MeshImpl::ComplexFace(*i),
@@ -210,27 +211,61 @@ impl<'m> Mesh<'m> {
     }
 
     /// The vertex positions, `pnindex` resolved: entry `n` is the position of
-    /// the vertex that [`Mesh::triangles`] refers to as `n` (0-based).
+    /// the vertex that [`Mesh::triangles`] refers to as `n` (0-based). A
+    /// `pnindex` entry outside the coordinate list is reported via
+    /// [`Scene::warnings`](crate::scene::Scene::warnings), and the mesh then
+    /// gives no points.
     pub fn points(&self) -> Vec<[f64; 3]> {
+        self.about().read_points().unwrap_or_default()
+    }
+
+    /// [`Mesh::points`], `None` (and reported) when they cannot be read.
+    fn read_points(&self) -> Option<Vec<[f64; 3]>> {
         let (_, coords, _, pnindex, ..) = self.parts();
-        let m::CoordinatesListRef::CoordinatesList(id) = coords;
-        let all = &self
-            .cx
-            .model
-            .coordinates_list_arena
-            .get(id.0)
-            .position_coords;
+        let model = self.cx.model;
+        let all: &[m::Reals3] = match coords {
+            m::CoordinatesListRef::CoordinatesList(id) => {
+                &model.coordinates_list_arena.get(id.0).position_coords
+            }
+            m::CoordinatesListRef::Complex(cuid) => {
+                let Some(all) = model
+                    .complex_entity_arena
+                    .get(cuid.0)
+                    .parts
+                    .iter()
+                    .find_map(|p| match p {
+                        m::PartialEntity::CoordinatesList {
+                            position_coords, ..
+                        } => Some(position_coords),
+                        _ => None,
+                    })
+                else {
+                    self.cx.warn(
+                        "mesh coordinates are a complex instance without a coordinate list"
+                            .to_owned(),
+                    );
+                    return None;
+                };
+                all
+            }
+        };
         if pnindex.is_empty() {
-            all.iter().map(|row| row3(row)).collect()
-        } else {
-            pnindex
-                .iter()
-                .filter_map(|&i| {
-                    let idx = usize::try_from(i).ok()?.checked_sub(1)?;
-                    all.get(idx).map(|row| row3(row))
-                })
-                .collect()
+            return Some(all.iter().map(|row| row3(row)).collect());
         }
+        // Dropping a bad entry would shift every later vertex, so a bad entry
+        // leaves the mesh without points.
+        let points: Option<Vec<[f64; 3]>> = pnindex
+            .iter()
+            .map(|&i| {
+                let idx = usize::try_from(i).ok()?.checked_sub(1)?;
+                all.get(idx).map(|row| row3(row))
+            })
+            .collect();
+        if points.is_none() {
+            self.cx
+                .warn("MESH.points: point index out of range".to_owned());
+        }
+        points
     }
 
     /// The triangles as 0-based indices into [`Mesh::points`], expanded from
@@ -238,11 +273,15 @@ impl<'m> Mesh<'m> {
     /// only the emission order differs). Degenerate entries (repeated
     /// indices) are skipped per the encoding; an out-of-range index skips the
     /// triangle with a warning. A plain `TESSELLATED_FACE` stores no
-    /// triangles, so its list is empty.
+    /// triangles, so its list is empty, and points that cannot be read leave
+    /// no triangles.
     pub fn triangles(&self) -> Vec<[usize; 3]> {
         let this = self.about();
         let (_, _, _, _, strips, fans) = this.parts();
-        let n = this.points().len();
+        let Some(points) = this.read_points() else {
+            return Vec::new();
+        };
+        let n = points.len();
         let cx = this.cx;
         let mut out = Vec::new();
         let mut push = |a: i64, b: i64, c: i64| {
@@ -288,14 +327,20 @@ impl<'m> Mesh<'m> {
     }
 
     /// The normals, as stored: none, one for the whole mesh, or one per
-    /// vertex. Any other count is malformed and reported as a warning.
+    /// vertex (one per `pnindex` entry, or per coordinate when there is no
+    /// `pnindex`). Any other count is malformed and reported as a warning.
     pub fn normals(&self) -> MeshNormals {
         let this = self.about();
-        let (_, _, normals, ..) = this.parts();
+        let (_, _, normals, pnindex, ..) = this.parts();
+        let vertices = if pnindex.is_empty() {
+            this.points().len()
+        } else {
+            pnindex.len()
+        };
         match normals.len() {
             0 => MeshNormals::None,
             1 => MeshNormals::Uniform(row3(&normals[0])),
-            k if k == this.points().len() => {
+            k if k == vertices => {
                 MeshNormals::PerVertex(normals.iter().map(|row| row3(row)).collect())
             }
             _ => {
@@ -309,15 +354,16 @@ impl<'m> Mesh<'m> {
     /// The precise b-rep face this mesh tessellates, where the file links one
     /// (`geometric_link`); surface links and surface sets have no face.
     pub fn face(&self) -> Option<Face<'m>> {
-        let link = match self.which {
-            MeshImpl::ComplexFace(i) => self
+        let this = self.about();
+        let link = match this.which {
+            MeshImpl::ComplexFace(i) => this
                 .cx
                 .model
                 .complex_triangulated_face_arena
                 .get(i.0)
                 .geometric_link
                 .as_ref(),
-            MeshImpl::PlainFace(i) => self
+            MeshImpl::PlainFace(i) => this
                 .cx
                 .model
                 .tessellated_face_arena
@@ -326,9 +372,28 @@ impl<'m> Mesh<'m> {
                 .as_ref(),
             MeshImpl::ComplexSurfaceSet(_) => None,
         }?;
+        let cx = this.cx;
         match link {
-            m::FaceOrSurfaceRef::AdvancedFace(id) => Some(Face::from_advanced_face(self.cx, *id)),
-            m::FaceOrSurfaceRef::FaceSurface(id) => Some(Face::from_face_surface(self.cx, *id)),
+            m::FaceOrSurfaceRef::AdvancedFace(id) => Some(Face::from_advanced_face(cx, *id)),
+            m::FaceOrSurfaceRef::FaceSurface(id) => Some(Face::from_face_surface(cx, *id)),
+            m::FaceOrSurfaceRef::Face(_) => {
+                cx.warn("mesh geometric_link is a bare FACE with no surface; not read".to_owned());
+                None
+            }
+            // A complex surface (a rational B-spline) is a surface link.
+            m::FaceOrSurfaceRef::Complex(cuid)
+                if !cx
+                    .model
+                    .complex_entity_arena
+                    .get(cuid.0)
+                    .parts
+                    .iter()
+                    .any(|p| matches!(p, m::PartialEntity::Surface)) =>
+            {
+                cx.warn("mesh geometric_link is a complex instance; not read".to_owned());
+                None
+            }
+            // A surface link: the mesh tessellates a surface, not a face.
             _ => None,
         }
     }
@@ -408,14 +473,22 @@ impl<'m> MeshGroup<'m> {
 
     /// The mesh faces bundled in this group.
     pub fn meshes(&self) -> impl Iterator<Item = Mesh<'m>> + 'm {
-        let cx = self.cx;
-        self.items().iter().filter_map(move |it| {
+        let this = self.about();
+        let cx = this.cx;
+        this.items().iter().filter_map(move |it| {
             let which = match it {
                 m::TessellatedStructuredItemRef::ComplexTriangulatedFace(id) => {
                     MeshImpl::ComplexFace(*id)
                 }
                 m::TessellatedStructuredItemRef::TessellatedFace(id) => MeshImpl::PlainFace(*id),
-                _ => return None,
+                m::TessellatedStructuredItemRef::TessellatedStructuredItem(_) => {
+                    cx.warn("a bare TESSELLATED_STRUCTURED_ITEM has no mesh; not read".to_owned());
+                    return None;
+                }
+                m::TessellatedStructuredItemRef::Complex(_) => {
+                    cx.warn("mesh group item is a complex instance; not read".to_owned());
+                    return None;
+                }
             };
             Some(Mesh { cx, which })
         })
@@ -423,11 +496,13 @@ impl<'m> MeshGroup<'m> {
 
     /// The precise b-rep solid this group tessellates, where the file links
     /// one: a tessellated solid links it directly (`geometric_link`); a
-    /// tessellated shell links the closed shell (`topological_link`), reached
-    /// back through the solid it bounds — as its outer shell or a cavity.
+    /// tessellated shell links the closed shell (`topological_link`), directly
+    /// or through an `ORIENTED_CLOSED_SHELL`, reached back through the solid it
+    /// bounds — as its outer shell or a cavity. An open shell bounds no solid.
     pub fn solid(&self) -> Option<Solid<'m>> {
-        let cx = self.cx;
-        match self.which {
+        let this = self.about();
+        let cx = this.cx;
+        match this.which {
             GroupImpl::Solid(i) => {
                 let link = cx
                     .model
@@ -440,7 +515,10 @@ impl<'m> MeshGroup<'m> {
                     m::ManifoldSolidBrepRef::BrepWithVoids(id) => {
                         Some(Solid::from_void_id(cx, *id))
                     }
-                    m::ManifoldSolidBrepRef::Complex(_) => None,
+                    m::ManifoldSolidBrepRef::Complex(_) => {
+                        cx.warn("mesh group's solid is a complex instance; not read".to_owned());
+                        None
+                    }
                 }
             }
             GroupImpl::Shell(i) => {
@@ -450,10 +528,24 @@ impl<'m> MeshGroup<'m> {
                     .get(i.0)
                     .topological_link
                     .as_ref()?;
-                let m::ConnectedFaceSetRef::ClosedShell(shell_id) = link else {
-                    return None;
-                };
-                Solid::of_closed_shell(cx, *shell_id)
+                match link {
+                    m::ConnectedFaceSetRef::ClosedShell(shell_id) => {
+                        Solid::of_closed_shell(cx, *shell_id)
+                    }
+                    m::ConnectedFaceSetRef::OrientedClosedShell(i) => {
+                        let ocs = cx.model.oriented_closed_shell_arena.get(i.0);
+                        let (shell_id, _) =
+                            crate::scene::geometry::resolve_oriented_closed_shell(cx, ocs)?;
+                        Solid::of_closed_shell(cx, shell_id)
+                    }
+                    m::ConnectedFaceSetRef::Complex(_) => {
+                        cx.warn("mesh group's shell is a complex instance; not read".to_owned());
+                        None
+                    }
+                    // An open shell or a bare face set bounds no solid.
+                    m::ConnectedFaceSetRef::OpenShell(_)
+                    | m::ConnectedFaceSetRef::ConnectedFaceSet(_) => None,
+                }
             }
         }
     }

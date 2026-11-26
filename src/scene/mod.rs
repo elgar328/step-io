@@ -38,7 +38,13 @@
 //! - **PMI** — the [`Dimension`]s, [`Tolerance`]s and [`Datum`]s of a shape,
 //!   and the [`Feature`] each applies to.
 //! - **presentation** — `.color()` (an [`Rgb`]), `.transparency()`,
-//!   `.layer()` and `.is_visible()` on the geometry handles.
+//!   `.layer()` and `.is_visible()` on the geometry handles, read from the
+//!   `STYLED_ITEM`s that style the shape — its annotation subtypes included,
+//!   for PMI geometry. Where an `OVER_RIDING_STYLED_ITEM` overrides another on
+//!   the same shape, its styles apply (all of them, whatever kind of style
+//!   each carries); a layer or an `INVISIBILITY` on either still counts. A
+//!   `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` applies only within its
+//!   assembly context, so these context-free accessors leave it out.
 //! - **units** — [`Scene::units`]: the length and angle [`Unit`]s, each with
 //!   a [`to_si`](Unit::to_si) factor to metres or radians.
 //!
@@ -221,8 +227,8 @@ pub struct SceneWarning {
     /// or a handle that method went on to consult (a dimension's features
     /// walked for a part's dimensions, say).
     pub entity: Option<EntityKey>,
-    /// What went wrong, starting with the entity type it concerns where that
-    /// is not the handle's own (`TRIMMED_CURVE.to_nurbs: …`).
+    /// What went wrong, in prose; many messages start with the STEP entity
+    /// and the step it arose in (`TRIMMED_CURVE.to_nurbs: …`).
     pub message: String,
 }
 
@@ -260,7 +266,7 @@ impl<'a> Ctx<'a> {
 
     /// The model's units, resolved on first use.
     pub(crate) fn units(&self) -> &'a Units {
-        self.units.get_or_init(|| units::units_of(self.model))
+        self.units.get_or_init(|| units::units_of(*self))
     }
 
     /// The factor taking a plane angle in the model's unit to radians (1 when
@@ -276,6 +282,12 @@ impl<'a> Ctx<'a> {
             subject: Some(key),
             ..self
         }
+    }
+
+    /// The STEP keyword of `key` for a warning message, `COMPLEX` for a
+    /// complex instance.
+    pub(crate) fn keyword(key: EntityKey) -> &'static str {
+        key.keyword().unwrap_or("COMPLEX")
     }
 
     /// Record a navigation anomaly (something a handle could not resolve into

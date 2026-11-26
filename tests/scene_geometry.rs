@@ -33,8 +33,8 @@ const BREP: &str = "\
 #26=CLOSED_SHELL('',(#25));\n\
 #27=MANIFOLD_SOLID_BREP('',#26);\n";
 
-// A presentation colour styled onto face #25, anchored in an MDGPR so settling
-// keeps it. Appended after BREP.
+// A presentation colour styled onto face #25, in an MDGPR. Appended after
+// BREP.
 const COLOUR: &str = "\
 #30=REPRESENTATION_CONTEXT('','3D');\n\
 #31=COLOUR_RGB('',0.8,0.2,0.1);\n\
@@ -46,6 +46,55 @@ const COLOUR: &str = "\
 #37=PRESENTATION_STYLE_ASSIGNMENT((#36));\n\
 #38=STYLED_ITEM('',(#37),#25);\n\
 #39=MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION('',(#38),#30);\n";
+
+/// AP242 edition 4 lets a styled item style a set of items: the colour
+/// reaches each of them, and the set reads and writes back whole.
+#[test]
+fn reads_a_colour_styled_onto_a_set_of_items() {
+    let colour = COLOUR.replace(
+        "#38=STYLED_ITEM('',(#37),#25);",
+        "#38=STYLED_ITEM('',(#37),SET_REPRESENTATION_ITEM((#25,#16)));",
+    );
+    let src = format!("{HEADER}{BREP}{colour}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let face = scene.all_faces().next().expect("a face");
+    let c = face.color().expect("the face is coloured through the set");
+    assert!((c.red - 0.8).abs() < 1e-9, "colour = {c:?}");
+
+    // The styled item's `item` resolves to the set's elements.
+    let (_, styled) = model
+        .all::<step_io::model::StyledItem>()
+        .next()
+        .expect("a styled item");
+    let step_io::model::StyledItemTargetOrRepresentationItemRefView::SetRepresentationItem(
+        elements,
+    ) = styled.item.resolve(&model)
+    else {
+        panic!("expected a set of items");
+    };
+    assert_eq!(elements.len(), 2);
+
+    let mut out = Vec::new();
+    step_io::write(&model, &mut out).expect("write");
+    let text = String::from_utf8(out).expect("utf-8");
+    assert!(
+        text.contains("SET_REPRESENTATION_ITEM((#"),
+        "the set is written as a typed aggregate: {text}"
+    );
+    let (again, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    assert!(
+        again
+            .scene()
+            .all_faces()
+            .next()
+            .expect("a face")
+            .color()
+            .is_some()
+    );
+}
 
 #[test]
 fn reads_face_colour() {
@@ -275,6 +324,34 @@ fn reads_edge_and_point_styles() {
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 
+/// A point written as a complex instance (AP242 edition 4 lets
+/// `CARTESIAN_POINT` combine) places the circle through its coordinates.
+#[test]
+fn a_complex_point_places_a_circle() {
+    let brep = BREP
+        .replace(
+            "#10=CARTESIAN_POINT('',(0.0,0.0,0.0));",
+            "#10=(CARTESIAN_POINT((0.0,0.0,5.0))GEOMETRIC_REPRESENTATION_ITEM()POINT()\
+             REPRESENTATION_ITEM(''));",
+        )
+        .replace("#18=LINE('',#10,#17);", "#18=CIRCLE('',#15,1.0);");
+    let src = format!("{HEADER}{brep}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("an edge");
+    let circle = edge.curve().to_nurbs().expect("a circle converts");
+    assert!(
+        circle
+            .control_points
+            .iter()
+            .all(|p| (p[2] - 5.0).abs() < 1e-12),
+        "{:?}",
+        circle.control_points
+    );
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 #[test]
 fn navigates_brep_solid_down_to_point_coords() {
     let src = format!("{HEADER}{BREP}{FOOTER}");
@@ -468,4 +545,175 @@ fn bounds_expose_the_orientation_layers() {
         "warnings: {:?}",
         scene.warnings()
     );
+}
+
+/// A shell face that is a bare `FACE` has no surface: the shell leaves it out
+/// and says so, naming the shell.
+#[test]
+fn a_bare_face_in_a_shell_is_reported() {
+    let brep = BREP.replace(
+        "#26=CLOSED_SHELL('',(#25));",
+        "#28=FACE('',(#24));\n#26=CLOSED_SHELL('',(#25,#28));",
+    );
+    let src = format!("{HEADER}{brep}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let solid = scene.all_solids().next().expect("a solid");
+    let (shell, _) = solid.outer().expect("the outer shell");
+    assert_eq!(shell.faces().count(), 1, "only the advanced face");
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "{warnings:?}");
+    assert_eq!(warnings[0].entity, Some(shell.key()));
+    assert!(warnings[0].message.contains("bare FACE"));
+}
+
+/// A bare `PRE_DEFINED_COLOUR` names its colour the way a draughting one does.
+#[test]
+fn reads_a_pre_defined_colour() {
+    let colour = COLOUR.replace(
+        "#31=COLOUR_RGB('',0.8,0.2,0.1);",
+        "#31=PRE_DEFINED_COLOUR('blue');",
+    );
+    let src = format!("{HEADER}{BREP}{colour}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let c = scene.all_faces().next().expect("a face").color();
+    assert_eq!(
+        c,
+        Some(step_io::scene::Rgb {
+            red: 0.0,
+            green: 0.0,
+            blue: 1.0
+        })
+    );
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// A vertex whose point is a complex instance with a `CARTESIAN_POINT` part
+/// reads its coordinates, and the point is one of `Scene::all_points`.
+#[test]
+fn a_vertex_reads_a_complex_point() {
+    let brep = BREP.replace(
+        "#10=CARTESIAN_POINT('',(0.0,0.0,0.0));",
+        "#10=(CARTESIAN_POINT((0.0,0.0,5.0))GEOMETRIC_REPRESENTATION_ITEM()POINT()\
+         REPRESENTATION_ITEM(''));",
+    );
+    let src = format!("{HEADER}{brep}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("an edge");
+    let point = edge
+        .start()
+        .and_then(|v| v.point())
+        .expect("the start point");
+    assert_eq!(point.xyz(), [0.0, 0.0, 5.0]);
+    assert!(scene.all_points().any(|p| p.key() == point.key()));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// A PMI annotation's curve is styled by an `ANNOTATION_CURVE_OCCURRENCE`, a
+/// subtype of `STYLED_ITEM`: the curve reads its style and layer.
+#[test]
+fn reads_a_curve_styled_by_an_annotation_occurrence() {
+    let style = CURVE_STYLE.replace(
+        "#35=STYLED_ITEM('',(#34),#18);",
+        "#35=ANNOTATION_CURVE_OCCURRENCE('',(#34),#18);\n\
+         #37=PRESENTATION_LAYER_ASSIGNMENT('pmi','',(#35));",
+    );
+    let src = format!("{HEADER}{BREP}{style}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let curve = scene.all_edges().next().expect("an edge").curve();
+    let c = curve.color().expect("the curve is coloured");
+    assert!((c.red - 0.1).abs() < 1e-9, "colour = {c:?}");
+    assert_eq!(curve.width(), Some(0.5));
+    assert_eq!(curve.layer(), Some("pmi"));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// An `OVER_RIDING_STYLED_ITEM` on a face beats the styled item it
+/// overrides; a context-dependent one applies only in its assembly context,
+/// so alone it leaves the face's own colour.
+#[test]
+fn an_over_riding_styled_item_wins_and_a_context_dependent_one_does_not() {
+    let blue = "#40=COLOUR_RGB('',0.0,0.0,1.0);\n\
+                #41=FILL_AREA_STYLE_COLOUR('',#40);\n\
+                #42=FILL_AREA_STYLE('',(#41));\n\
+                #43=SURFACE_STYLE_FILL_AREA(#42);\n\
+                #44=SURFACE_SIDE_STYLE('',(#43));\n\
+                #45=SURFACE_STYLE_USAGE(.BOTH.,#44);\n\
+                #46=PRESENTATION_STYLE_ASSIGNMENT((#45));\n";
+    let face_colour = |extra: &str| {
+        let src = format!("{HEADER}{BREP}{COLOUR}{blue}{extra}{FOOTER}");
+        let (model, rep) = read(src.as_bytes()).expect("read");
+        assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+        let scene = model.scene();
+        let c = scene.all_faces().next().expect("a face").color();
+        assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+        c.expect("a colour")
+    };
+    let c = face_colour("#47=OVER_RIDING_STYLED_ITEM('',(#46),#25,#38);\n");
+    assert_eq!((c.red, c.blue), (0.0, 1.0), "the override wins");
+    let c = face_colour("#47=CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM('',(#46),#25,#38,(#27));\n");
+    assert!((c.red - 0.8).abs() < 1e-9, "the face's own colour: {c:?}");
+}
+
+/// An override whose style has no surface colour still hides the colour it
+/// overrides: the face has none.
+#[test]
+fn an_over_riding_styled_item_without_a_colour_hides_the_one_it_overrides() {
+    let curve_style = "#40=COLOUR_RGB('',0.0,0.0,1.0);\n\
+                       #41=DRAUGHTING_PRE_DEFINED_CURVE_FONT('continuous');\n\
+                       #42=CURVE_STYLE('cs',#41,POSITIVE_LENGTH_MEASURE(0.5),#40);\n\
+                       #43=PRESENTATION_STYLE_ASSIGNMENT((#42));\n\
+                       #47=OVER_RIDING_STYLED_ITEM('',(#43),#25,#38);\n";
+    let src = format!("{HEADER}{BREP}{COLOUR}{curve_style}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    assert_eq!(scene.all_faces().next().expect("a face").color(), None);
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// Styled items that override each other in a cycle are reported; the
+/// overrides inside the cycle are set aside, so its items beat the plain
+/// styled item on the face, the first of them giving the colour.
+#[test]
+fn styled_items_overriding_each_other_in_a_cycle_are_reported() {
+    let blue_green = "#40=COLOUR_RGB('',0.0,0.0,1.0);\n\
+                      #41=FILL_AREA_STYLE_COLOUR('',#40);\n\
+                      #42=FILL_AREA_STYLE('',(#41));\n\
+                      #43=SURFACE_STYLE_FILL_AREA(#42);\n\
+                      #44=SURFACE_SIDE_STYLE('',(#43));\n\
+                      #45=SURFACE_STYLE_USAGE(.BOTH.,#44);\n\
+                      #46=PRESENTATION_STYLE_ASSIGNMENT((#45));\n\
+                      #50=COLOUR_RGB('',0.0,1.0,0.0);\n\
+                      #51=FILL_AREA_STYLE_COLOUR('',#50);\n\
+                      #52=FILL_AREA_STYLE('',(#51));\n\
+                      #53=SURFACE_STYLE_FILL_AREA(#52);\n\
+                      #54=SURFACE_SIDE_STYLE('',(#53));\n\
+                      #55=SURFACE_STYLE_USAGE(.BOTH.,#54);\n\
+                      #56=PRESENTATION_STYLE_ASSIGNMENT((#55));\n";
+    let face_colour = |extra: &str| {
+        let src = format!("{HEADER}{BREP}{COLOUR}{blue_green}{extra}{FOOTER}");
+        let (model, rep) = read(src.as_bytes()).expect("read");
+        assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+        let scene = model.scene();
+        let c = scene.all_faces().next().expect("a face").color();
+        let warnings = scene.warnings();
+        assert_eq!(warnings.len(), 1, "{warnings:?}");
+        assert!(warnings[0].message.contains("cycle"), "{warnings:?}");
+        c.expect("a colour")
+    };
+    let c = face_colour(
+        "#47=OVER_RIDING_STYLED_ITEM('',(#46),#25,#48);\n\
+         #48=OVER_RIDING_STYLED_ITEM('',(#56),#25,#47);\n",
+    );
+    assert_eq!((c.red, c.green, c.blue), (0.0, 0.0, 1.0), "{c:?}");
+    let c = face_colour("#47=OVER_RIDING_STYLED_ITEM('',(#46),#25,#47);\n");
+    assert_eq!((c.red, c.green, c.blue), (0.0, 0.0, 1.0), "{c:?}");
 }

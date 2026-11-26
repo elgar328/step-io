@@ -157,3 +157,52 @@ fn mapped_instance_with_2d_target_warns() {
     assert_eq!(scene.warnings().len(), 1);
     assert!(scene.warnings()[0].message.contains("AXIS2_PLACEMENT_3D"));
 }
+
+/// A mapped item's source representation bridged to the one holding the
+/// solid by a plain `SHAPE_REPRESENTATION_RELATIONSHIP` stamps that solid, as
+/// a part's does. A relationship a `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION`
+/// uses relates a component to its assembly and is not crossed.
+#[test]
+fn a_mapped_item_reaches_a_bridged_solid_but_not_its_assembly() {
+    let mapped = MAPPED.replace(
+        "#54=SHAPE_REPRESENTATION('source B',(#32),#40);",
+        "#54=SHAPE_REPRESENTATION('source B',(#4),#40);\n\
+         #57=ADVANCED_BREP_SHAPE_REPRESENTATION('geometry B',(#32),#40);\n\
+         #58=SHAPE_REPRESENTATION_RELATIONSHIP('','',#54,#57);",
+    );
+    let src = format!("{HEADER}{mapped}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let inner = scene
+        .all_mapped_instances()
+        .find(|i| i.name() == "inner")
+        .expect("inner");
+    let names: Vec<_> = inner.solids().map(|s| s.name()).collect();
+    assert_eq!(names, ["part B"]);
+
+    // The same relationship used by a CDSR is an assembly link: not crossed.
+    let linked = format!(
+        "{mapped}#90=APPLICATION_CONTEXT('');\n\
+         #91=PRODUCT_CONTEXT('',#90,'mechanical');\n\
+         #92=PRODUCT_DEFINITION_CONTEXT('',#90,'design');\n\
+         #93=PRODUCT('a','asm','',(#91));\n\
+         #94=PRODUCT_DEFINITION_FORMATION('1','',#93);\n\
+         #95=PRODUCT_DEFINITION('design','',#94,#92);\n\
+         #96=PRODUCT('b','part','',(#91));\n\
+         #97=PRODUCT_DEFINITION_FORMATION('1','',#96);\n\
+         #98=PRODUCT_DEFINITION('design','',#97,#92);\n\
+         #99=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','','',#95,#98,$);\n\
+         #80=PRODUCT_DEFINITION_SHAPE('','',#99);\n\
+         #81=CONTEXT_DEPENDENT_SHAPE_REPRESENTATION(#58,#80);\n"
+    );
+    let src = format!("{HEADER}{linked}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let inner = scene
+        .all_mapped_instances()
+        .find(|i| i.name() == "inner")
+        .expect("inner");
+    assert_eq!(inner.solids().count(), 0);
+}
