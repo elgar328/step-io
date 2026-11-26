@@ -9,300 +9,170 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `ParseWarning::Ed3LinesSkipped`: `parser::parse()` and `parser::stream()`
-  report an `ANCHOR` or `REFERENCE` section that keeps some lines and skips
-  others it cannot read. Such a section used to be reported as
-  `Ed3SectionDiscarded`, though its readable lines were kept;
-  `Ed3SectionDiscarded` now means the whole section is gone.
 - `read()` recognizes AP242 edition 4 in `FILE_SCHEMA`: module version 7
   (`{ 1 0 10303 442 7 1 4 }`) as edition 4 IS, versions 5 and 6 as edition 4
   of an unknown stage.
-- The model reads more entities within step-io's support boundary, each
-  with an `Ap242Author` constructor: the round, composite and counter-bored,
-  -drilled or -sunk hole features (`ROUND_HOLE`, `BASIC_ROUND_HOLE`,
-  `EXPLICIT_ROUND_HOLE`, `COMPOSITE_HOLE`, `EXPLICIT_COMPOSITE_HOLE`,
-  `COUNTERBORE_HOLE_DEFINITION`, `COUNTERDRILL_HOLE_DEFINITION`,
-  `COUNTERSINK_HOLE_DEFINITION`, `ROUND_HOLE_BOTTOM_CONDITION`,
-  `COMPOUND_FEATURE`, `FEATURE_DEFINITION`),
+- The model reads, and `Ap242Author` writes, entities that edition 4 adds or
+  references: the round, composite and counter-bored, -drilled or -sunk hole
+  features (`ROUND_HOLE`, `BASIC_ROUND_HOLE`, `EXPLICIT_ROUND_HOLE`,
+  `COMPOSITE_HOLE`, `EXPLICIT_COMPOSITE_HOLE`, `COUNTERBORE_HOLE_DEFINITION`,
+  `COUNTERDRILL_HOLE_DEFINITION`, `COUNTERSINK_HOLE_DEFINITION`,
+  `ROUND_HOLE_BOTTOM_CONDITION`, `COMPOUND_FEATURE`, `FEATURE_DEFINITION`),
   `POSITIVE_LENGTH_MEASURE_WITH_UNIT`, `POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT`,
   `EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT` and
-  `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP`. `ROUND_HOLE_BOTTOM_CONDITION`,
-  `EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT` and
-  `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP` are new in edition 4; the others
-  are older, and come in because edition 4 references them. `EntityKey`, the
-  reference enums that admit them, and `PartialEntity` for those that can be
-  part of a complex instance gain arms for them:
-  - the hole features: `CharacterizedDefinitionRef`,
-    `DocumentReferenceItemRef` and
-    `ItemIdentifiedRepresentationUsageDefinitionRef`
-  - the positive measures: `MeasureWithUnitRef`, `LengthMeasureWithUnitRef`
-    (the length one), `LengthOrPlaneAngleMeasureWithUnitSelectRef`,
-    `SizeSelectRef` and `GroupableItemRef`
-  - `ExternalImagePlacementInCallout`: `RepresentationItemRef` and the
-    enums that list representation items, such as `StyledItemRef`,
-    `LayeredItemRef`, `InvisibleItemRef` and `AnnotationOccurrenceRef`
-  - `RoundHoleBottomCondition`: `IdAttributeSelectRef`;
-    `ActionResourceRequirementRelationship`:
-    `CharacterizedResourceDefinitionRef`
+  `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP`. `EntityKey`, `PartialEntity` and
+  the reference enums that admit them gain arms for them.
 - `Ap242Author` constructors for what edition 4 allows and edition 2 did not:
   `add_apll_point`, `add_apll_point_with_surface`,
   `add_annotation_placeholder_occurrence_with_leader_line`,
   `add_annotation_to_annotation_leader_line`,
   `add_annotation_to_model_leader_line` and `add_auxiliary_leader_line`.
-- A styled item may style a set of items (`SET_REPRESENTATION_ITEM`), as AP242
-  edition 4 allows: `StyledItemTargetOrRepresentationItemRef` (below) has a
-  `SetRepresentationItem` arm, and a colour styled onto a set reaches each of
-  its items.
+- A styled item may style a `SET_REPRESENTATION_ITEM`, as edition 4 allows,
+  and a colour styled onto a set reaches each of its items.
 - `GeometricToleranceModifier` gains edition 4's values: `ContinuousFeatures`,
   `DerivedFeature`, `EachElement`, `Individually`, `OffsetZone`,
   `SeparateZones`, `Stock`, `UnspecifiedAngularToleranceZoneOffset`,
   `UnspecifiedLinearToleranceZoneOffset` and `VariableAngle`.
-- Reference enums with an aggregate arm
-  (`StyledItemTargetOrRepresentationItemRef`, `DatumOrCommonDatumRef`,
-  `CompoundItemDefinitionRef`, `TransformationRef`,
-  `ItemIdentifiedRepresentationUsageSelectRef`) have `resolve()`, which views
-  the aggregate as its elements; `entity_key()` stays with enums whose every
-  arm is one entity.
-- `AuthorError::NarrowedReference`: a reference names a type that AP242 does
-  not allow in an attribute it narrows. It is raised where the argument's
-  type cannot rule that out: an argument that is a complex instance, a part
-  given to `add_complex`, and the struct a self-referencing constructor
-  (`add_…_cyclic`) takes, which has the model's types.
-- `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
-  `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
-  `Ap242AdvancedBrepShapeRepresentationItemsSelectRef`,
-  `Ap242AdvancedFaceGeometrySelectRef`, `Ap242FaceOrSurfaceRef`,
-  `Ap242ManifoldSurfaceShapeRepresentationSelectRef`,
-  `Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef`,
-  `Ap242MechanicalDesignShadedPresentationRepresentationItemsRef`,
-  `Ap242ShapeDimensionRepresentationItemRef`,
-  `Ap242ShapeRepresentationWithParametersItemsRef`,
-  `Ap242CompoundItemDefinitionRef`, `Ap242DatumOrCommonDatumRef` and
-  `Ap242TransformationRef`: what AP242 edition 4 allows where the model, read
-  from every edition, allows more. Each converts into the model's reference
-  with `From`, as do `PropertyDefinitionRef` into `RepresentedDefinitionRef`,
-  `ShapeRepresentationRef` into `RepresentationRef`, `ShapeModelRef` into
-  `RepresentationOrRepresentationReferenceRef`, and
-  `LengthMeasureWithUnitRef` and `LengthOrPlaneAngleMeasureWithUnitSelectRef`
-  into `MeasureWithUnitRef`.
-- `Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef`,
-  `Ap242BoundedCurveRef`, `Ap242BoundedSurfaceCurveCurve3dRef`,
-  `Ap242CameraUsageMappedRepresentationRef`,
-  `Ap242ConstructiveGeometryRepresentationItemsRef`,
-  `Ap242GeometricCurveSetElementsRef`,
-  `Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef`,
-  `Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef`,
-  `Ap242GlobalUnitAssignedContextRef`, `Ap242LeaderCurveRef`,
-  `Ap242LengthUnitRef`, `Ap242MassUnitRef`,
-  `Ap242MeasureQualificationQualifiedMeasureRef`,
-  `Ap242OrientedClosedShellClosedShellElementRef`,
-  `Ap242OrientedEdgeEdgeElementRef`,
-  `Ap242ParametricRepresentationContextRef`, `Ap242PlaneAngleUnitRef`,
-  `Ap242ProductDefinitionOccurrenceDefinitionRef`,
-  `Ap242ProductDefinitionShapeDefinitionRef`,
-  `Ap242ProductDefinitionUsageRef`, `Ap242RatioUnitRef`,
-  `Ap242StyledItemItemRef`, `Ap242StyledItemItemSetRepresentationItemRef`
-  and `Ap242SurfaceCurveCurve3dRef`: what an AP242 edition 4 `WHERE` rule
-  lets an attribute, or each element of a set it holds, reference. Each
-  converts into the model's reference with `From`, as does
-  `GeometricRepresentationContextRef` into `RepresentationContextRef`.
+- `Ap242…Ref` enums, such as `Ap242AdvancedFaceGeometrySelectRef`,
+  `Ap242LengthUnitRef` and `Ap242StyledItemItemRef`: what AP242 edition 4
+  allows in an attribute, through its type or a `WHERE` rule, where the model,
+  read from every edition, allows more. The constructors take them (see
+  Changed), and each converts into the model's reference with `From`. `From`
+  also converts some model references into wider ones, such as
+  `ShapeRepresentationRef` into `RepresentationRef`.
 - `StyledItemTargetOrRepresentationItemRef`: what a styled item's `item` takes
   in the model — AP242's `styled_item_target` or, as AP203 and AP214 allow,
   any representation item.
+- `resolve()` on the reference enums with an aggregate arm, such as
+  `TransformationRef` and `DatumOrCommonDatumRef`: it views the aggregate as
+  its elements. `entity_key()` stays with enums whose every arm is one entity.
+- `AuthorError::NarrowedReference`: a reference names a type AP242 does not
+  allow in an attribute it narrows. It is raised where the argument's type
+  cannot rule that out: a complex instance, a part given to `add_complex`, and
+  the struct a self-referencing constructor (`add_…_cyclic`) takes.
+- `ParseWarning::Ed3LinesSkipped`: `parser::parse()` and `parser::stream()`
+  report an `ANCHOR` or `REFERENCE` section that keeps some lines and skips
+  others it cannot read. Such a section used to be reported as
+  `Ed3SectionDiscarded`, which now means the whole section is gone.
 - `FeatureKind::Complex`: a feature written as a complex instance with a
-  `SHAPE_ASPECT` part; its parts are on the model under `Feature::key`.
+  `SHAPE_ASPECT` part (see Fixed).
 
 ### Changed
 
 - Output is AP242 edition 4 (ISO 10303-242:2025): `Ap242Author::finish` and
   `StepBuilder` stamp `FILE_SCHEMA` `{ 1 0 10303 442 7 1 4 }`, and
-  `StepBuilder` writes the application protocol definition's year as 2025.
-  The constructors follow edition 4's types and `WHERE` rules; the entries
-  below say what changes for them.
-- The model reads the union of seven editions, AP242 edition 4 included. A
-  complex instance is allowed wherever the EXPRESS rules let the entity
-  combine in any edition, so `PartialEntity` gains a variant for each entity
-  some edition lets combine (82 that were modeled already, such as
-  `CartesianPoint`, `Circle` and `Line`), and `CartesianPointRef`,
-  `Axis1PlacementRef`, `Axis2PlacementRef`, `Axis2Placement3dRef`,
-  `CoordinatesListRef`, `DatumReferenceCompartmentRef`,
-  `DatumReferenceElementRef`, `UncertaintyMeasureWithUnitRef`,
-  `TrimmingSelectRef`, `VertexLoopRef`, `ToleranceSelectRef`,
-  `SymbolTargetRef`, `DesApllPointSelectRef`,
-  `AnnotationPlaceholderLeaderLineRef`, `AnnotationToModelLeaderLineRef` and
-  `CameraModelD3MultiClippingIntersectionSelectRef` gain a `Complex` arm.
-  `GeometricToleranceTargetRef` gains edition 4's shape aspect relationships
-  (`ShapeAspectRelationship`, `ShapeAspectAssociativity`,
-  `ShapeAspectDerivingRelationship`, `FeatureForDatumTargetRelationship`).
-  The scene reads a complex point, mesh coordinate list or model uncertainty
-  from its parts, and reports a complex placement or datum reference it
-  cannot follow as a warning.
-- `Ap242Author` constructors take AP242 edition 4's narrower reference type
-  where the model's is wider, and store it as the model's:
-  - `add_shape_definition_representation`: `definition` takes a
-    `PropertyDefinitionRef`, `used_representation` a
-    `ShapeRepresentationRef`
-  - `add_advanced_brep_shape_representation` and
-    `add_manifold_surface_shape_representation`: `items` takes the matching
-    `Ap242…SelectRef`
-  - `add_advanced_face`: `face_geometry` takes an
-    `Ap242AdvancedFaceGeometrySelectRef` (an elementary, B-spline or swept
-    surface)
-  - `add_complex_triangulated_face`: `geometric_link` takes an
-    `Ap242FaceOrSurfaceRef` (a face surface or a surface, where edition 2
-    allowed any face)
-  - `add_compound_representation_item`: `item_element` takes an
-    `Ap242CompoundItemDefinitionRef` (a list or set of items, not one alone);
-    `add_datum_reference_compartment` and `add_datum_reference_element`:
-    `base` takes an `Ap242DatumOrCommonDatumRef` (a datum reference element
-    only in a list)
-  - `add_draughting_model`,
-    `add_mechanical_design_geometric_presentation_representation`,
-    `add_mechanical_design_shaded_presentation_representation`,
-    `add_shape_dimension_representation` and
-    `add_shape_representation_with_parameters`: `items` takes the matching
-    `Ap242…Ref`
-  - `add_shape_aspect_deriving_relationship`: `relating_shape_aspect` takes an
-    `Ap242DerivedShapeAspectRef`
-  - `add_constructive_geometry_representation_relationship`: `rep_1` takes a
-    `ShapeModelRef`, `rep_2` an `Ap242ConstructiveGeometryRepresentationRef`
-  - `add_cc_design_approval`: `items` takes `Ap242ApprovedItemRef`s
-  - `add_representation_relationship_with_transformation`:
-    `transformation_operator` takes an `Ap242TransformationRef` (not a
-    `list_item_defined_transformation`, which edition 2 allowed)
-- `Ap242Author` constructors also take a narrower reference type where an
-  AP242 edition 4 `WHERE` rule limits the types an attribute, each of its
-  elements, or each element of a set it holds may reference, whether for
-  every instance or by the instance's own type (such as
-  `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)` or
-  `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7`). Rules on one indexed element, on
-  two attributes together or on a path through another entity are not
-  checked. The parts of a complex argument count together: it is rejected on
-  insertion with `AuthorError::NarrowedReference` if a part is of a type the
-  rule excludes, or if the rule asks for exactly one of several types and its
-  parts are of more than one of them:
+  `StepBuilder` writes the application protocol year as 2025. The
+  constructors follow edition 4's types and `WHERE` rules.
+- The model reads the union of seven editions, edition 4 included, and allows
+  a complex instance wherever any edition lets the entity combine:
+  `PartialEntity` gains a variant for 82 entities that were modeled already
+  (such as `CartesianPoint`, `Circle` and `Line`), and references such as
+  `CartesianPointRef`, `Axis2Placement3dRef`, `CoordinatesListRef` and
+  `UncertaintyMeasureWithUnitRef` gain a `Complex` arm.
+  `GeometricToleranceTargetRef` gains edition 4's shape aspect relationships.
+  The scene reads a complex point, mesh coordinate list or uncertainty from its
+  parts, and reports a complex placement or datum reference it cannot follow.
+- `Ap242Author` constructors take edition 4's type where it is narrower than
+  the model's, an `Ap242…Ref` or a model reference such as
+  `PropertyDefinitionRef`:
+  `add_shape_definition_representation`,
+  `add_advanced_brep_shape_representation`,
+  `add_manifold_surface_shape_representation`, `add_advanced_face`,
+  `add_complex_triangulated_face`, `add_compound_representation_item`,
+  `add_datum_reference_compartment`, `add_datum_reference_element`,
+  `add_draughting_model`,
+  `add_mechanical_design_geometric_presentation_representation`,
+  `add_mechanical_design_shaded_presentation_representation`,
+  `add_shape_dimension_representation`,
+  `add_shape_representation_with_parameters`,
+  `add_shape_aspect_deriving_relationship`,
+  `add_constructive_geometry_representation_relationship`,
+  `add_cc_design_approval` and
+  `add_representation_relationship_with_transformation`.
+  Two arguments edition 2 allowed are no longer taken: a face other than a
+  face surface as a complex triangulated face's `geometric_link`, and a
+  `list_item_defined_transformation` as a transformation operator.
+- Constructors also take a narrower type where an edition 4 `WHERE` rule
+  limits what an attribute, or each of its elements, may reference, for every
+  instance or by the instance's own type:
   - `add_styled_item`, `add_over_riding_styled_item`,
     `add_context_dependent_over_riding_styled_item`,
-    `add_annotation_occurrence` and `add_draughting_annotation_occurrence`:
-    `item` takes an `Ap242StyledItemItemRef`: a mapped item or a geometric
-    item that is not a styled item, or a set of mapped and geometric items
-    (`STYLED_ITEM.WR2`, `WR3`; edition 4 no longer exempts a
-    context-dependent over-riding styled item)
+    `add_annotation_occurrence` and `add_draughting_annotation_occurrence`
+    (`item`; edition 4 no longer exempts a context-dependent over-riding
+    styled item)
   - `add_length_measure_with_unit`, `add_positive_length_measure_with_unit`,
     `add_mass_measure_with_unit`, `add_plane_angle_measure_with_unit`,
     `add_positive_plane_angle_measure_with_unit` and
-    `add_ratio_measure_with_unit`: `unit_component` takes the matching
-    `Ap242…UnitRef`
-  - `add_product_definition_occurrence`: `definition` takes an
-    `Ap242ProductDefinitionOccurrenceDefinitionRef`
-  - `add_constructive_geometry_representation`: `items` takes an
-    `Ap242ConstructiveGeometryRepresentationItemsRef`. Edition 4's
-    `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` asks each item to be exactly
-    one of a list that names supertypes with their subtypes, which would
-    leave out a cartesian point, a line, a circle or a plane; this is a known
-    issue of the edition, and the rule is read as asking for at least one
-  - `add_geometrically_bounded_surface_shape_representation` and
-    `add_geometrically_bounded_wireframe_shape_representation`: `items`
-    takes the matching `Ap242…ItemsRef`
-  - `add_product_definition_shape`: `definition` takes an
-    `Ap242ProductDefinitionShapeDefinitionRef` (a product definition or its
-    relationship, or a characterized object; not a shape aspect)
-  - `add_constructive_geometry_representation`,
-    `add_definitional_representation` and
-    `add_tessellated_shape_representation`: `context_of_items` takes a
-    `GeometricRepresentationContextRef`,
-    `Ap242ParametricRepresentationContextRef` and
-    `Ap242GlobalUnitAssignedContextRef` respectively
-  - `add_surface_curve`, `add_intersection_curve` and `add_seam_curve`:
-    `curve_3d` takes an `Ap242SurfaceCurveCurve3dRef` (not a pcurve);
-    `add_bounded_surface_curve` an `Ap242BoundedSurfaceCurveCurve3dRef`;
-    `add_composite_curve_segment`: `parent_curve` an `Ap242BoundedCurveRef`
-  - `add_oriented_edge` and `add_oriented_closed_shell`: `edge_element` and
-    `closed_shell_element` take a type that is not itself oriented
-  - `add_configuration_effectivity` (`usage`), `add_geometric_curve_set`
-    (`elements`), `add_leader_terminator` (`annotated_curve`),
-    `add_annotation_occurrence_associativity`
-    (`related_annotation_occurrence`), `add_measure_qualification`
-    (`qualified_measure`) and `add_camera_usage` (`mapped_representation`):
-    the matching `Ap242…Ref`
+    `add_ratio_measure_with_unit` (`unit_component`)
+  - `add_product_definition_occurrence`, `add_product_definition_shape`,
+    `add_constructive_geometry_representation`,
+    `add_definitional_representation`,
+    `add_tessellated_shape_representation`,
+    `add_geometrically_bounded_surface_shape_representation`,
+    `add_geometrically_bounded_wireframe_shape_representation`,
+    `add_surface_curve`, `add_intersection_curve`, `add_seam_curve`,
+    `add_bounded_surface_curve`, `add_composite_curve_segment`,
+    `add_oriented_edge`, `add_oriented_closed_shell`,
+    `add_configuration_effectivity`, `add_geometric_curve_set`,
+    `add_leader_terminator`, `add_annotation_occurrence_associativity`,
+    `add_measure_qualification` and `add_camera_usage`
+
+  Rules on one indexed element, on two attributes together or on a path
+  through another entity are not checked. Edition 4's
+  `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` asks each item to be exactly one
+  of a list that names supertypes with their subtypes, which would leave out a
+  cartesian point, a line, a circle or a plane; this is a known issue of the
+  edition, and the rule is read as asking for at least one.
 - `add_complex` and the self-referencing constructors check the same
-  narrowings at run time, each element of a set included. In `add_complex`,
-  a rule that depends on the instance's own type is checked against its
-  parts: `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` (exactly one composite text
-  or text literal) applies where a part is an annotation text occurrence.
-- `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless
-  a part of one of its subtypes is beside it, with
-  `AuthorError::InvalidComplex`.
-- `StepBuilder` marks a part's mesh representation as an alternative
-  representation of its shape when the part also has a solid: a
-  `NAME_ATTRIBUTE` 'alternative shape representation' names the
-  `SHAPE_DEFINITION_REPRESENTATION` that binds it, as the MBx-IF Recommended
-  Practices for Alternative Shapes (1.0) describe. A part with meshes only is
-  not marked.
+  narrowings at run time, each element of a set included. The parts of a
+  complex argument count together: it is rejected with
+  `AuthorError::NarrowedReference` if a part is of a type the rule excludes,
+  or if the rule asks for exactly one of several types and its parts are of
+  more than one. A rule that depends on the instance's own type is checked
+  against its parts, so `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` applies where a
+  part is an annotation text occurrence.
+- `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless a
+  part of one of its subtypes is beside it, with `AuthorError::InvalidComplex`.
+- `StepBuilder` marks a part's mesh as an alternative representation of its
+  shape when the part also has a solid, with a `NAME_ATTRIBUTE` 'alternative
+  shape representation' on the `SHAPE_DEFINITION_REPRESENTATION` that binds
+  it, as the MBx-IF Recommended Practices for Alternative Shapes (1.0)
+  describe. A part with meshes only is not marked.
+- Attributes that every STEP edition narrows with a redeclaration now have the
+  narrower type in the model, so reading and `Ap242Author` both take only
+  what the schema allows there: for example
+  `PresentationRepresentation::context_of_items`
+  (`GeometricRepresentationContextRef`),
+  `CameraUsage::mapping_origin` (`CameraModelRef`) and
+  `FeatureForDatumTargetRelationship::related_shape_aspect`
+  (`DatumTargetRef`).
+- Attributes an older edition declares wider than AP242 now have the wider
+  type in the model, so reading keeps what any edition allows, while the
+  constructors still take AP242's: a geometric tolerance's `magnitude`
+  (`Option<MeasureWithUnitRef>`) and `unit_size`,
+  `ProjectedZoneDefinition::projected_length` (`MeasureWithUnitRef`), a
+  styled item's `item` (`StyledItemTargetOrRepresentationItemRef`), and
+  `ConstructiveGeometryRepresentationRelationship::rep_1`
+  (`RepresentationOrRepresentationReferenceRef`).
 - `MappedInstance::solids`, `surface_models`, `geometric_sets` and
-  `mapped_children` follow a plain `SHAPE_REPRESENTATION_RELATIONSHIP` from
-  the source representation to an equivalent one, as `ProductDef::solids`
-  does. Neither crosses a relationship a
-  `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` uses any more: it relates a
-  component to its assembly, and crossing it could pull the assembly's items
+  `mapped_children` follow a plain `SHAPE_REPRESENTATION_RELATIONSHIP` to an
+  equivalent representation, as `ProductDef::solids` does. Neither crosses a
+  relationship a `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` uses any more: it
+  relates a component to its assembly, and could pull the assembly's items
   into a part.
 - `Point` also covers `APLL_POINT`, `APLL_POINT_WITH_SURFACE` and a complex
   instance with a `CARTESIAN_POINT` part: `Vertex::point`, `Scene::all_points`,
   `SetElement::Point` and `FeatureGeometry::Point` give them, where they used
   to give `None` or `Other`, so `Point::key` is no longer always a
-  `CARTESIAN_POINT`.
-- A complex curve (a rational B-spline) in a geometric set or a feature's
-  geometry comes back as `SetElement::Curve` / `FeatureGeometry::Curve`,
-  where it used to be `Other`.
-- `Feature::geometry` also gives the geometry of a feature's components. A
-  composite feature (`COMPOSITE_SHAPE_ASPECT`, `COMPOSITE_GROUP_SHAPE_ASPECT`,
-  `CONTINUOUS_SHAPE_ASPECT`, `ALL_AROUND_SHAPE_ASPECT`) or a datum feature
-  (`DATUM_FEATURE`, `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`), plain or complex,
-  usually carries no `GEOMETRIC_ITEM_SPECIFIC_USAGE` itself; its geometry is
-  on the shape aspects that plain `SHAPE_ASPECT_RELATIONSHIP`s name as its
-  components, and on theirs in turn. Such features used to give nothing. A
-  `DATUM` at the other end of a relationship is not a component, and each
-  item comes once even when several usages designate it. Any feature also
-  gives the items a plain `ITEM_IDENTIFIED_REPRESENTATION_USAGE` names, each
-  item of a `SET_REPRESENTATION_ITEM` or `LIST_REPRESENTATION_ITEM` among
-  them, as some of NIST's AP242 test files link a feature to its faces.
-- Attributes that every STEP edition narrows with a redeclaration
-  (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
-  model, so both reading and `Ap242Author` take only what the schema allows
-  there:
-  - `PresentationArea`, `PresentationRepresentation` and `PresentationView`
-    `context_of_items`: `GeometricRepresentationContextRef`
-  - `ModelGeometricView` and `DefaultModelGeometricView` `rep`:
-    `DraughtingModelRef`; `item`: `CameraModelRef`
-  - `CameraImage` and `CameraImage3dWithScale` `mapping_source`:
-    `CameraUsageRef`; `mapping_target`: `PlanarBoxRef`
-  - `CameraUsage::mapping_origin`: `CameraModelRef`
-  - `MechanicalDesignPresentationRepresentationWithDraughting::items`:
-    `Vec<CameraModelD3Ref>`
-  - `DraughtingModelItemAssociationWithPlaceholder` `used_representation`:
-    `DraughtingModelRef`; `identified_item`: `DraughtingCalloutRef`
-  - `FeatureForDatumTargetRelationship::related_shape_aspect`:
-    `DatumTargetRef`
-  - `AnnotationPlaceholderOccurrence(WithLeaderLine)::item`:
-    `GeometricSetRef`; `TessellatedAnnotationOccurrence::item`:
-    `TessellatedGeometricSetRef`
-- Attributes an older STEP edition declares wider than AP242 now have the
-  wider type in the model, so reading keeps what any edition allows; the
-  `Ap242Author` constructors still take AP242's type:
-  - `magnitude` of every geometric tolerance (and of the
-    `GEOMETRIC_TOLERANCE` part): `Option<MeasureWithUnitRef>`, as AP203 and
-    AP214 declare it, where AP242 takes a length measure
-  - `GeometricToleranceWithDefinedUnit` and
-    `GeometricToleranceWithDefinedAreaUnit` `unit_size`, and
-    `ProjectedZoneDefinition::projected_length`: `MeasureWithUnitRef`
-  - `item` of `StyledItem`, `OverRidingStyledItem`,
-    `ContextDependentOverRidingStyledItem`, `AnnotationOccurrence` and
-    `DraughtingAnnotationOccurrence` (and of the `STYLED_ITEM` part):
-    `StyledItemTargetOrRepresentationItemRef`
-  - `ConstructiveGeometryRepresentationRelationship::rep_1`:
-    `RepresentationOrRepresentationReferenceRef`, as
-    `representation_relationship` declares it; `Ap242Author` still takes
-    AP242's `ShapeModelRef`
+  `CARTESIAN_POINT`. A complex curve (a rational B-spline) in a geometric set
+  or a feature's geometry is a `Curve`, where it used to be `Other`.
+- `Feature::geometry` also gives the geometry of a feature's components: a
+  composite feature or a datum feature usually has none of its own, and its
+  geometry is on the shape aspects that plain `SHAPE_ASPECT_RELATIONSHIP`s
+  name as its components, and on theirs in turn. Such features used to give
+  nothing. Any feature also gives the items a plain
+  `ITEM_IDENTIFIED_REPRESENTATION_USAGE` names, as some of NIST's AP242 test
+  files link a feature to its faces.
 
 ### Removed
 
@@ -327,19 +197,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `GENERIC_PRODUCT_DEFINITION_REFERENCE`, `TEXTURE_STYLE_SPECIFICATION` and
   `TEXTURE_STYLE_TESSELLATION_SPECIFICATION` can no longer be authored:
   step-io models none of their subtypes that are not themselves `ABSTRACT`.
-- `ANNOTATION_FILL_AREA_OCCURRENCE` and `ANNOTATION_SYMBOL` are no longer
-  modeled. Every edition requires them to reference types step-io does not
-  model (`ANNOTATION_FILL_AREA`, `SYMBOL_REPRESENTATION_MAP`), so a standard
-  instance was already dropped when read. Their model types, the
-  `add_annotation_fill_area_occurrence`, `add_annotation_symbol` and
-  `add_annotation_symbol_cyclic` constructors, and their variants in
-  `EntityKey`, `PartialEntity` and the reference enums that listed them are
-  gone.
-- `StyledItemTargetRef`, replaced by `StyledItemTargetOrRepresentationItemRef`
-  in the model and `Ap242StyledItemItemRef` in the constructors.
-- `ConstructiveGeometryRepresentationOrShapeRepresentationRef`, replaced by
-  `RepresentationOrRepresentationReferenceRef` in the model and
-  `ShapeModelRef` in `add_constructive_geometry_representation_relationship`.
+- `ANNOTATION_FILL_AREA_OCCURRENCE` and `ANNOTATION_SYMBOL`, with their
+  constructors (`add_annotation_fill_area_occurrence`,
+  `add_annotation_symbol`, `add_annotation_symbol_cyclic`) and their arms in
+  `EntityKey`, `PartialEntity` and the reference enums. Every edition requires
+  them to reference types step-io does not model, so a standard instance was
+  already dropped when read.
+- `StyledItemTargetRef` and
+  `ConstructiveGeometryRepresentationOrShapeRepresentationRef`, replaced by
+  `StyledItemTargetOrRepresentationItemRef` and
+  `RepresentationOrRepresentationReferenceRef` in the model, and by
+  `Ap242StyledItemItemRef` and `ShapeModelRef` in the constructors.
 - `add_oriented_edge_cyclic`, `add_oriented_closed_shell_cyclic`,
   `add_product_definition_shape_cyclic`,
   `add_product_definition_occurrence_cyclic`,
@@ -349,142 +217,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `read()` drops an entity whose reference, in one of the attributes every
-  STEP edition narrows (listed under Changed), names a type the narrower
-  attribute does not allow, and reports it as a `NonstandardReference`. Such
-  an entity used to be kept, with a reference the standard does not allow.
-- The same holds inside a complex instance: when one part narrows an
-  attribute another part declares, and every edition shares that narrowing,
-  `read()` drops the entity if the reference falls outside it (for example
-  `(PRESENTATION_REPRESENTATION REPRESENTATION)` over a context that is not
-  geometric).
-- `read()` drops an entity whose reference points at a complex instance none
-  of whose parts the schema allows there, and reports it as a
-  `NonstandardReference`, as it already did for a simple entity of the wrong
-  type. Such an entity used to be kept, and the reference went missing from
-  the scene without a report: a face's surface read as `Other`, or a loop or
-  edge was left out.
-- `read()` keeps a geometric tolerance whose magnitude or unit size, or a
-  projected zone whose projected length, is a plain `MEASURE_WITH_UNIT`, and
-  a styled item that styles a representation item outside AP242's
-  `styled_item_target`, as AP203 and AP214 allow. These used to be dropped as
-  a `NonstandardReference`.
-- `Tolerance::magnitude` reads a magnitude given as a plain
-  `MEASURE_WITH_UNIT` when its value is a length measure.
-- The scene reports a reference it cannot follow in `Scene::warnings`
-  instead of leaving it out silently, and the warnings name the handle they
-  concern. The geometry walks report a bare `FACE`, `EDGE` or `VERTEX`; a
-  complex face, bound, oriented edge, edge or vertex; an oriented edge whose
-  edge is another `ORIENTED_EDGE`; a vertex point without coordinates; a
-  mesh group item or a link to a solid it cannot read; and a mesh's face
-  link that is a bare `FACE` or a complex instance. `to_nurbs` reports a
-  curve or surface it cannot convert (a bare supertype such as
-  `B_SPLINE_SURFACE` alone, or a `PCURVE`), a complex direction or vector, a
-  zero direction, a 2D or degenerate placement, a complex B-spline without
-  its B-spline part or knots, a B-spline whose control points do not fit its
-  knot family, an unbounded swept profile, and a basis or 3D curve of a kind
-  it does not convert. The product and PMI walks report a complex product,
-  formation, document, date, direction, shape representation or `of_shape`;
-  a complex dimension feature or datum feature without a `SHAPE_ASPECT`
-  part; a complex tolerance target without a `SHAPE_ASPECT`,
-  `SHAPE_ASPECT_RELATIONSHIP` or `DIMENSIONAL_SIZE` part; a
-  `PRODUCT_DEFINITION_OCCURRENCE` without a definition, and an occurrence or
-  assembly usage that names something other than a product definition; a
-  placement whose transformation is not an `ITEM_DEFINED_TRANSFORMATION`;
-  and a shape relationship whose other end is not a representation. The
-  presentation walks report a complex style, style element or rendering
-  property, a bare `COLOUR` and an unknown pre-defined colour name, and
-  `Scene::units` a length or angle unit it cannot read, naming the unit
-  context. A measure written as a complex instance without a
-  `MEASURE_WITH_UNIT` part is reported where it is read: a dimension value,
-  a tolerance magnitude, a curve width, the uncertainty, and a conversion
-  factor.
-- A bare `PRE_DEFINED_COLOUR` gives its colour.
-- `Datum::datum_feature` also finds a `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`.
-- `MeshGroup::solid` follows a shell linked through an
-  `ORIENTED_CLOSED_SHELL`.
-- `ProductDef::tolerances` includes a tolerance whose target is a dimension
-  or a relationship between shape aspects, also when that is a complex
-  instance, under each part a feature it joins is on, as
-  `ProductDef::dimensions` places a dimension. Such a tolerance used to
-  belong to no part.
-- The assembly tree follows a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` that names a
-  definition through a `PRODUCT_DEFINITION_OCCURRENCE`, as AP242 edition 4
-  may write it: `ProductDef::children`, `parents`, `occurrences`,
-  `Scene::root_definitions`, `Occurrence::definition` and
-  `Occurrence::transform` read it as they read a usage that names the
-  definition itself. Such a component used to drop out of the tree, and its
-  definition to show as a root.
-- The presentation accessors (`color`, `transparency`, `width`,
-  `line_font`, `layer`, `is_visible`) read the subtypes of `STYLED_ITEM`
-  too — the annotation occurrences that style PMI geometry, and a complex
-  instance with a `STYLED_ITEM` part — where they read only a plain
-  `STYLED_ITEM`. An `OVER_RIDING_STYLED_ITEM` on a shape now beats the styled
-  item it overrides, where it used to be ignored; a
-  `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` is still not applied, as it
-  holds only in its assembly context. Styled items that override each other
-  in a cycle are reported, and the overrides inside the cycle are set aside.
-- `Face::to_nurbs` converts a face on a `SURFACE_OF_LINEAR_EXTRUSION` of a
-  `LINE`, bounding the line by the face's points as it bounds the extrusion;
-  it used to give `None`. A face swept from a parabola or hyperbola, or from
-  a line along the extrusion, is reported in `Scene::warnings`.
-- `Edge::to_nurbs` gives a closed edge whose direction is against its
-  curve's (`same_sense` false) the other way round; it used to follow the
-  curve. The closed curve still starts at the curve's parameter origin.
-- `Mesh::points` gives no points, and reports it, when a `pnindex` entry
-  falls outside the coordinate list; it used to leave the entry out, which
-  shifted every later vertex under `Mesh::triangles`. Its warnings now name
-  the mesh, and `Mesh::normals` counts per-vertex normals against `pnindex`.
-- An `AXIS2_PLACEMENT_3D` that omits its reference direction takes the one
-  STEP defines: `[0, 1, 0]` when the axis is along X, else `[1, 0, 0]`. The
-  scene used `[1, 0, 0]` every time, so on an X axis the frame was degenerate:
-  `Transform::matrix` gave `None`, and so did `to_nurbs` for a curve or
-  surface on such a placement. An axis off X by floating-point noise alone
-  (NIST's test files write axes such as `(-1., -6.12323399574E-17, -0.)`)
-  still takes `[1, 0, 0]`, as the standard says, and its frame is now computed
-  from the values as written: it used to come out degenerate, because the
-  frame code took a projected reference direction shorter than 1e-12 for
-  zero. The frame is also right now for an axis of any length: one shorter
-  than 1e-12 used to give none, a very long one (around 1E154 and beyond) a
-  wrong one through overflow, and one near X a slightly skewed one through
-  rounding.
+- `read()` drops an entity, and reports a `NonstandardReference`, when a
+  reference in an attribute every edition narrows falls outside the narrower
+  type, also inside a complex instance, or when a reference points at a
+  complex instance none of whose parts the schema allows there. Such entities
+  used to be kept; the second kind lost the reference from the scene without
+  a report.
+- `read()` keeps a geometric tolerance whose magnitude, unit size or
+  projected length is a plain `MEASURE_WITH_UNIT`, and a styled item that
+  styles a representation item outside AP242's `styled_item_target`, as AP203
+  and AP214 allow; these used to be dropped. `Tolerance::magnitude` reads such
+  a magnitude when its value is a length measure.
 - `read()` repeats its drop pass until no kept entity fails, where it used to
-  stop after three rounds; an entity that failed in the third was reported
-  as dropped yet left in the model and counted as kept.
-- The scene reads a measure written as a complex instance, such as
-  `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
-  MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`, from
-  its `MEASURE_WITH_UNIT` part: `Dimension::value`, `Tolerance::magnitude`,
-  a curve width, and a conversion-based unit's factor. `Dimension::value` and
-  `Tolerance::magnitude` used to give `None` for such a measure, which is how
-  NIST's test files write them. `Scene::units` also reads a conversion factor
-  given as any other subtype of `MEASURE_WITH_UNIT`, such as a
-  `POSITIVE_LENGTH_MEASURE_WITH_UNIT`.
-- `Dimension::value` takes the first measure item not named `upper limit` or
-  `lower limit`; it used to take the first, a limit when the representation
-  lists one before the nominal value, as NIST's test files can.
-- `Scene::units` stops at a conversion-based unit defined through itself and
-  reports it; such a unit used to overflow the stack. A length or angle unit
-  whose base is a unit of another kind, or cannot be read, is now reported
-  too.
-- `ProductDef::children`, `parents` and `occurrences` give a usage whose two
-  ends are the same definition once; it used to come twice.
-- A shape aspect written as a complex instance with a `SHAPE_ASPECT` part,
-  as NIST's AP242 test files write a composite datum feature
-  (`(COMPOSITE_SHAPE_ASPECT() DATUM_FEATURE() SHAPE_ASPECT(...))`), is a
-  `Feature` of kind `FeatureKind::Complex`: `Scene::all_features`,
-  `ProductDef::features`, `Datum::datum_feature` (when it has a
-  `DATUM_FEATURE` part), `Dimension::features` and `Tolerance::feature` give
+  stop after three rounds and could leave a dropped entity in the model.
+- The scene reports what it cannot follow in `Scene::warnings`, naming the
+  handle, where it used to leave it out silently: for example a bare `FACE`,
+  `EDGE` or `VERTEX`; a topology item, product, style or measure written as a
+  complex instance it cannot read; a curve or surface `to_nurbs` cannot
+  convert; an assembly usage or placement of a form it does not read; and a
+  length or angle unit it cannot read.
+- The scene reads a measure written as a complex instance, as NIST's test
+  files write dimensions and tolerances, from its `MEASURE_WITH_UNIT` part:
+  `Dimension::value`, `Tolerance::magnitude`, a curve width and a
+  conversion-based unit's factor. The first two used to give `None` for one.
+  `Dimension::value` also skips a measure item named `upper limit` or
+  `lower limit`; it used to take the first item, a limit when one comes before
+  the nominal value. `Scene::units` reads a conversion factor given as any
+  subtype of `MEASURE_WITH_UNIT`.
+- A shape aspect written as a complex instance with a `SHAPE_ASPECT` part, as
+  NIST's AP242 test files write a composite datum feature, is a `Feature` of
+  kind `FeatureKind::Complex`: `Scene::all_features`, `ProductDef::features`,
+  `Datum::datum_feature`, `Dimension::features` and `Tolerance::feature` give
   it, and a dimension or tolerance on it belongs to its part. It used to be
   reported and left out.
-- `Ap242Author` checks the size of a list held in a SELECT, and rejects one
-  outside its bounds with `AuthorError::Cardinality`: a `COMMON_DATUM_LIST`
-  needs at least two elements, a `LIST_REPRESENTATION_ITEM`,
-  `SET_REPRESENTATION_ITEM` or `SET_ITEM_DEFINED_TRANSFORMATION` at least
-  one. It used to check only the elements.
-- `add_person_and_organization_address` rejects `organizations` or `people`
-  that do not hold exactly one element with `AuthorError::Cardinality`, as
-  AP242 requires; it used to accept more than one.
+- The assembly tree follows a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` that names a
+  definition through a `PRODUCT_DEFINITION_OCCURRENCE`, as edition 4 may write
+  it; such a component used to drop out of the tree, and its definition to
+  show as a root. `ProductDef::children`, `parents` and `occurrences` give a
+  usage whose two ends are the same definition once, not twice.
+- `ProductDef::tolerances` includes a tolerance on a dimension or on a
+  relationship between shape aspects, plain or complex, under each part a
+  feature it joins is on, as `ProductDef::dimensions` places a dimension. Such
+  a tolerance used to belong to no part.
+- The presentation accessors (`color`, `transparency`, `width`, `line_font`,
+  `layer`, `is_visible`) also read the subtypes of `STYLED_ITEM`, such as the
+  annotation occurrences that style PMI, and a complex instance with a
+  `STYLED_ITEM` part. An `OVER_RIDING_STYLED_ITEM` now beats the styled item it
+  overrides, where it used to be ignored; a
+  `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` is still not applied, as it
+  holds only in its assembly context. Overrides that form a cycle are reported
+  and set aside. A bare `PRE_DEFINED_COLOUR` gives its colour.
+- An `AXIS2_PLACEMENT_3D` without a reference direction takes the one STEP
+  defines, `[0, 1, 0]` when the axis is along X and `[1, 0, 0]` otherwise; the
+  scene always used `[1, 0, 0]`, so on an X axis `Transform::matrix` and
+  `to_nurbs` gave `None`. The frame is also computed from the values as
+  written, so an axis off X by floating-point noise, or a very short or very
+  long one, no longer gives a degenerate or wrong frame.
+- `Face::to_nurbs` converts a face on a `SURFACE_OF_LINEAR_EXTRUSION` of a
+  `LINE`, where it used to give `None`.
+- `Edge::to_nurbs` gives a closed edge with `same_sense` false the other way
+  round; it used to follow the curve.
+- `Mesh::points` gives no points, and reports it, when a `pnindex` entry falls
+  outside the coordinate list; it used to skip the entry, shifting every later
+  vertex. `Mesh::normals` counts per-vertex normals against `pnindex`.
+- `Scene::units` reports a conversion-based unit defined through itself,
+  which used to overflow the stack.
+- `Datum::datum_feature` also finds a `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`,
+  and `MeshGroup::solid` follows a shell linked through an
+  `ORIENTED_CLOSED_SHELL`.
+- `Ap242Author` checks the size of a list held in a SELECT, with
+  `AuthorError::Cardinality`: a `COMMON_DATUM_LIST` needs at least two
+  elements, a `LIST_REPRESENTATION_ITEM`, `SET_REPRESENTATION_ITEM` or
+  `SET_ITEM_DEFINED_TRANSFORMATION` at least one. It used to check only the
+  elements.
+- `add_person_and_organization_address` takes exactly one element in
+  `organizations` and in `people`, as AP242 requires, and rejects more with
+  `AuthorError::Cardinality`; it used to accept them.
 
 ## [0.3.1] - 2026-11-18
 
