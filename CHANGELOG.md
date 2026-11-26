@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-26
+
 ### Added
 
 - `read()` recognizes AP242 edition 4 in `FILE_SCHEMA`: module version 7
@@ -831,7 +833,8 @@ write instead.
   coverage matrix ([`docs/entities.md`](docs/entities.md)) lists exactly what is
   read and written.
 
-[Unreleased]: https://github.com/elgar328/step-io/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/elgar328/step-io/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/elgar328/step-io/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/elgar328/step-io/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/elgar328/step-io/compare/v0.2.5...v0.3.0
 [0.2.5]: https://github.com/elgar328/step-io/compare/v0.2.4...v0.2.5
