@@ -10,6 +10,8 @@ pub static AP242E4_FILE_SCHEMA: &[&str] =
 pub const AP242E4_APD_STATUS: &str = "international standard";
 pub const AP242E4_APD_NAME: &str = "ap242_managed_model_based_3d_engineering_mim_lf";
 pub const AP242E4_APD_YEAR: i64 = 2025;
+/// The `application` of the output schema's `APPLICATION_CONTEXT`.
+pub const AP242E4_APD_DESCRIPTION: &str = "managed model based 3d engineering";
 
 /// The schema identity the authoring layer stamps on its output header.
 pub fn ap242e4_schema_id() -> crate::parser::SchemaId {

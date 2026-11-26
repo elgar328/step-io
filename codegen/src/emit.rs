@@ -2748,8 +2748,10 @@ pub fn emit_schema(targets: &[(&str, &str, &crate::schema::ProfileToml)]) -> Str
             "/// The output schema's `APPLICATION_PROTOCOL_DEFINITION` values.\n\
              pub const {prefix}_APD_STATUS: &str = {:?};\n\
              pub const {prefix}_APD_NAME: &str = {:?};\n\
-             pub const {prefix}_APD_YEAR: i64 = {};\n",
-            apd.status, apd.name, apd.year
+             pub const {prefix}_APD_YEAR: i64 = {};\n\
+             /// The `application` of the output schema's `APPLICATION_CONTEXT`.\n\
+             pub const {prefix}_APD_DESCRIPTION: &str = {:?};\n",
+            apd.status, apd.name, apd.year, apd.description
         )
         .unwrap();
 

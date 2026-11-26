@@ -287,6 +287,7 @@ pub struct ProfileApd {
     pub status: String,
     pub name: String,
     pub year: i64,
+    pub description: String,
 }
 
 /// Inner element of a `LIST/SET/BAG/ARRAY [n:m] OF X` aggregation (bounds

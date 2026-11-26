@@ -690,7 +690,7 @@ impl StepBuilder {
     pub fn new_with(units: &UnitsInput) -> Result<Self, AuthorError> {
         let mut a = Ap242Author::new();
 
-        let ac = a.add_application_context("managed model based 3d engineering")?;
+        let ac = a.add_application_context(schema::AP242E4_APD_DESCRIPTION)?;
         a.add_application_protocol_definition(
             schema::AP242E4_APD_STATUS,
             schema::AP242E4_APD_NAME,
