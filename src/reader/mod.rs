@@ -19,8 +19,8 @@ use crate::generated::model::{StepModel, TextDedup};
 use crate::generated::read::{
     COMPLEX_PART_NAMES, ComplexNarrowing, RefSlot, SIMPLE_NAMES, build_complex_entity,
     build_entity, complex_narrowings, complex_part_index, complex_ref_field_slots,
-    complex_ref_slots, finalize_arenas, ref_field_slots, ref_slots, resolve_complex_entity,
-    resolve_entity, shrink_arenas, simple_index,
+    complex_ref_slots, complex_violation, finalize_arenas, ref_field_slots, ref_slots,
+    resolve_complex_entity, resolve_entity, shrink_arenas, simple_index,
 };
 use crate::parser::p21::{Parser, Stream};
 use crate::parser::{Attribute, Error, ParseWarning, RawEntity, RawEntityPart};
@@ -40,7 +40,8 @@ pub enum DropKind {
     /// One of the entity's own values is nonstandard and has no standard
     /// rewrite: a required reference is missing, an integer field holds a
     /// fractional value, a list held inline has more than three reals, more
-    /// attributes than the entity has.
+    /// attributes than the entity has, parts a complex entity may not
+    /// combine.
     NonstandardValue,
     /// The entity type is not one step-io reads: not yet supported, or not a
     /// schema entity at all.
@@ -229,6 +230,15 @@ impl Scan {
                     pixs = index(&parts);
                     self.norm
                         .push((id, "complex entity parts sorted into name order"));
+                }
+                if pixs.is_some() {
+                    let names: Vec<&str> = parts.iter().map(|p| p.name.as_str()).collect();
+                    if let Some(reason) = complex_violation(&names) {
+                        row.member = Member::Rejected;
+                        row.label = self.labels.intern(reason);
+                        self.rows.push(row);
+                        return;
+                    }
                 }
                 if let Some(pixs) = pixs.filter(|p| !p.is_empty()) {
                     row.member = Member::Complex;
@@ -635,6 +645,12 @@ fn resolve(
 /// it; the rest of the file reads as usual. A list with more or fewer
 /// elements than its schema bounds allow is kept as read and listed in
 /// [`Report::kept_nonstandard`].
+///
+/// What is checked is each entity's form: its attributes' count and kinds,
+/// the types its references name, its lists' sizes, and the parts a complex
+/// entity combines. A form any edition of the file's AP family allows is
+/// accepted, each rule judged on its own. The schema's `WHERE` rules, global
+/// `RULE`s, and `UNIQUE` and `INVERSE` constraints are not checked.
 ///
 /// # Errors
 /// [`Error::Io`] if `input` fails, and another [`Error`] if the file does not

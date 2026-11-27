@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is dropped as a `nonstandard value` (`more attributes than the entity
   has`); the extra attributes used to be ignored. A trailing comma, which
   reads as one more blank attribute, counts too.
+- A complex entity whose parts no edition lets combine is dropped as a
+  `nonstandard value`: a part repeated, a supertype part missing, parts of
+  unrelated hierarchies, two branches of a ONEOF group, or an abstract part
+  with none of its subtypes. Each rule is judged against every edition, so
+  a combination one edition allows is kept.
+- `read()`'s documentation says what it checks: each entity's form, not the
+  schema's `WHERE` rules, global `RULE`s, `UNIQUE` or `INVERSE` constraints.
 
 ### Fixed
 

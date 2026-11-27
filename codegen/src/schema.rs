@@ -9,6 +9,10 @@ use serde::Deserialize;
 pub struct Schema {
     #[serde(default)]
     pub entity: BTreeMap<String, Entity>,
+    /// Every edition's ONEOF groups (universal.toml); the output profile's
+    /// groups, without `editions`, when the profile is read as a `Schema`.
+    #[serde(default)]
+    pub oneof: Vec<EditionOneof>,
     #[serde(rename = "type", default)]
     pub types: BTreeMap<String, TypeDef>,
 }
@@ -18,10 +22,21 @@ pub struct Entity {
     /// Direct supertype names (EXPRESS declaration order, left-to-right).
     #[serde(default)]
     pub parents: Vec<String>,
+    /// Each edition's direct supertypes, where editions declare different
+    /// ones (universal.toml); empty where they agree.
+    #[serde(default)]
+    pub edition_parents: Vec<Vec<String>>,
     /// EXPRESS `ABSTRACT` flag: the entity exists only as part of an instance
-    /// of a subtype.
+    /// of a subtype (in any edition, in universal.toml).
     #[serde(default)]
     pub is_abstract: bool,
+    /// `ABSTRACT` in every edition declaring it (universal.toml).
+    #[serde(default)]
+    pub abstract_everywhere: bool,
+    /// Some edition's `SUPERTYPE OF` clause for it holds an `AND`
+    /// (universal.toml).
+    #[serde(default)]
+    pub supertype_has_and: bool,
     /// True if this entity can appear as a Part21 complex (multiple-inheritance)
     /// part (ANDOR-combinable leaf or a supertype of one) — auto-derived in
     /// `universal_export`. Drives the part-bag (`complex_parts`), replacing the
@@ -273,6 +288,20 @@ pub struct ProfileOneof {
     #[allow(dead_code)]
     pub supertype: String,
     pub branches: Vec<Vec<String>>,
+}
+
+/// One ONEOF exclusivity group as the editions in `editions` declare it: a
+/// complex instance may draw parts from at most one branch, each the flat
+/// name set of one ONEOF child subtree.
+#[derive(Deserialize)]
+pub struct EditionOneof {
+    /// Entity whose `SUPERTYPE OF` clause declares the group — provenance
+    /// only.
+    #[allow(dead_code)]
+    pub supertype: String,
+    pub branches: Vec<Vec<String>>,
+    #[serde(default)]
+    pub editions: Vec<String>,
 }
 
 #[derive(Deserialize)]

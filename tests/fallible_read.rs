@@ -663,3 +663,58 @@ fn extra_attributes_drop_the_entity() {
     }
     assert_eq!(r.entities_kept, 2, "{:?}", r.dropped);
 }
+
+/// A complex entity whose parts the schema does not combine in any edition is
+/// dropped as a nonstandard value, with the rule it breaks.
+#[test]
+fn complex_entities_the_schema_does_not_combine_are_dropped() {
+    let r = read_body(
+        "#1=(LENGTH_UNIT()LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+         #2=(LENGTH_UNIT()SI_UNIT(.MILLI.,.METRE.));\n\
+         #3=(LENGTH_UNIT()NAMED_UNIT(*)REPRESENTATION_CONTEXT('','')SI_UNIT(.MILLI.,.METRE.));\n\
+         #4=(LENGTH_UNIT()MASS_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+         #5=(CAMERA_MODEL()GEOMETRIC_REPRESENTATION_ITEM()REPRESENTATION_ITEM(''));\n\
+         #6=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n",
+    );
+    let detail = |id: u64| {
+        r.dropped
+            .iter()
+            .find(|(i, d)| *i == id && d.kind == DropKind::NonstandardValue)
+            .map(|(_, d)| d.detail.as_str())
+    };
+    assert_eq!(detail(1), Some("complex entity repeats a part"));
+    assert_eq!(detail(2), Some("complex entity lacks a supertype part"));
+    assert_eq!(detail(3), Some("complex entity joins unrelated parts"));
+    assert_eq!(
+        detail(4),
+        Some("complex entity has parts of two ONEOF branches")
+    );
+    assert_eq!(
+        detail(5),
+        Some("complex entity has an abstract part without a subtype part")
+    );
+    assert_eq!(r.entities_kept, 1, "{:?}", r.dropped);
+}
+
+/// A combination one edition allows is kept: an area unit that is a named
+/// unit (AP203 edition 1), and an item both mapped and styled (AP214).
+#[test]
+fn older_edition_complex_forms_are_kept() {
+    let r = read_body(
+        "#1=(AREA_UNIT()NAMED_UNIT(*)SI_UNIT($,.METRE.));\n\
+         #2=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #3=REPRESENTATION_CONTEXT('','');\n\
+         #4=SHAPE_REPRESENTATION('',(#2),#3);\n\
+         #5=REPRESENTATION_MAP(#2,#4);\n\
+         #6=CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #7=COLOUR_RGB('',0.8,0.2,0.1);\n\
+         #8=FILL_AREA_STYLE_COLOUR('',#7);\n\
+         #9=FILL_AREA_STYLE('',(#8));\n\
+         #10=SURFACE_STYLE_FILL_AREA(#9);\n\
+         #11=SURFACE_SIDE_STYLE('',(#10));\n\
+         #12=SURFACE_STYLE_USAGE(.BOTH.,#11);\n\
+         #13=PRESENTATION_STYLE_ASSIGNMENT((#12));\n\
+         #14=(MAPPED_ITEM(#5,#6)REPRESENTATION_ITEM('')STYLED_ITEM((#13),#6));\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+}

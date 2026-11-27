@@ -848,7 +848,7 @@ fn a_dimension_value_is_not_one_of_its_limits() {
 fn a_dimension_with_only_limits_has_no_value() {
     let v = dimension_value(
         "#30=MEASURE_REPRESENTATION_ITEM('upper limit',LENGTH_MEASURE(10.1),#22);\n\
-         #31=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() REPRESENTATION_ITEM('lower limit') );\n\
+         #31=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() MEASURE_WITH_UNIT(LENGTH_MEASURE(9.9),#22) REPRESENTATION_ITEM('lower limit') );\n\
          #24=SHAPE_DIMENSION_REPRESENTATION('',(#30,#31),#21);\n",
     );
     assert_eq!(v, None);

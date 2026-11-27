@@ -4,6 +4,4337 @@
 # derived/derivable `*` slots from these. Names/own_attrs prefer newest AP;
 # a declared type editions disagree on is widened to cover them all.
 # `schemas` = source APs declaring the entity, chronological (membership data).
+# `edition_parents` = each edition's parents where they differ; `abstract_everywhere`
+# = ABSTRACT in every edition declaring it (`is_abstract`: in any); `supertype_has_and`
+# = some edition's SUPERTYPE OF holds an AND. [[oneof]] = every edition's ONEOF groups
+# (branch = flat name set of one ONEOF child subtree), with the editions declaring each.
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_for_assembly"
+branches = [
+    ["a3m_equivalence_criterion_of_assembly_data_structure"],
+    ["a3m_equivalence_criterion_of_detailed_assembly_data_content"],
+    ["a3m_equivalence_criterion_of_component_property_difference"],
+    ["a3m_equivalence_criterion_of_representative_assembly_property_value"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_for_shape"
+branches = [
+    ["a3m_equivalence_criterion_of_detailed_shape_data_content"],
+    ["a3m_equivalence_criterion_of_representative_shape_property_value"],
+    ["a3m_equivalence_criterion_of_shape_data_structure"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_of_assembly_data_structure"
+branches = [
+    ["different_component_identification_via_multi_level_reference"],
+    ["mismatch_of_component"],
+    ["missing_assembly_constraint"],
+    ["missing_component"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_of_detailed_assembly_data_content"
+branches = [
+    ["different_angle_of_assembly_constraint"],
+    ["different_assembly_constraint_type"],
+    ["different_component_type"],
+    ["different_length_of_assembly_constraint"],
+    ["different_placement_of_component"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_of_detailed_shape_data_content"
+branches = [
+    ["different_surface_normal"],
+    ["mismatch_of_arcwise_connected_curves"],
+    ["mismatch_of_arcwise_connected_surfaces"],
+    ["mismatch_of_arcwise_connected_surfaces_boundary"],
+    ["mismatch_of_points"],
+    ["mismatch_of_point_cloud_and_related_geometry"],
+    ["mismatch_of_underlying_edge_geometry"],
+    ["mismatch_of_underlying_face_geometry"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_of_representative_assembly_property_value"
+branches = [
+    ["different_assembly_centroid"],
+    ["different_assembly_centroid_using_notional_solid"],
+    ["different_assembly_volume"],
+    ["different_number_of_components"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_of_representative_shape_property_value"
+branches = [
+    ["different_bounding_box"],
+    ["different_centroid"],
+    ["different_curve_length"],
+    ["different_number_of_closed_shell"],
+    ["different_number_of_geometric_elements"],
+    ["different_number_of_geometric_elements_wireframe_model"],
+    ["different_number_of_topological_elements"],
+    ["different_number_of_topological_elements_wireframe_model"],
+    ["different_surface_area"],
+    ["different_volume"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_equivalence_criterion_of_shape_data_structure"
+branches = [
+    ["mismatch_of_edges"],
+    ["mismatch_of_faces"],
+    ["missing_edge"],
+    ["missing_face"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "a3m_erroneous_pmi_data"
+branches = [
+    ["erroneous_pmi_representation"],
+    ["erroneous_relation_of_pmi_and_feature"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "a3m_erroneous_triangulated_shape_data"
+branches = [
+    ["inconsistent_normals_of_adjacent_faces"],
+    ["inconsistent_normals_of_adjacent_triangles"],
+    ["non_manifold_at_triangle_edge"],
+    ["non_manifold_at_triangle_vertex"],
+    ["triangle_edge_in_free_edge_loop"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "a3m_inapt_pmi_data"
+branches = [
+    ["inapt_pmi_representation"],
+    ["inapt_relation_of_pmi_and_feature"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "a3m_inapt_triangulated_shape_data"
+branches = [
+    ["abrupt_normal_change_of_adjacent_triangles"],
+    ["abrupt_normal_change_of_adjacent_faces"],
+    ["gap_in_triangulated_face"],
+    ["gap_in_triangulated_shell_or_solid"],
+    ["inconsistent_triangle_normal_and_normal_at_vertex"],
+    ["inner_void_in_triangulated_solid"],
+    ["large_aspect_ratio_triangle"],
+    ["large_number_of_triangles"],
+    ["nearly_overlapping_triangles"],
+    ["non_homogeneous_triangle_size"],
+    ["self_intersecting_triangulated_face"],
+    ["self_intersecting_triangulated_shell_or_solid"],
+    ["sharp_triangle_vertex"],
+    ["short_height_triangle"],
+    ["short_triangle_edge"],
+    ["small_triangulated_shell"],
+    ["thin_slit_in_triangulated_shell_or_solid"],
+    ["thin_thickness_of_triangulated_shell_or_solid"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "a3m_pmi_data_quality_criterion"
+branches = [
+    ["a3m_erroneous_pmi_data"],
+    ["a3m_inapt_pmi_data"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "a3m_triangulated_shape_data_quality_criterion"
+branches = [
+    ["a3m_erroneous_triangulated_shape_data"],
+    ["a3m_inapt_triangulated_shape_data"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "action_assignment"
+branches = [
+    ["applied_usage_right"],
+    ["applied_action_assignment"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "action_method"
+branches = [
+    ["task_element"],
+    ["task_method"],
+    ["task_method_version"],
+    ["task_objective"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "action_method_relationship"
+branches = [
+    ["task_element_relationship"],
+    ["task_method_relationship"],
+    ["task_method_version_relationship"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "additive_manufacturing_setup_relationship"
+branches = [
+    ["additive_manufacturing_build_plate_relationship"],
+    ["additive_manufacturing_support_structure_geometry_relationship"],
+    ["additive_manufacturing_setup_workpiece_relationship"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "annotation_curve_occurrence"
+branches = [
+    ["dimension_curve"],
+    ["leader_curve"],
+    ["projection_curve"],
+]
+editions = [
+    "ap242e1",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "annotation_curve_occurrence"
+branches = [
+    ["leader_curve"],
+    ["projection_curve"],
+]
+editions = ["ap242e2"]
+
+[[oneof]]
+supertype = "annotation_occurrence"
+branches = [
+    ["annotation_curve_occurrence"],
+    ["annotation_fill_area_occurrence"],
+    ["annotation_plane"],
+    ["annotation_symbol_occurrence"],
+    ["annotation_text_occurrence"],
+]
+editions = ["ap242e2"]
+
+[[oneof]]
+supertype = "annotation_occurrence"
+branches = [
+    ["annotation_curve_occurrence"],
+    ["annotation_fill_area_occurrence"],
+    ["annotation_plane"],
+    ["annotation_symbol_occurrence"],
+    ["annotation_text_occurrence"],
+    ["tessellated_annotation_occurrence"],
+]
+editions = ["ap242e1"]
+
+[[oneof]]
+supertype = "annotation_occurrence"
+branches = [
+    ["annotation_curve_occurrence"],
+    ["annotation_fill_area_occurrence"],
+    ["annotation_text_occurrence"],
+    ["annotation_symbol_occurrence"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+]
+
+[[oneof]]
+supertype = "annotation_occurrence"
+branches = [
+    ["annotation_point_occurrence"],
+    ["annotation_curve_occurrence"],
+    ["annotation_fill_area_occurrence"],
+    ["annotation_placeholder_occurrence"],
+    ["annotation_plane"],
+    ["annotation_text_occurrence"],
+    ["annotation_symbol_occurrence"],
+    ["tessellated_annotation_occurrence"],
+]
+editions = [
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "annotation_occurrence"
+branches = [
+    ["annotation_point_occurrence"],
+    ["annotation_curve_occurrence"],
+    ["annotation_fill_area_occurrence"],
+    ["annotation_text_occurrence"],
+    ["annotation_symbol_occurrence"],
+]
+editions = ["ap242e2"]
+
+[[oneof]]
+supertype = "annotation_placeholder_leader_line"
+branches = [
+    ["annotation_to_annotation_leader_line"],
+    ["annotation_to_model_leader_line"],
+    ["auxiliary_leader_line"],
+]
+editions = [
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "application_context_element"
+branches = [
+    ["product_concept_context"],
+    ["product_context"],
+    ["product_definition_context"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "application_context_element"
+branches = [
+    ["product_context"],
+    ["product_definition_context"],
+    ["product_concept_context"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "area_based_llai"
+branches = [
+    ["butt_splice_area"],
+    ["darting_area"],
+    ["fiber_orientation_angle_tolerance_deviation_area"],
+    ["manufacturing_edge_of_part"],
+    ["manufacturing_edge_of_ply"],
+    ["no_splice_area"],
+    ["overlap_splice_area"],
+    ["ply_drop_off_stay_out_area"],
+    ["ply_wrinkle_allowance_area"],
+    ["potting_area"],
+    ["stitching_area"],
+    ["surface_porosity_allowance_area"],
+    ["surface_preparation_area"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "array_placement_group"
+branches = [
+    ["linear_array_placement_group_component"],
+    ["rectangular_array_placement_group_component"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "assembly_component_usage"
+branches = [
+    ["multi_level_reference_designator"],
+    ["next_assembly_usage_occurrence"],
+    ["promissory_usage_occurrence"],
+    ["specified_higher_usage_occurrence"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "assembly_component_usage"
+branches = [
+    ["next_assembly_usage_occurrence"],
+    ["specified_higher_usage_occurrence"],
+    ["promissory_usage_occurrence"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+]
+
+[[oneof]]
+supertype = "assembly_geometric_constraint"
+branches = [
+    ["binary_assembly_constraint"],
+    ["fixed_constituent_assembly_constraint"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "b_spline_curve"
+branches = [
+    ["uniform_curve"],
+    ["b_spline_curve_with_knots"],
+    ["quasi_uniform_curve"],
+    ["bezier_curve"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "b_spline_surface"
+branches = [
+    ["b_spline_surface_with_knots"],
+    ["uniform_surface"],
+    ["quasi_uniform_surface"],
+    ["bezier_surface"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "b_spline_volume"
+branches = [
+    ["b_spline_volume_with_knots"],
+    ["uniform_volume"],
+    ["quasi_uniform_volume"],
+    ["bezier_volume"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "binary_assembly_constraint"
+branches = [
+    ["parallel_assembly_constraint"],
+    ["surface_distance_assembly_constraint_with_dimension"],
+    ["angle_assembly_constraint_with_dimension"],
+    ["perpendicular_assembly_constraint"],
+    ["incidence_assembly_constraint"],
+    ["coaxial_assembly_constraint"],
+    ["tangent_assembly_constraint"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "binary_boolean_expression"
+branches = [
+    ["xor_expression"],
+    ["equals_expression"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "binary_numeric_expression"
+branches = [
+    ["minus_expression"],
+    ["div_expression"],
+    ["mod_expression"],
+    ["slash_expression"],
+    ["power_expression"],
+    ["binary_function_call"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "boolean_expression"
+branches = [
+    ["simple_boolean_expression"],
+    ["multiple_arity_boolean_expression"],
+    ["comparison_expression"],
+    ["interval_expression"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "boolean_expression"
+branches = [
+    ["simple_boolean_expression"],
+    ["unary_boolean_expression"],
+    ["binary_boolean_expression"],
+    ["multiple_arity_boolean_expression"],
+    ["comparison_expression"],
+    ["interval_expression"],
+    ["boolean_defined_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "bounded_curve"
+branches = [
+    ["polyline"],
+    ["b_spline_curve"],
+    ["trimmed_curve"],
+    ["bounded_pcurve"],
+    ["bounded_surface_curve"],
+    ["composite_curve"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+]
+
+[[oneof]]
+supertype = "bounded_curve"
+branches = [
+    ["polyline"],
+    ["b_spline_curve"],
+    ["trimmed_curve"],
+    ["bounded_pcurve"],
+    ["bounded_surface_curve"],
+    ["composite_curve"],
+    ["locally_refined_spline_curve"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "bounded_surface"
+branches = [
+    ["b_spline_surface"],
+    ["rectangular_trimmed_surface"],
+    ["curve_bounded_surface"],
+    ["rectangular_composite_surface"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+]
+
+[[oneof]]
+supertype = "bounded_surface"
+branches = [
+    ["b_spline_surface"],
+    ["rectangular_trimmed_surface"],
+    ["curve_bounded_surface"],
+    ["rectangular_composite_surface"],
+    ["locally_refined_spline_surface"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "camera_image"
+branches = [
+    ["camera_image_2d_with_scale"],
+    ["camera_image_3d_with_scale"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "camera_model"
+branches = [
+    ["camera_model_d2"],
+    ["camera_model_d3"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "cartesian_point"
+branches = [
+    ["cylindrical_point"],
+    ["polar_point"],
+    ["spherical_point"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "cartesian_transformation_operator"
+branches = [
+    ["cartesian_transformation_operator_2d"],
+    ["cartesian_transformation_operator_3d"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "change_element"
+branches = [
+    ["modify_element"],
+    ["delete_element"],
+    ["add_element"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "comparison_expression"
+branches = [
+    ["comparison_equal"],
+    ["comparison_greater"],
+    ["comparison_greater_equal"],
+    ["comparison_less"],
+    ["comparison_less_equal"],
+    ["comparison_not_equal"],
+    ["like_expression"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "composite_shape_aspect"
+branches = [
+    ["continuous_shape_aspect"],
+    ["common_datum"],
+    ["composite_group_shape_aspect"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "compound_representation_item"
+branches = [
+    ["point_and_vector"],
+    ["point_array"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "compound_representation_item"
+branches = [
+    ["point_and_vector"],
+    ["point_path"],
+]
+editions = ["ap242e1"]
+
+[[oneof]]
+supertype = "compound_representation_item"
+branches = [
+    ["point_and_vector"],
+    ["point_path"],
+    ["row_representation_item"],
+    ["table_representation_item"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "compound_representation_item"
+branches = [
+    ["row_representation_item"],
+    ["table_representation_item"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "conic"
+branches = [
+    ["circle"],
+    ["ellipse"],
+    ["hyperbola"],
+    ["parabola"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "connected_face_set"
+branches = [
+    ["closed_shell"],
+    ["open_shell"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "continuous_shape_aspect"
+branches = [
+    ["between_shape_aspect"],
+    ["all_around_shape_aspect"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "cross_sectional_group_shape_element"
+branches = [
+    ["cross_sectional_group_shape_element_with_tubular_cover"],
+    ["cross_sectional_group_shape_element_with_lacing"],
+    ["twisted_cross_sectional_group_shape_element"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "cross_sectional_part_shape_element"
+branches = [
+    ["cross_sectional_alternative_shape_element"],
+    ["cross_sectional_group_shape_element"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "currency"
+branches = [
+    ["externally_defined_currency"],
+    ["iso4217_currency"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "curve"
+branches = [
+    ["line"],
+    ["conic"],
+    ["clothoid"],
+    ["circular_involute"],
+    ["pcurve"],
+    ["surface_curve"],
+    ["offset_curve_2d"],
+    ["offset_curve_3d"],
+    ["curve_replica"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "curve"
+branches = [
+    ["line"],
+    ["conic"],
+    ["pcurve"],
+    ["surface_curve"],
+    ["offset_curve_2d"],
+    ["offset_curve_3d"],
+    ["curve_replica"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+]
+
+[[oneof]]
+supertype = "curve"
+branches = [
+    ["line"],
+    ["conic"],
+    ["pcurve"],
+    ["surface_curve"],
+    ["offset_curve_3d"],
+    ["curve_replica"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "data_equivalence_inspection_criterion_report_item"
+branches = [
+    ["a3m_equivalence_criterion_report_item_with_measured_value"],
+    ["criterion_report_item_with_number_of_instances"],
+    ["criterion_report_item_with_value"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "data_equivalence_inspection_criterion_report_item"
+branches = [
+    ["criterion_report_item_with_number_of_instances"],
+    ["criterion_report_item_with_value"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "data_equivalence_inspection_report"
+branches = [
+    ["data_equivalence_inspection_criterion_report"],
+    ["data_equivalence_inspection_instance_report"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "data_quality_inspection_report"
+branches = [
+    ["data_quality_inspection_criterion_report"],
+    ["data_quality_inspection_instance_report"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "data_quality_report_request"
+branches = [
+    ["summary_report_request"],
+    ["detailed_report_request"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "date"
+branches = [
+    ["calendar_date"],
+    ["ordinal_date"],
+    ["week_of_year_and_day_date"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "date"
+branches = [
+    ["calendar_date"],
+    ["ordinal_date"],
+    ["week_of_year_and_day_date"],
+    ["year_month"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "datum_feature"
+branches = [
+    ["dimensional_location_with_datum_feature"],
+    ["dimensional_size_with_datum_feature"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "defined_function"
+branches = [
+    ["numeric_defined_function"],
+    ["string_defined_function"],
+    ["boolean_defined_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "derived_shape_aspect"
+branches = [
+    ["apex"],
+    ["centre_of_symmetry"],
+    ["geometric_alignment"],
+    ["geometric_contact"],
+    ["geometric_intersection"],
+    ["parallel_offset"],
+    ["perpendicular_to"],
+    ["extension"],
+    ["tangent"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "derived_shape_aspect"
+branches = [
+    ["apex"],
+    ["centre_of_symmetry"],
+    ["geometric_alignment"],
+    ["geometric_intersection"],
+    ["parallel_offset"],
+    ["perpendicular_to"],
+    ["extension"],
+    ["tangent"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+]
+
+[[oneof]]
+supertype = "derived_unit"
+branches = [
+    ["absorbed_dose_unit"],
+    ["acceleration_unit"],
+    ["radioactivity_unit"],
+    ["area_unit"],
+    ["capacitance_unit"],
+    ["dose_equivalent_unit"],
+    ["electric_charge_unit"],
+    ["conductance_unit"],
+    ["electric_potential_unit"],
+    ["energy_unit"],
+    ["magnetic_flux_density_unit"],
+    ["force_unit"],
+    ["frequency_unit"],
+    ["illuminance_unit"],
+    ["inductance_unit"],
+    ["magnetic_flux_unit"],
+    ["power_unit"],
+    ["pressure_unit"],
+    ["resistance_unit"],
+    ["velocity_unit"],
+    ["volume_unit"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "derived_unit"
+branches = [
+    ["area_unit"],
+    ["volume_unit"],
+]
+editions = ["ap214e3"]
+
+[[oneof]]
+supertype = "descriptive_representation_item"
+branches = [
+    ["tagged_text_item"],
+    ["uniform_resource_identifier"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "dimensional_location"
+branches = [
+    ["angular_location"],
+    ["dimensional_location_with_path"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "dimensional_size"
+branches = [
+    ["angular_size"],
+    ["dimensional_size_with_path"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "discontinuous_geometry"
+branches = [
+    ["g1_discontinuous_curve"],
+    ["g2_discontinuous_curve"],
+    ["g1_discontinuous_surface"],
+    ["g2_discontinuous_surface"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "draughting_callout"
+branches = [
+    ["datum_feature_callout"],
+    ["datum_target_callout"],
+    ["dimension_curve_directed_callout"],
+    ["draughting_elements"],
+    ["geometrical_tolerance_callout"],
+    ["leader_directed_callout"],
+    ["projection_directed_callout"],
+    ["structured_dimension_callout"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "edge"
+branches = [
+    ["edge_curve"],
+    ["edge_with_length"],
+    ["oriented_edge"],
+    ["subedge"],
+]
+editions = ["ap242e2"]
+
+[[oneof]]
+supertype = "edge"
+branches = [
+    ["edge_curve"],
+    ["oriented_edge"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "edge"
+branches = [
+    ["edge_curve"],
+    ["oriented_edge"],
+    ["subedge"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "edge_blended_solid"
+branches = [
+    ["solid_with_constant_radius_edge_blend"],
+    ["solid_with_chamfered_edges"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "edge_blended_solid"
+branches = [
+    ["solid_with_constant_radius_edge_blend"],
+    ["solid_with_variable_radius_edge_blend"],
+    ["solid_with_chamfered_edges"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "effectivity"
+branches = [
+    ["serial_numbered_effectivity"],
+    ["dated_effectivity"],
+    ["lot_effectivity"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "effectivity"
+branches = [
+    ["serial_numbered_effectivity"],
+    ["dated_effectivity"],
+    ["lot_effectivity"],
+    ["time_interval_based_effectivity"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "elementary_surface"
+branches = [
+    ["plane"],
+    ["cylindrical_surface"],
+    ["conical_surface"],
+    ["spherical_surface"],
+    ["toroidal_surface"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "erroneous_data"
+branches = [
+    ["erroneous_topology"],
+    ["erroneous_geometry"],
+    ["erroneous_topology_and_geometry_relationship"],
+    ["erroneous_manifold_solid_brep"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "erroneous_geometry"
+branches = [
+    ["inconsistent_curve_transition_code"],
+    ["erroneous_b_spline_curve_definition"],
+    ["inconsistent_surface_transition_code"],
+    ["erroneous_b_spline_surface_definition"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "erroneous_manifold_solid_brep"
+branches = [
+    ["wrongly_oriented_void"],
+    ["wrongly_placed_void"],
+    ["intersecting_shells_in_solid"],
+    ["solid_with_wrong_number_of_voids"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "erroneous_pmi_representation"
+branches = [
+    ["incorrect_datum_reference_by_datum_target"],
+    ["incorrect_unit_of_tolerance_value"],
+    ["duplicated_datum"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "erroneous_relation_of_pmi_and_feature"
+branches = [
+    ["no_general_part_feature_association"],
+    ["incorrect_relation_of_geometric_tolerance_and_feature"],
+    ["incorrect_relation_of_geometric_tolerance_and_datum_feature"],
+    ["inconsistent_feature_for_range_symbol"],
+    ["insufficiently_constrained_datum_system"],
+    ["incorrect_spatial_arrangement_of_datum_targets"],
+    ["incorrect_geometric_relation_of_datum_and_toleranced_feature"],
+    ["incorrect_relation_of_geometric_tolerance_modifier_to_feature"],
+    ["inconsistent_length_between_annotation_value_and_shape"],
+    ["inconsistent_angle_between_annotation_value_and_shape"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "erroneous_topology"
+branches = [
+    ["open_edge_loop"],
+    ["open_closed_shell"],
+    ["inconsistent_adjacent_face_normals"],
+    ["disconnected_face_set"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "erroneous_topology_and_geometry_relationship"
+branches = [
+    ["inconsistent_edge_and_curve_directions"],
+    ["inconsistent_face_and_surface_normals"],
+    ["inconsistent_face_and_closed_shell_normals"],
+    ["intersecting_loops_in_face"],
+    ["wrongly_placed_loop"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "explicit_constraint"
+branches = [
+    ["defined_constraint"],
+    ["free_form_constraint"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "explicit_geometric_constraint"
+branches = [
+    ["fixed_element_geometric_constraint"],
+    ["parallel_geometric_constraint"],
+    ["point_distance_geometric_constraint"],
+    ["skew_line_distance_geometric_constraint"],
+    ["curve_distance_geometric_constraint"],
+    ["surface_distance_geometric_constraint"],
+    ["radius_geometric_constraint"],
+    ["curve_length_geometric_constraint"],
+    ["parallel_offset_geometric_constraint"],
+    ["angle_geometric_constraint"],
+    ["perpendicular_geometric_constraint"],
+    ["incidence_geometric_constraint"],
+    ["coaxial_geometric_constraint"],
+    ["tangent_geometric_constraint"],
+    ["symmetry_geometric_constraint"],
+    ["swept_point_curve_geometric_constraint"],
+    ["swept_curve_surface_geometric_constraint"],
+    ["curve_smoothness_geometric_constraint"],
+    ["surface_smoothness_geometric_constraint"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "explicit_table_function"
+branches = [
+    ["listed_data"],
+    ["externally_listed_data"],
+    ["linearized_table_function"],
+    ["basic_sparse_matrix"],
+]
+editions = ["ap242e1"]
+
+[[oneof]]
+supertype = "explicit_table_function"
+branches = [
+    ["listed_real_data"],
+    ["listed_integer_data"],
+    ["listed_logical_data"],
+    ["listed_string_data"],
+    ["listed_complex_number_data"],
+    ["listed_data"],
+    ["externally_listed_data"],
+    ["linearized_table_function"],
+    ["basic_sparse_matrix"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "expression"
+branches = [
+    ["numeric_expression"],
+    ["boolean_expression"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "expression"
+branches = [
+    ["numeric_expression"],
+    ["boolean_expression"],
+    ["string_expression"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "extruded_face_solid_with_trim_conditions"
+branches = [
+    ["extruded_face_solid_with_draft_angle"],
+    ["extruded_face_solid_with_multiple_draft_angles"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "face"
+branches = [
+    ["face_surface"],
+    ["oriented_face"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "face"
+branches = [
+    ["face_surface"],
+    ["oriented_face"],
+    ["subface"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "face"
+branches = [
+    ["face_surface"],
+    ["subface"],
+    ["oriented_face"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+]
+
+[[oneof]]
+supertype = "faceted_primitive"
+branches = [
+    ["tetrahedron"],
+    ["convex_hexahedron"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "feature_component_relationship"
+branches = [
+    ["pattern_omit_membership"],
+    ["pattern_offset_membership"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "feature_definition"
+branches = [
+    ["boss"],
+    ["compound_feature"],
+    ["externally_defined_feature_definition"],
+    ["flat_face"],
+    ["gear"],
+    ["marking"],
+    ["outer_round"],
+    ["outside_profile"],
+    ["pocket"],
+    ["protrusion"],
+    ["removal_volume"],
+    ["replicate_feature"],
+    ["revolved_profile"],
+    ["rib_top"],
+    ["round_hole"],
+    ["rounded_end"],
+    ["spherical_cap"],
+    ["step"],
+    ["slot"],
+    ["thread"],
+    ["turned_knurl"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "founded_item"
+branches = [
+    ["b_spline_curve_knot_locator"],
+    ["b_spline_curve_segment"],
+    ["b_spline_surface_knot_locator"],
+    ["b_spline_surface_patch"],
+    ["b_spline_surface_strip"],
+    ["boundary_curve_of_b_spline_or_rectangular_composite_surface"],
+    ["box_domain"],
+    ["character_glyph_style_outline"],
+    ["character_glyph_style_stroke"],
+    ["composite_curve_segment"],
+    ["composite_curve_transition_locator"],
+    ["curve_style"],
+    ["curve_style_font"],
+    ["curve_style_font_and_scaling"],
+    ["curve_style_font_pattern"],
+    ["externally_defined_style"],
+    ["fill_area_style"],
+    ["interpolated_configuration_segment"],
+    ["kinematic_path_segment"],
+    ["plane_angle_and_length_pair"],
+    ["plane_angle_and_ratio_pair"],
+    ["point_style"],
+    ["presentation_style_assignment"],
+    ["rectangular_composite_surface_transition_locator"],
+    ["surface_patch"],
+    ["surface_side_style"],
+    ["surface_style_boundary"],
+    ["surface_style_control_grid"],
+    ["surface_style_fill_area"],
+    ["surface_style_parameter_line"],
+    ["surface_style_segmentation_curve"],
+    ["surface_style_silhouette"],
+    ["surface_style_usage"],
+    ["symbol_style"],
+    ["text_style"],
+    ["view_volume"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "founded_item"
+branches = [
+    ["character_glyph_style_outline"],
+    ["character_glyph_style_stroke"],
+    ["curve_style"],
+    ["curve_style_font"],
+    ["curve_style_font_and_scaling"],
+    ["curve_style_font_pattern"],
+    ["externally_defined_style"],
+    ["fill_area_style"],
+    ["point_style"],
+    ["presentation_style_assignment"],
+    ["surface_side_style"],
+    ["surface_style_boundary"],
+    ["surface_style_control_grid"],
+    ["surface_style_fill_area"],
+    ["surface_style_parameter_line"],
+    ["surface_style_segmentation_curve"],
+    ["surface_style_silhouette"],
+    ["surface_style_usage"],
+    ["symbol_style"],
+    ["text_style"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "founded_item"
+branches = [
+    ["character_glyph_style_outline"],
+    ["character_glyph_style_stroke"],
+    ["curve_style"],
+    ["curve_style_font"],
+    ["curve_style_font_and_scaling"],
+    ["curve_style_font_pattern"],
+    ["fill_area_style"],
+    ["point_style"],
+    ["presentation_style_assignment"],
+    ["surface_side_style"],
+    ["surface_style_boundary"],
+    ["surface_style_control_grid"],
+    ["surface_style_fill_area"],
+    ["surface_style_parameter_line"],
+    ["surface_style_segmentation_curve"],
+    ["surface_style_silhouette"],
+    ["surface_style_usage"],
+    ["symbol_style"],
+    ["text_style"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "free_form_constraint"
+branches = [
+    ["free_form_assignment"],
+    ["free_form_relation"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "general_datum_reference"
+branches = [
+    ["datum_reference_compartment"],
+    ["datum_reference_element"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "generic_expression"
+branches = [
+    ["simple_generic_expression"],
+    ["unary_generic_expression"],
+    ["binary_generic_expression"],
+    ["multiple_arity_generic_expression"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "generic_product_definition_reference"
+branches = [
+    ["product_definition_reference"],
+    ["product_definition_reference_with_local_representation"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_gap_in_topology"
+branches = [
+    ["gap_between_adjacent_edges_in_loop"],
+    ["gap_between_vertex_and_base_surface"],
+    ["gap_between_vertex_and_edge"],
+    ["gap_between_edge_and_base_surface"],
+    ["gap_between_pcurves_related_to_an_edge"],
+    ["gap_between_faces_related_to_an_edge"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_representation_context"
+branches = [
+    ["geometric_representation_context_with_parameter"],
+    ["path_parameter_representation_context"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["annotation_fill_area"],
+    ["composite_text"],
+    ["curve"],
+    ["defined_character_glyph"],
+    ["defined_symbol"],
+    ["point"],
+    ["symbol_target"],
+    ["text_literal"],
+]
+editions = [
+    "ap242e1",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["annotation_fill_area"],
+    ["curve"],
+    ["point"],
+    ["text_literal"],
+]
+editions = ["ap242e2"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["block"],
+    ["boolean_result"],
+    ["cartesian_transformation_operator"],
+    ["curve"],
+    ["cyclide_segment_solid"],
+    ["direction"],
+    ["edge_based_wireframe_model"],
+    ["edge_curve"],
+    ["ellipsoid"],
+    ["face_based_surface_model"],
+    ["face_surface"],
+    ["faceted_primitive"],
+    ["geometric_set"],
+    ["half_space_solid"],
+    ["placement"],
+    ["point"],
+    ["poly_loop"],
+    ["primitive_2d"],
+    ["rectangular_pyramid"],
+    ["right_angular_wedge"],
+    ["right_circular_cone"],
+    ["right_circular_cylinder"],
+    ["scanned_data_item"],
+    ["shell_based_surface_model"],
+    ["shell_based_wireframe_model"],
+    ["solid_model"],
+    ["sphere"],
+    ["surface"],
+    ["tessellated_item"],
+    ["torus"],
+    ["vector"],
+    ["vertex_point"],
+    ["volume"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["camera_model"],
+    ["camera_model_d3_multi_clipping_intersection"],
+    ["camera_model_d3_multi_clipping_union"],
+    ["curve"],
+    ["direction"],
+    ["light_source"],
+]
+editions = [
+    "ap242e1",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["camera_model"],
+    ["curve"],
+    ["direction"],
+]
+editions = ["ap242e2"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["curve"],
+    ["externally_defined_hatch_style"],
+    ["externally_defined_tile_style"],
+    ["fill_area_style_hatching"],
+    ["fill_area_style_tile_coloured_region"],
+    ["fill_area_style_tile_curve_with_style"],
+    ["fill_area_style_tile_symbol_with_style"],
+    ["fill_area_style_tiles"],
+    ["one_direction_repeat_factor"],
+    ["point"],
+    ["vector"],
+]
+editions = [
+    "ap242e1",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["curve"],
+    ["externally_defined_hatch_style"],
+    ["externally_defined_tile_style"],
+    ["fill_area_style_hatching"],
+    ["fill_area_style_tile_symbol_with_style"],
+    ["fill_area_style_tiles"],
+    ["one_direction_repeat_factor"],
+    ["point"],
+    ["vector"],
+]
+editions = ["ap242e2"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["curve"],
+    ["planar_extent"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["kinematic_path"],
+    ["placement"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["point"],
+    ["direction"],
+    ["vector"],
+    ["placement"],
+    ["cartesian_transformation_operator"],
+    ["curve"],
+    ["surface"],
+    ["edge_curve"],
+    ["face_surface"],
+    ["poly_loop"],
+    ["vertex_point"],
+    ["solid_model"],
+    ["boolean_result"],
+    ["sphere"],
+    ["right_circular_cone"],
+    ["right_circular_cylinder"],
+    ["torus"],
+    ["block"],
+    ["primitive_2d"],
+    ["right_angular_wedge"],
+    ["ellipsoid"],
+    ["faceted_primitive"],
+    ["rectangular_pyramid"],
+    ["cyclide_segment_solid"],
+    ["volume"],
+    ["half_space_solid"],
+    ["shell_based_surface_model"],
+    ["face_based_surface_model"],
+    ["shell_based_wireframe_model"],
+    ["edge_based_wireframe_model"],
+    ["geometric_set"],
+    ["tessellated_item"],
+    ["volume_with_faces"],
+    ["scanned_data_item"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["point"],
+    ["direction"],
+    ["vector"],
+    ["placement"],
+    ["cartesian_transformation_operator"],
+    ["curve"],
+    ["surface"],
+    ["edge_curve"],
+    ["face_surface"],
+    ["poly_loop"],
+    ["vertex_point"],
+    ["solid_model"],
+    ["boolean_result"],
+    ["sphere"],
+    ["right_circular_cone"],
+    ["right_circular_cylinder"],
+    ["torus"],
+    ["block"],
+    ["primitive_2d"],
+    ["right_angular_wedge"],
+    ["volume"],
+    ["half_space_solid"],
+    ["shell_based_surface_model"],
+    ["face_based_surface_model"],
+    ["shell_based_wireframe_model"],
+    ["edge_based_wireframe_model"],
+    ["geometric_set"],
+    ["tessellated_item"],
+]
+editions = ["ap242e1"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["point"],
+    ["direction"],
+    ["vector"],
+    ["placement"],
+    ["cartesian_transformation_operator"],
+    ["curve"],
+    ["surface"],
+    ["edge_curve"],
+    ["face_surface"],
+    ["poly_loop"],
+    ["vertex_point"],
+    ["solid_model"],
+    ["boolean_result"],
+    ["sphere"],
+    ["right_circular_cone"],
+    ["right_circular_cylinder"],
+    ["torus"],
+    ["block"],
+    ["right_angular_wedge"],
+    ["half_space_solid"],
+    ["shell_based_surface_model"],
+    ["face_based_surface_model"],
+    ["edge_based_wireframe_model"],
+    ["geometric_set"],
+]
+editions = ["ap214e3"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["point"],
+    ["direction"],
+    ["vector"],
+    ["placement"],
+    ["cartesian_transformation_operator"],
+    ["curve"],
+    ["surface"],
+    ["edge_curve"],
+    ["face_surface"],
+    ["poly_loop"],
+    ["vertex_point"],
+    ["solid_model"],
+    ["boolean_result"],
+    ["sphere"],
+    ["right_circular_cone"],
+    ["right_circular_cylinder"],
+    ["torus"],
+    ["block"],
+    ["right_angular_wedge"],
+    ["half_space_solid"],
+    ["shell_based_surface_model"],
+    ["face_based_surface_model"],
+    ["shell_based_wireframe_model"],
+    ["edge_based_wireframe_model"],
+    ["geometric_set"],
+    ["camera_model"],
+    ["camera_model_d3_multi_clipping_intersection"],
+    ["camera_model_d3_multi_clipping_union"],
+    ["light_source"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["point"],
+    ["direction"],
+    ["vector"],
+    ["placement"],
+    ["cartesian_transformation_operator"],
+    ["curve"],
+    ["surface"],
+    ["edge_curve"],
+    ["face_surface"],
+    ["poly_loop"],
+    ["vertex_point"],
+    ["solid_model"],
+    ["shell_based_surface_model"],
+    ["shell_based_wireframe_model"],
+    ["edge_based_wireframe_model"],
+    ["geometric_set"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "geometric_representation_item"
+branches = [
+    ["rotation_about_direction"],
+    ["su_parameters"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_tolerance"
+branches = [
+    ["cylindricity_tolerance"],
+    ["flatness_tolerance"],
+    ["line_profile_tolerance"],
+    ["position_tolerance"],
+    ["roundness_tolerance"],
+    ["straightness_tolerance"],
+    ["surface_profile_tolerance"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_tolerance"
+branches = [
+    ["geometric_tolerance_with_modifiers"],
+    ["modified_geometric_tolerance"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometric_tolerance_with_datum_reference"
+branches = [
+    ["angularity_tolerance"],
+    ["circular_runout_tolerance"],
+    ["coaxiality_tolerance"],
+    ["concentricity_tolerance"],
+    ["parallelism_tolerance"],
+    ["perpendicularity_tolerance"],
+    ["symmetry_tolerance"],
+    ["total_runout_tolerance"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometry_with_local_irregularity"
+branches = [
+    ["extreme_patch_width_variation"],
+    ["zero_surface_normal"],
+    ["abrupt_change_of_surface_normal"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "geometry_with_local_near_degeneracy"
+branches = [
+    ["curve_with_small_curvature_radius"],
+    ["short_length_curve_segment"],
+    ["surface_with_small_curvature_radius"],
+    ["small_area_surface_patch"],
+    ["narrow_surface_patch"],
+    ["indistinct_surface_knots"],
+    ["indistinct_curve_knots"],
+    ["nearly_degenerate_surface_boundary"],
+    ["nearly_degenerate_surface_patch"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "group"
+branches = [
+    ["change_group"],
+    ["change_element"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "group_assignment"
+branches = [
+    ["current_change_element_assignment"],
+    ["previous_change_element_assignment"],
+    ["change_group_assignment"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "high_order_kinematic_pair"
+branches = [
+    ["linear_flexible_and_planar_curve_pair"],
+    ["point_on_surface_pair"],
+    ["point_on_planar_curve_pair"],
+    ["planar_curve_pair"],
+    ["surface_pair"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "implicit_planar_curve"
+branches = [
+    ["implicit_intersection_curve"],
+    ["implicit_projected_curve"],
+    ["implicit_model_intersection_curve"],
+    ["implicit_silhouette_curve"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "implicit_point_on_plane"
+branches = [
+    ["implicit_planar_intersection_point"],
+    ["implicit_planar_projection_point"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "inapt_data"
+branches = [
+    ["inapt_topology"],
+    ["inapt_geometry"],
+    ["inapt_topology_and_geometry_relationship"],
+    ["inapt_manifold_solid_brep"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "inapt_geometry"
+branches = [
+    ["nearly_degenerate_geometry"],
+    ["discontinuous_geometry"],
+    ["self_intersecting_geometry"],
+    ["geometry_with_local_near_degeneracy"],
+    ["overlapping_geometry"],
+    ["multiply_defined_geometry"],
+    ["geometry_with_local_irregularity"],
+    ["overcomplex_geometry"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "inapt_manifold_solid_brep"
+branches = [
+    ["partly_overlapping_solids"],
+    ["small_volume_solid"],
+    ["multiply_defined_solids"],
+    ["entirely_narrow_solid"],
+    ["solid_with_excessive_number_of_voids"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "inapt_relation_of_pmi_and_feature"
+branches = [
+    ["geometric_tolerance_related_to_edge"],
+    ["general_part_feature_without_pmi"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "inapt_topology"
+branches = [
+    ["free_edge"],
+    ["non_manifold_at_edge"],
+    ["non_manifold_at_vertex"],
+    ["over_used_vertex"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "inapt_topology_and_geometry_relationship"
+branches = [
+    ["topology_related_to_nearly_degenerate_geometry"],
+    ["geometric_gap_in_topology"],
+    ["non_smooth_geometry_transition_across_edge"],
+    ["topology_related_to_self_intersecting_geometry"],
+    ["steep_geometry_transition_across_edge"],
+    ["topology_related_to_overlapping_geometry"],
+    ["topology_related_to_multiply_defined_geometry"],
+    ["overcomplex_topology_and_geometry_relationship"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "item_defined_transformation"
+branches = [
+    ["topology_to_geometry_item_association"],
+    ["geometry_to_topology_item_association"],
+]
+editions = [
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "kinematic_link_representation"
+branches = [
+    ["linear_flexible_link_representation"],
+    ["rigid_link_representation"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "kinematic_pair"
+branches = [
+    ["high_order_kinematic_pair"],
+    ["low_order_kinematic_pair_with_motion_coupling"],
+    ["low_order_kinematic_pair"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "kinematic_path"
+branches = [
+    ["kinematic_path_defined_by_nodes"],
+    ["kinematic_path_defined_by_curves"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "kinematic_path_segment"
+branches = [
+    ["path_node"],
+    ["curve_based_path_with_orientation"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "kinematic_property_definition_representation"
+branches = [
+    ["kinematic_property_topology_representation"],
+    ["kinematic_property_mechanism_representation"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "laminate_table"
+branches = [
+    ["part_laminate_table"],
+    ["zone_structural_makeup"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "light_source"
+branches = [
+    ["light_source_ambient"],
+    ["light_source_directional"],
+    ["light_source_positional"],
+    ["light_source_spot"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "line_based_llai"
+branches = [
+    ["edge_sealing"],
+    ["guide_curve"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "linearized_table_function"
+branches = [
+    ["standard_table_function"],
+    ["regular_table_function"],
+    ["triangular_matrix"],
+    ["symmetric_matrix"],
+    ["banded_matrix"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "link_motion_representation_along_path"
+branches = [
+    ["prescribed_path"],
+    ["resulting_path"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "literal_number"
+branches = [
+    ["int_literal"],
+    ["real_literal"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "loop"
+branches = [
+    ["vertex_loop"],
+    ["edge_loop"],
+    ["poly_loop"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "low_order_kinematic_pair"
+branches = [
+    ["revolute_pair"],
+    ["cylindrical_pair"],
+    ["spherical_pair"],
+    ["spherical_pair_with_pin"],
+    ["planar_pair"],
+    ["unconstrained_pair"],
+    ["fully_constrained_pair"],
+    ["prismatic_pair"],
+    ["universal_pair"],
+    ["low_order_kinematic_pair_with_range"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "low_order_kinematic_pair_with_motion_coupling"
+branches = [
+    ["gear_pair"],
+    ["linear_flexible_and_pinion_pair"],
+    ["rack_and_pinion_pair"],
+    ["screw_pair"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "maths_function"
+branches = [
+    ["finite_function"],
+    ["constant_function"],
+    ["selector_function"],
+    ["elementary_function"],
+    ["restriction_function"],
+    ["repackaging_function"],
+    ["reindexed_array_function"],
+    ["series_composed_function"],
+    ["parallel_composed_function"],
+    ["explicit_table_function"],
+    ["homogeneous_linear_function"],
+    ["general_linear_function"],
+    ["b_spline_basis"],
+    ["b_spline_function"],
+    ["rationalize_function"],
+    ["partial_derivative_function"],
+    ["definite_integral_function"],
+    ["abstracted_expression_function"],
+    ["expression_denoted_function"],
+    ["imported_point_function"],
+    ["imported_curve_function"],
+    ["imported_surface_function"],
+    ["imported_volume_function"],
+    ["application_defined_function"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "maths_space"
+branches = [
+    ["elementary_space"],
+    ["finite_integer_interval"],
+    ["integer_interval_from_min"],
+    ["integer_interval_to_max"],
+    ["finite_real_interval"],
+    ["real_interval_from_min"],
+    ["real_interval_to_max"],
+    ["cartesian_complex_number_region"],
+    ["polar_complex_number_region"],
+    ["finite_space"],
+    ["uniform_product_space"],
+    ["listed_product_space"],
+    ["extended_tuple_space"],
+    ["function_space"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "measure_with_unit"
+branches = [
+    ["length_measure_with_unit"],
+    ["mass_measure_with_unit"],
+    ["plane_angle_measure_with_unit"],
+    ["solid_angle_measure_with_unit"],
+    ["area_measure_with_unit"],
+    ["volume_measure_with_unit"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "measure_with_unit"
+branches = [
+    ["length_measure_with_unit"],
+    ["mass_measure_with_unit"],
+    ["time_measure_with_unit"],
+    ["electric_current_measure_with_unit"],
+    ["thermodynamic_temperature_measure_with_unit"],
+    ["celsius_temperature_measure_with_unit"],
+    ["amount_of_substance_measure_with_unit"],
+    ["luminous_intensity_measure_with_unit"],
+    ["plane_angle_measure_with_unit"],
+    ["solid_angle_measure_with_unit"],
+    ["area_measure_with_unit"],
+    ["volume_measure_with_unit"],
+    ["ratio_measure_with_unit"],
+]
+editions = ["ap214e3"]
+
+[[oneof]]
+supertype = "measure_with_unit"
+branches = [
+    ["length_measure_with_unit"],
+    ["mass_measure_with_unit"],
+    ["time_measure_with_unit"],
+    ["electric_current_measure_with_unit"],
+    ["thermodynamic_temperature_measure_with_unit"],
+    ["celsius_temperature_measure_with_unit"],
+    ["amount_of_substance_measure_with_unit"],
+    ["luminous_intensity_measure_with_unit"],
+    ["plane_angle_measure_with_unit"],
+    ["solid_angle_measure_with_unit"],
+    ["area_measure_with_unit"],
+    ["volume_measure_with_unit"],
+    ["ratio_measure_with_unit"],
+    ["acceleration_measure_with_unit"],
+    ["capacitance_measure_with_unit"],
+    ["electric_charge_measure_with_unit"],
+    ["conductance_measure_with_unit"],
+    ["electric_potential_measure_with_unit"],
+    ["energy_measure_with_unit"],
+    ["magnetic_flux_density_measure_with_unit"],
+    ["force_measure_with_unit"],
+    ["frequency_measure_with_unit"],
+    ["illuminance_measure_with_unit"],
+    ["inductance_measure_with_unit"],
+    ["luminous_flux_measure_with_unit"],
+    ["magnetic_flux_measure_with_unit"],
+    ["power_measure_with_unit"],
+    ["pressure_measure_with_unit"],
+    ["resistance_measure_with_unit"],
+    ["velocity_measure_with_unit"],
+    ["absorbed_dose_measure_with_unit"],
+    ["radioactivity_measure_with_unit"],
+    ["dose_equivalent_measure_with_unit"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "modified_solid"
+branches = [
+    ["edge_blended_solid"],
+    ["sculptured_solid"],
+    ["shelled_solid"],
+    ["modified_solid_with_placed_configuration"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "modified_solid_with_placed_configuration"
+branches = [
+    ["solid_with_depression"],
+    ["solid_with_protrusion"],
+    ["solid_with_shape_element_pattern"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "multiple_arity_boolean_expression"
+branches = [
+    ["and_expression"],
+    ["or_expression"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "multiple_arity_function_call"
+branches = [
+    ["maximum_function"],
+    ["minimum_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "multiple_arity_numeric_expression"
+branches = [
+    ["plus_expression"],
+    ["mult_expression"],
+    ["multiple_arity_function_call"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "multiply_defined_geometry"
+branches = [
+    ["multiply_defined_curves"],
+    ["multiply_defined_surfaces"],
+    ["multiply_defined_cartesian_points"],
+    ["multiply_defined_directions"],
+    ["multiply_defined_placements"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "named_unit"
+branches = [
+    ["length_unit"],
+    ["mass_unit"],
+    ["plane_angle_unit"],
+    ["solid_angle_unit"],
+    ["area_unit"],
+    ["volume_unit"],
+]
+editions = ["ap203e1"]
+
+[[oneof]]
+supertype = "named_unit"
+branches = [
+    ["length_unit"],
+    ["mass_unit"],
+    ["time_unit"],
+    ["electric_current_unit"],
+    ["thermodynamic_temperature_unit"],
+    ["amount_of_substance_unit"],
+    ["luminous_flux_unit"],
+    ["luminous_intensity_unit"],
+    ["plane_angle_unit"],
+    ["solid_angle_unit"],
+    ["ratio_unit"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "named_unit"
+branches = [
+    ["length_unit"],
+    ["mass_unit"],
+    ["time_unit"],
+    ["electric_current_unit"],
+    ["thermodynamic_temperature_unit"],
+    ["amount_of_substance_unit"],
+    ["luminous_intensity_unit"],
+    ["plane_angle_unit"],
+    ["solid_angle_unit"],
+    ["ratio_unit"],
+]
+editions = ["ap214e3"]
+
+[[oneof]]
+supertype = "named_unit"
+branches = [
+    ["si_unit"],
+    ["conversion_based_unit"],
+    ["context_dependent_unit"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "nearly_degenerate_geometry"
+branches = [
+    ["small_area_surface"],
+    ["short_length_curve"],
+    ["entirely_narrow_surface"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "non_smooth_geometry_transition_across_edge"
+branches = [
+    ["g1_discontinuity_between_adjacent_faces"],
+    ["g2_discontinuity_between_adjacent_faces"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "numeric_defined_function"
+branches = [
+    ["integer_defined_function"],
+    ["real_defined_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "numeric_expression"
+branches = [
+    ["simple_numeric_expression"],
+    ["unary_numeric_expression"],
+    ["binary_numeric_expression"],
+    ["multiple_arity_numeric_expression"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "numeric_expression"
+branches = [
+    ["simple_numeric_expression"],
+    ["unary_numeric_expression"],
+    ["binary_numeric_expression"],
+    ["multiple_arity_numeric_expression"],
+    ["length_function"],
+    ["value_function"],
+    ["numeric_defined_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "numeric_variable"
+branches = [
+    ["int_numeric_variable"],
+    ["real_numeric_variable"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "overcomplex_geometry"
+branches = [
+    ["excessively_high_degree_curve"],
+    ["excessively_high_degree_surface"],
+    ["surface_with_excessive_patches_in_one_direction"],
+    ["curve_with_excessive_segments"],
+    ["high_degree_linear_curve"],
+    ["high_degree_planar_surface"],
+    ["high_degree_conic"],
+    ["high_degree_axi_symmetric_surface"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "overcomplex_topology_and_geometry_relationship"
+branches = [
+    ["unused_patches"],
+    ["edge_with_excessive_segments"],
+    ["face_surface_with_excessive_patches_in_one_direction"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "overlapping_geometry"
+branches = [
+    ["partly_overlapping_curves"],
+    ["partly_overlapping_surfaces"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "pair_value"
+branches = [
+    ["sliding_surface_pair_value"],
+    ["rolling_surface_pair_value"],
+    ["revolute_pair_value"],
+    ["prismatic_pair_value"],
+    ["screw_pair_value"],
+    ["cylindrical_pair_value"],
+    ["spherical_pair_value"],
+    ["sliding_curve_pair_value"],
+    ["rolling_curve_pair_value"],
+    ["gear_pair_value"],
+    ["rack_and_pinion_pair_value"],
+    ["universal_pair_value"],
+    ["planar_pair_value"],
+    ["unconstrained_pair_value"],
+    ["point_on_surface_pair_value"],
+    ["point_on_planar_curve_pair_value"],
+    ["low_order_kinematic_pair_value"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "part_laminate_table"
+branches = [
+    ["composite_assembly_table"],
+    ["ply_laminate_table"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "path"
+branches = [
+    ["edge_loop"],
+    ["oriented_path"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+]
+
+[[oneof]]
+supertype = "path"
+branches = [
+    ["open_path"],
+    ["edge_loop"],
+    ["oriented_path"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "path_node"
+branches = [
+    ["point_to_point_path"],
+    ["circular_path"],
+    ["linear_path"],
+    ["curve_based_path"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "physical_component_feature"
+branches = [
+    ["physical_component_terminal"],
+    ["physical_component_interface_terminal"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "picture_representation_item"
+branches = [
+    ["externally_defined_picture_representation_item"],
+    ["predefined_picture_representation_item"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "placement"
+branches = [
+    ["axis1_placement"],
+    ["axis2_placement_2d"],
+    ["axis2_placement_3d"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "planar_curve_pair"
+branches = [
+    ["sliding_curve_pair"],
+    ["rolling_curve_pair"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "point"
+branches = [
+    ["cartesian_point"],
+    ["point_on_curve"],
+    ["point_on_surface"],
+    ["point_in_volume"],
+    ["point_replica"],
+    ["degenerate_pcurve"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "point"
+branches = [
+    ["cartesian_point"],
+    ["point_on_curve"],
+    ["point_on_surface"],
+    ["point_replica"],
+    ["degenerate_pcurve"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+]
+
+[[oneof]]
+supertype = "point_based_llai"
+branches = [
+    ["core_sample"],
+    ["strategy_point"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "presentation_representation"
+branches = [
+    ["presentation_area"],
+    ["presentation_view"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "primitive_2d"
+branches = [
+    ["circular_area"],
+    ["elliptic_area"],
+    ["rectangular_area"],
+    ["polygonal_area"],
+    ["half_space_2d"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "product_definition"
+branches = [
+    ["composite_assembly_definition"],
+    ["composite_assembly_sequence_definition"],
+    ["laminate_table"],
+    ["percentage_laminate_definition"],
+    ["percentage_ply_definition"],
+    ["ply_laminate_definition"],
+    ["ply_laminate_sequence_definition"],
+    ["thickness_laminate_definition"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "product_definition"
+branches = [
+    ["composite_assembly_sequence_definition"],
+    ["laminate_table"],
+    ["ply_laminate_sequence_definition"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "product_definition_usage"
+branches = [
+    ["make_from_usage_option"],
+    ["assembly_component_usage"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "property_definition"
+branches = [
+    ["product_definition_kinematics"],
+    ["product_definition_relationship_kinematics"],
+    ["product_definition_shape"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "replicate_feature"
+branches = [
+    ["circular_pattern"],
+    ["rectangular_pattern"],
+    ["feature_pattern"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation"
+branches = [
+    ["interpolated_configuration_representation"],
+    ["link_motion_representation_along_path"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation"
+branches = [
+    ["kinematic_link_representation"],
+    ["kinematic_topology_structure"],
+    ["kinematic_topology_directed_structure"],
+    ["kinematic_topology_network_structure"],
+    ["mechanism_representation"],
+    ["shape_representation"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation"
+branches = [
+    ["kinematic_topology_structure"],
+    ["kinematic_topology_directed_structure"],
+    ["kinematic_topology_network_structure"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation"
+branches = [
+    ["reinforcement_orientation_basis"],
+    ["ply_angle_representation"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation_item"
+branches = [
+    ["binary_representation_item"],
+    ["compound_representation_item"],
+    ["mapped_item"],
+    ["value_representation_item"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation_item"
+branches = [
+    ["binary_representation_item"],
+    ["compound_representation_item"],
+    ["mapped_item"],
+    ["value_representation_item"],
+    ["mapped_item"],
+    ["styled_item"],
+    ["boolean_representation_item"],
+    ["date_representation_item"],
+    ["date_time_representation_item"],
+    ["integer_representation_item"],
+    ["logical_representation_item"],
+    ["rational_representation_item"],
+    ["real_representation_item"],
+]
+editions = ["ap203e2"]
+
+[[oneof]]
+supertype = "representation_item"
+branches = [
+    ["boolean_representation_item"],
+    ["date_representation_item"],
+    ["date_time_representation_item"],
+    ["integer_representation_item"],
+    ["logical_representation_item"],
+    ["rational_representation_item"],
+    ["real_representation_item"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation_item"
+branches = [
+    ["compound_representation_item"],
+    ["mapped_item"],
+    ["value_representation_item"],
+]
+editions = ["ap214e3"]
+
+[[oneof]]
+supertype = "representation_item"
+branches = [
+    ["mapped_item"],
+    ["styled_item"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "representation_relationship_with_transformation"
+branches = [
+    ["topology_to_geometry_model_association"],
+    ["geometry_to_topology_model_association"],
+]
+editions = [
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "round_hole"
+branches = [
+    ["basic_round_hole"],
+    ["explicit_round_hole"],
+]
+editions = [
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "scanned_data_item"
+branches = [
+    ["point_cloud_dataset"],
+    ["point_cloud_superdataset"],
+    ["triangulated_point_cloud_dataset"],
+    ["scan_3d_model"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "self_intersecting_geometry"
+branches = [
+    ["self_intersecting_curve"],
+    ["self_intersecting_surface"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shape_aspect"
+branches = [
+    ["assembly_shape_constraint"],
+    ["assembly_shape_joint"],
+    ["connectivity_definition"],
+    ["contact_feature"],
+    ["transport_feature"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shape_aspect"
+branches = [
+    ["contacting_feature"],
+    ["datum"],
+    ["datum_feature"],
+    ["datum_target"],
+    ["datum_system"],
+    ["general_datum_reference"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shape_aspect"
+branches = [
+    ["harness_node"],
+    ["harness_segment"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shape_aspect"
+branches = [
+    ["shape_aspect_occurrence"],
+    ["component_path_shape_aspect"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shape_aspect_relationship"
+branches = [
+    ["assembly_shape_joint_item_relationship"],
+    ["assembly_shape_constraint_item_relationship"],
+    ["connectivity_definition_item_relationship"],
+    ["shape_feature_fit_relationship"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shape_data_quality_criterion"
+branches = [
+    ["erroneous_data"],
+    ["inapt_data"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shape_data_quality_value_limit"
+branches = [
+    ["shape_data_quality_upper_value_limit"],
+    ["shape_data_quality_lower_value_limit"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "shelled_solid"
+branches = [
+    ["double_offset_shelled_solid"],
+    ["complex_shelled_solid"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "simple_boolean_expression"
+branches = [
+    ["boolean_literal"],
+    ["boolean_variable"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "simple_generic_expression"
+branches = [
+    ["generic_literal"],
+    ["generic_variable"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "simple_numeric_expression"
+branches = [
+    ["literal_number"],
+    ["numeric_variable"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "simple_string_expression"
+branches = [
+    ["string_literal"],
+    ["string_variable"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_model"
+branches = [
+    ["csg_solid"],
+    ["manifold_solid_brep"],
+    ["swept_face_solid"],
+    ["swept_area_solid"],
+    ["swept_disk_solid"],
+    ["solid_replica"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_chamfered_edges"
+branches = [
+    ["solid_with_single_offset_chamfer"],
+    ["solid_with_double_offset_chamfer"],
+    ["solid_with_angle_based_chamfer"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_depression"
+branches = [
+    ["solid_with_hole"],
+    ["solid_with_pocket"],
+    ["solid_with_slot"],
+    ["solid_with_groove"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_pocket"
+branches = [
+    ["solid_with_rectangular_pocket"],
+    ["solid_with_circular_pocket"],
+    ["solid_with_general_pocket"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_protrusion"
+branches = [
+    ["solid_with_circular_protrusion"],
+    ["solid_with_rectangular_protrusion"],
+    ["solid_with_general_protrusion"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_shape_element_pattern"
+branches = [
+    ["solid_with_circular_pattern"],
+    ["solid_with_rectangular_pattern"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_slot"
+branches = [
+    ["solid_with_straight_slot"],
+    ["solid_with_curved_slot"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_slot"
+branches = [
+    ["solid_with_trapezoidal_section_slot"],
+    ["solid_with_tee_section_slot"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "solid_with_stepped_round_hole"
+branches = [
+    ["solid_with_flat_bottom_round_hole"],
+    ["solid_with_conical_bottom_round_hole"],
+    ["solid_with_spherical_bottom_round_hole"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "steep_geometry_transition_across_edge"
+branches = [
+    ["steep_angle_between_adjacent_edges"],
+    ["steep_angle_between_adjacent_faces"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "string_expression"
+branches = [
+    ["simple_string_expression"],
+    ["index_expression"],
+    ["substring_expression"],
+    ["concat_expression"],
+    ["format_function"],
+    ["string_defined_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "surface"
+branches = [
+    ["elementary_surface"],
+    ["swept_surface"],
+    ["bounded_surface"],
+    ["offset_surface"],
+    ["surface_replica"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "surface_curve"
+branches = [
+    ["intersection_curve"],
+    ["seam_curve"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "surface_pair"
+branches = [
+    ["sliding_surface_pair"],
+    ["rolling_surface_pair"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "swept_area_solid"
+branches = [
+    ["revolved_area_solid"],
+    ["extruded_area_solid"],
+    ["surface_curve_swept_area_solid"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "swept_face_solid"
+branches = [
+    ["extruded_face_solid"],
+    ["revolved_face_solid"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "swept_surface"
+branches = [
+    ["surface_of_linear_extrusion"],
+    ["surface_of_revolution"],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+]
+
+[[oneof]]
+supertype = "swept_surface"
+branches = [
+    ["surface_of_linear_extrusion"],
+    ["surface_of_revolution"],
+    ["surface_curve_swept_surface"],
+    ["fixed_reference_swept_surface"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "task_element"
+branches = [
+    ["concurrent_task_element"],
+    ["end_task"],
+    ["exit_loop"],
+    ["looping_element"],
+    ["task_element_sequence"],
+    ["task_step"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "tessellated_edge"
+branches = [
+    ["tessellated_connecting_edge"],
+    ["cubic_bezier_tessellated_edge"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "tessellated_face"
+branches = [
+    ["triangulated_face"],
+    ["complex_triangulated_face"],
+]
+editions = ["ap242e1"]
+
+[[oneof]]
+supertype = "tessellated_face"
+branches = [
+    ["triangulated_face"],
+    ["complex_triangulated_face"],
+    ["cubic_bezier_triangulated_face"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "tessellated_item"
+branches = [
+    ["coordinates_list"],
+    ["tessellated_solid"],
+    ["tessellated_shell"],
+    ["tessellated_wire"],
+    ["tessellated_geometric_set"],
+    ["tessellated_curve_set"],
+    ["tessellated_point_set"],
+    ["tessellated_surface_set"],
+    ["tessellated_structured_item"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "tessellated_structured_item"
+branches = [
+    ["tessellated_face"],
+    ["tessellated_edge"],
+    ["tessellated_vertex"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "tessellated_surface_set"
+branches = [
+    ["triangulated_surface_set"],
+    ["complex_triangulated_surface_set"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "tolerance_zone_definition"
+branches = [
+    ["projected_zone_definition"],
+    ["non_uniform_zone_definition"],
+    ["runout_zone_definition"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "tolerance_zone_definition"
+branches = [
+    ["projected_zone_definition"],
+    ["runout_zone_definition"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+]
+
+[[oneof]]
+supertype = "tolerance_zone_with_datum"
+branches = [
+    ["directed_tolerance_zone"],
+    ["direction_feature_tolerance_zone"],
+    ["oriented_tolerance_zone"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "tolerance_zone_with_datum"
+branches = [
+    ["directed_tolerance_zone"],
+    ["oriented_tolerance_zone"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+]
+
+[[oneof]]
+supertype = "topological_representation_item"
+branches = [
+    ["vertex"],
+    ["edge"],
+    ["face_bound"],
+    ["face"],
+    ["connected_edge_set"],
+    ["connected_face_set"],
+    [
+    "loop",
+    "path",
+],
+]
+editions = ["ap214e3"]
+
+[[oneof]]
+supertype = "topological_representation_item"
+branches = [
+    ["vertex"],
+    ["edge"],
+    ["face_bound"],
+    ["face"],
+    ["vertex_shell"],
+    ["wire_shell"],
+    ["connected_edge_set"],
+    ["connected_face_set"],
+    ["connected_volume_set"],
+    ["volume_with_faces"],
+    [
+    "loop",
+    "path",
+],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+]
+
+[[oneof]]
+supertype = "topological_representation_item"
+branches = [
+    ["vertex"],
+    ["edge"],
+    ["face_bound"],
+    ["face"],
+    ["vertex_shell"],
+    ["wire_shell"],
+    ["connected_edge_set"],
+    ["connected_face_set"],
+    [
+    "loop",
+    "path",
+],
+]
+editions = [
+    "ap203e1",
+    "ap203e2",
+    "ap242e1",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "topology_related_to_multiply_defined_geometry"
+branches = [
+    ["multiply_defined_faces"],
+    ["multiply_defined_vertices"],
+    ["multiply_defined_edges"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "topology_related_to_nearly_degenerate_geometry"
+branches = [
+    ["short_length_edge"],
+    ["small_area_face"],
+    ["entirely_narrow_face"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "topology_related_to_overlapping_geometry"
+branches = [
+    ["partly_overlapping_faces"],
+    ["partly_overlapping_edges"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "topology_related_to_self_intersecting_geometry"
+branches = [
+    ["self_intersecting_loop"],
+    ["self_intersecting_shell"],
+    ["intersecting_connected_face_sets"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "transformation_with_derived_angle"
+branches = [
+    ["draped_defined_transformation"],
+    ["laid_defined_transformation"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "transition_feature"
+branches = [
+    ["chamfer"],
+    ["edge_round"],
+    ["fillet"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "triangulated_face_element"
+branches = [
+    ["representative_triangle"],
+    ["triangle_edge"],
+    ["triangle_vertex"],
+    ["adjacent_triangle_pair"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "unary_boolean_expression"
+branches = [
+    ["not_expression"],
+    ["odd_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "unary_function_call"
+branches = [
+    ["abs_function"],
+    ["minus_function"],
+    ["sin_function"],
+    ["cos_function"],
+    ["tan_function"],
+    ["asin_function"],
+    ["acos_function"],
+    ["exp_function"],
+    ["log_function"],
+    ["log2_function"],
+    ["log10_function"],
+    ["square_root_function"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "uncertainty_qualifier"
+branches = [
+    ["standard_uncertainty"],
+    ["qualitative_uncertainty"],
+]
+editions = [
+    "ap203e2",
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "uuid_attribute"
+branches = [
+    ["v5_uuid_attribute"],
+    ["v4_uuid_attribute"],
+]
+editions = ["ap242e4"]
+
+[[oneof]]
+supertype = "variable"
+branches = [
+    ["numeric_variable"],
+    ["boolean_variable"],
+    ["string_variable"],
+]
+editions = [
+    "ap214e3",
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "variational_parameter"
+branches = [
+    ["bound_variational_parameter"],
+    ["unbound_variational_parameter"],
+]
+editions = [
+    "ap242e1",
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "volume"
+branches = [
+    ["block_volume"],
+    ["wedge_volume"],
+    ["spherical_volume"],
+    ["cylindrical_volume"],
+    ["eccentric_conical_volume"],
+    ["toroidal_volume"],
+    ["pyramid_volume"],
+    ["b_spline_volume"],
+    ["ellipsoid_volume"],
+    ["tetrahedron_volume"],
+    ["hexahedron_volume"],
+    ["locally_refined_spline_volume"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+    "ap242e4",
+]
+
+[[oneof]]
+supertype = "volume_with_faces"
+branches = [
+    ["volume_with_shell"],
+    ["volume_with_parametric_boundary"],
+]
+editions = [
+    "ap242e2",
+    "ap242e3",
+]
+
+[[oneof]]
+supertype = "zone_structural_makeup"
+branches = [
+    [
+    "smeared_material_definition",
+    "thickness_laminate_table",
+],
+    [
+    "smeared_material_definition",
+    "percentage_laminate_table",
+],
+    ["thickness_laminate_table"],
+    ["percentage_laminate_table"],
+    ["smeared_material_definition"],
+]
+editions = [
+    "ap203e2",
+    "ap242e1",
+    "ap242e2",
+]
+
+[[oneof]]
+supertype = "zone_structural_makeup"
+branches = [
+    [
+    "thickness_laminate_table",
+    "smeared_material_definition",
+],
+    [
+    "percentage_laminate_table",
+    "smeared_material_definition",
+],
+    ["thickness_laminate_table"],
+    ["percentage_laminate_table"],
+    ["smeared_material_definition"],
+]
+editions = [
+    "ap242e3",
+    "ap242e4",
+]
 
 [entity.a3m_data_quality_criteria_representation]
 parents = ["data_quality_criteria_representation"]
@@ -18,6 +4349,7 @@ parents = [
     "data_quality_measurement_requirement",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -44,6 +4376,7 @@ ty = "LIST OF a3m_data_quality_type_name_for_location_of_extreme_value"
 [entity.a3m_data_quality_criterion_specific_applied_value]
 parents = ["representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -98,6 +4431,7 @@ ty = "summary_stats_value_type"
 [entity.a3m_data_quality_inspection_result]
 parents = ["data_quality_inspection_result_with_judgement"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -219,6 +4553,7 @@ parents = [
     "data_equivalence_inspection_requirement",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -253,6 +4588,7 @@ ty = "LIST OF a3m_accuracy_type_name"
 [entity.a3m_equivalence_criterion_for_assembly]
 parents = ["a3m_equivalence_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["a3m_equivalence_criterion.accuracy_types"]
 schemas = [
@@ -265,6 +4601,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_for_shape]
 parents = ["a3m_equivalence_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -276,6 +4613,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_of_assembly_data_structure]
 parents = ["a3m_equivalence_criterion_for_assembly"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = [
     "a3m_equivalence_criterion.comparing_element_types",
@@ -291,6 +4629,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_of_component_property_difference]
 parents = ["a3m_equivalence_criterion_for_assembly"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["a3m_equivalence_criterion.measured_data_type"]
 schemas = [
@@ -309,6 +4648,7 @@ union_safe = true
 [entity.a3m_equivalence_criterion_of_detailed_assembly_data_content]
 parents = ["a3m_equivalence_criterion_for_assembly"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = [
     "a3m_equivalence_criterion.comparing_element_types",
@@ -324,6 +4664,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_of_detailed_shape_data_content]
 parents = ["a3m_equivalence_criterion_for_shape"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -335,6 +4676,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_of_representative_assembly_property_value]
 parents = ["a3m_equivalence_criterion_for_assembly"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = [
     "a3m_equivalence_criterion.comparing_element_types",
@@ -350,6 +4692,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_of_representative_shape_property_value]
 parents = ["a3m_equivalence_criterion_for_shape"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["a3m_equivalence_criterion.comparing_element_types"]
 schemas = [
@@ -362,6 +4705,7 @@ own_attrs = []
 [entity.a3m_equivalence_criterion_of_shape_data_structure]
 parents = ["a3m_equivalence_criterion_for_shape"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["a3m_equivalence_criterion.comparing_element_types"]
 schemas = [
@@ -424,6 +4768,7 @@ ty = "equivalence_measured_value_select"
 [entity.a3m_equivalence_inspection_requirement_with_values]
 parents = ["data_equivalence_inspection_requirement"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -485,6 +4830,7 @@ ty = "representative_value_type"
 [entity.a3m_erroneous_pmi_data]
 parents = ["a3m_pmi_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -492,6 +4838,7 @@ own_attrs = []
 [entity.a3m_erroneous_triangulated_shape_data]
 parents = ["a3m_triangulated_shape_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -513,6 +4860,7 @@ ty = "a3m_data_quality_measured_value_select"
 [entity.a3m_inapt_pmi_data]
 parents = ["a3m_pmi_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["a3m_data_quality_criterion.measured_data_type"]
 schemas = ["ap242e4"]
@@ -527,6 +4875,7 @@ union_safe = true
 [entity.a3m_inapt_triangulated_shape_data]
 parents = ["a3m_triangulated_shape_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -560,6 +4909,7 @@ ty = "LIST [1:?] OF a3m_extreme_instance"
 [entity.a3m_pmi_data_quality_criterion]
 parents = ["a3m_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = [
     "a3m_data_quality_criterion.accuracy_types",
@@ -594,6 +4944,7 @@ ty = "summary_stats_value_type"
 [entity.a3m_triangulated_shape_data_quality_criterion]
 parents = ["a3m_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["a3m_data_quality_criterion.accuracy_types"]
 schemas = ["ap242e4"]
@@ -945,6 +5296,7 @@ own_attrs = []
 
 [entity.action_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -1065,6 +5417,7 @@ ty = "text"
 
 [entity.action_method_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -1238,6 +5591,7 @@ ty = "action"
 
 [entity.action_request_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -1502,6 +5856,7 @@ own_attrs = []
 [entity.additive_manufacturing_setup_relationship]
 parents = ["next_assembly_usage_occurrence"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -2096,6 +6451,7 @@ ty = "annotation_occurrence"
 [entity.annotation_placeholder_leader_line]
 parents = ["geometric_representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["model_end"]
 schemas = [
@@ -3238,6 +7594,10 @@ ty = "SET OF time_interval_item"
 
 [entity.applied_usage_right]
 parents = ["action_assignment"]
+edition_parents = [
+    ["applied_action_assignment"],
+    ["action_assignment"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -3274,6 +7634,7 @@ ty = "label"
 
 [entity.approval_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -3479,6 +7840,10 @@ own_attrs = []
 
 [entity.area_unit]
 parents = ["derived_unit"]
+edition_parents = [
+    ["named_unit"],
+    ["derived_unit"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -3663,6 +8028,7 @@ ty = "assembly_component_usage"
 [entity.assembly_geometric_constraint]
 parents = ["explicit_constraint"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -4023,6 +8389,7 @@ own_attrs = []
 
 [entity.attribute_classification_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -4064,6 +8431,7 @@ ty = "SET [1:?] OF attribute_language_item"
 
 [entity.attribute_value_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -4854,6 +9222,7 @@ parents = [
     "representation_relationship_with_transformation",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -4881,6 +9250,7 @@ parents = [
     "binary_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -4894,6 +9264,7 @@ own_attrs = []
 [entity.binary_function_call]
 parents = ["binary_numeric_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -4907,6 +9278,7 @@ own_attrs = []
 [entity.binary_generic_expression]
 parents = ["generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -4942,6 +9314,7 @@ parents = [
     "binary_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -5036,6 +9409,7 @@ parents = [
     "boolean_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -5049,6 +9423,7 @@ own_attrs = []
 [entity.boolean_expression]
 parents = ["expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -5586,6 +9961,7 @@ own_attrs = []
 [entity.camera_model]
 parents = ["geometric_representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -6096,6 +10472,7 @@ ty = "certification_type"
 
 [entity.certification_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -6245,6 +10622,7 @@ parents = [
     "characterized_object",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -6871,6 +11249,7 @@ ty = "SET [1:?] OF class_usage_effectivity_context_item"
 
 [entity.classification_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -7304,6 +11683,7 @@ parents = [
     "binary_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -7389,6 +11769,7 @@ own_attrs = []
 [entity.complex_area]
 parents = ["primitive_2d"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -9133,6 +13514,7 @@ ty = "contract_type"
 
 [entity.contract_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -9758,6 +14140,7 @@ ty = "cubic_bezier_triangulated_face"
 [entity.currency]
 parents = ["context_dependent_unit"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -10267,6 +14650,10 @@ own_attrs = []
 
 [entity.cylindrical_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -10673,6 +15060,7 @@ ty = "SET [1:?] OF data_equivalence_inspection_criterion_report_item"
 [entity.data_equivalence_inspection_criterion_report_item]
 parents = ["representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -10713,6 +15101,7 @@ ty = "data_equivalence_inspected_element_pair_select"
 [entity.data_equivalence_inspection_report]
 parents = ["representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -11115,6 +15504,7 @@ union_safe = true
 
 [entity.data_quality_report_request]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -11171,6 +15561,7 @@ ty = "local_time"
 
 [entity.date_and_time_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e1",
@@ -11192,6 +15583,7 @@ ty = "date_time_role"
 
 [entity.date_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -11549,6 +15941,7 @@ ty = "axis2_placement"
 [entity.defined_constraint]
 parents = ["explicit_constraint"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -11560,6 +15953,7 @@ own_attrs = []
 
 [entity.defined_function]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -11755,6 +16149,7 @@ own_attrs = []
 [entity.dependent_product_definition_exchange_context]
 parents = ["product_definition_context"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -11870,6 +16265,7 @@ ty = "text"
 
 [entity.description_text_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -12915,6 +17311,7 @@ ty = "action_directive"
 
 [entity.directed_action_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -13047,6 +17444,7 @@ union_safe = true
 [entity.discontinuous_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -13195,6 +17593,7 @@ own_attrs = []
 
 [entity.document_reference]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -13305,6 +17704,7 @@ ty = "text"
 
 [entity.document_usage_constraint_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -14012,6 +18412,7 @@ own_attrs = []
 [entity.edge_blended_solid]
 parents = ["modified_solid"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -14175,6 +18576,7 @@ ty = "identifier"
 
 [entity.effectivity_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -14192,6 +18594,7 @@ ty = "effectivity"
 
 [entity.effectivity_context_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -14785,6 +19188,7 @@ union_safe = true
 [entity.erroneous_data]
 parents = ["shape_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -14797,6 +19201,7 @@ own_attrs = []
 [entity.erroneous_geometry]
 parents = ["erroneous_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -14809,6 +19214,7 @@ own_attrs = []
 [entity.erroneous_manifold_solid_brep]
 parents = ["erroneous_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -14821,6 +19227,7 @@ own_attrs = []
 [entity.erroneous_pmi_representation]
 parents = ["a3m_erroneous_pmi_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["a3m_data_quality_criterion.measured_data_type"]
 schemas = ["ap242e4"]
@@ -14835,6 +19242,7 @@ union_safe = true
 [entity.erroneous_relation_of_pmi_and_feature]
 parents = ["a3m_erroneous_pmi_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -14842,6 +19250,7 @@ own_attrs = []
 [entity.erroneous_topology]
 parents = ["erroneous_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -14854,6 +19263,7 @@ own_attrs = []
 [entity.erroneous_topology_and_geometry_relationship]
 parents = ["erroneous_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -14948,6 +19358,7 @@ ty = "OPTIONAL text"
 
 [entity.event_occurrence_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -14978,6 +19389,7 @@ own_attrs = []
 
 [entity.event_occurrence_context_assignment]
 is_abstract = true
+abstract_everywhere = true
 schemas = ["ap214e3"]
 
 [[entity.event_occurrence_context_assignment.own_attrs]]
@@ -15215,6 +19627,7 @@ ty = "OPTIONAL text"
 
 [entity.experience_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -15272,6 +19685,7 @@ ty = "OPTIONAL text"
 
 [entity.experience_type_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -15352,6 +19766,7 @@ ty = "shape_representation"
 [entity.explicit_constraint]
 parents = ["variational_representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -15378,6 +19793,7 @@ parents = [
     "geometric_representation_item",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -15520,6 +19936,7 @@ ty = "shape_representation"
 [entity.explicit_table_function]
 parents = ["maths_function"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -15539,6 +19956,7 @@ ty = "LIST [1:?] OF positive_integer"
 [entity.expression]
 parents = ["generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -15691,6 +20109,7 @@ own_attrs = []
 [entity.external_identification_assignment]
 parents = ["identification_assignment"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -17283,6 +21702,7 @@ own_attrs = []
 [entity.free_form_constraint]
 parents = ["explicit_constraint"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -17400,6 +21820,10 @@ ty = "SET [1:?] OF change_management_object"
 
 [entity.fully_constrained_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -17817,6 +22241,10 @@ own_attrs = []
 
 [entity.gear_pair]
 parents = ["low_order_kinematic_pair_with_motion_coupling"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair_with_motion_coupling"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -17912,6 +22340,7 @@ ty = "OPTIONAL plane_angle_measure"
 [entity.general_datum_reference]
 parents = ["shape_aspect"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -17930,6 +22359,10 @@ ty = "OPTIONAL SET [1:?] OF datum_reference_modifier"
 
 [entity.general_feature]
 parents = ["shape_feature_definition"]
+edition_parents = [
+    ["feature_definition"],
+    ["shape_feature_definition"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -18094,6 +22527,7 @@ ty = "positive_integer"
 [entity.generic_character_glyph_symbol]
 parents = ["symbol_representation"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -18107,6 +22541,7 @@ own_attrs = []
 
 [entity.generic_expression]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -18121,6 +22556,7 @@ own_attrs = []
 [entity.generic_literal]
 parents = ["simple_generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -18134,6 +22570,7 @@ own_attrs = []
 
 [entity.generic_product_definition_reference]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -18177,6 +22614,7 @@ ty = "string"
 [entity.generic_variable]
 parents = ["simple_generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -18232,6 +22670,7 @@ own_attrs = []
 [entity.geometric_gap_in_topology]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -18659,6 +23098,7 @@ union_safe = true
 [entity.geometry_with_local_irregularity]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -18671,6 +23111,7 @@ own_attrs = []
 [entity.geometry_with_local_near_degeneracy]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -18797,6 +23238,7 @@ ty = "OPTIONAL text"
 
 [entity.group_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -19082,6 +23524,7 @@ union_safe = true
 [entity.high_order_kinematic_pair]
 parents = ["kinematic_pair"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -19266,6 +23709,7 @@ ty = "id_attribute_select"
 
 [entity.identification_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -19437,6 +23881,7 @@ parents = [
     "auxiliary_geometric_representation_item",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["curve_plane"]
 schemas = [
@@ -19494,6 +23939,7 @@ parents = [
     "auxiliary_geometric_representation_item",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["plane_of_point"]
 schemas = [
@@ -19671,6 +24117,7 @@ own_attrs = []
 [entity.inapt_data]
 parents = ["shape_data_quality_criterion"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -19683,6 +24130,7 @@ own_attrs = []
 [entity.inapt_geometry]
 parents = ["inapt_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -19695,6 +24143,7 @@ own_attrs = []
 [entity.inapt_manifold_solid_brep]
 parents = ["inapt_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -19707,6 +24156,7 @@ own_attrs = []
 [entity.inapt_pmi_representation]
 parents = ["a3m_inapt_pmi_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -19714,6 +24164,7 @@ own_attrs = []
 [entity.inapt_relation_of_pmi_and_feature]
 parents = ["a3m_inapt_pmi_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 own_attrs = []
@@ -19721,6 +24172,7 @@ own_attrs = []
 [entity.inapt_topology]
 parents = ["inapt_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -19733,6 +24185,7 @@ own_attrs = []
 [entity.inapt_topology_and_geometry_relationship]
 parents = ["inapt_data"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -20411,6 +24864,16 @@ parents = [
     "feature_definition",
     "shape_aspect",
 ]
+edition_parents = [
+    [
+    "shape_aspect",
+    "shape_feature_definition",
+],
+    [
+    "feature_definition",
+    "shape_aspect",
+],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -20489,6 +24952,7 @@ own_attrs = []
 [entity.integer_defined_function]
 parents = ["numeric_defined_function"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -20828,6 +25292,11 @@ ty = "interpolation_type"
 
 [entity.interpolated_configuration_sequence]
 parents = ["geometric_representation_item"]
+edition_parents = [
+    [],
+    ["representation_item"],
+    ["geometric_representation_item"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -21202,6 +25671,10 @@ own_attrs = []
 
 [entity.kinematic_joint]
 parents = ["edge"]
+edition_parents = [
+    [],
+    ["edge"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -21215,6 +25688,10 @@ own_attrs = []
 
 [entity.kinematic_link]
 parents = ["vertex"]
+edition_parents = [
+    [],
+    ["vertex"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -21302,6 +25779,13 @@ parents = [
     "geometric_representation_item",
     "item_defined_transformation",
 ]
+edition_parents = [
+    ["item_defined_transformation"],
+    [
+    "geometric_representation_item",
+    "item_defined_transformation",
+],
+]
 is_abstract = true
 is_complex_part = true
 derives = [
@@ -21323,6 +25807,10 @@ ty = "kinematic_joint"
 
 [entity.kinematic_path]
 parents = ["geometric_representation_item"]
+edition_parents = [
+    ["representation_item"],
+    ["geometric_representation_item"],
+]
 is_abstract = true
 is_complex_part = true
 derives = [
@@ -21387,6 +25875,7 @@ union_safe = true
 [entity.kinematic_path_segment]
 parents = ["founded_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -21416,6 +25905,7 @@ ty = "characterized_definition"
 [entity.kinematic_property_definition_representation]
 parents = ["property_definition_representation"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -22412,6 +26902,7 @@ parents = [
     "generic_literal",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -22653,6 +27144,7 @@ ty = "OPTIONAL text"
 
 [entity.location_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -22728,6 +27220,7 @@ ty = "location"
 
 [entity.location_representation_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -23035,6 +27528,7 @@ union_safe = true
 [entity.low_order_kinematic_pair_with_motion_coupling]
 parents = ["kinematic_pair"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -23552,6 +28046,7 @@ ty = "maths_enum_atom"
 [entity.maths_function]
 parents = ["generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = [
     "domain",
@@ -23596,6 +28091,7 @@ own_attrs = []
 [entity.maths_space]
 parents = ["generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -24513,6 +29009,10 @@ ty = "limit_condition"
 
 [entity.modified_pattern]
 parents = ["shape_aspect"]
+edition_parents = [
+    ["replicate_feature"],
+    ["shape_aspect"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -24527,6 +29027,7 @@ own_attrs = []
 [entity.modified_solid]
 parents = ["solid_model"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -24547,6 +29048,7 @@ ty = "base_solid_select"
 [entity.modified_solid_with_placed_configuration]
 parents = ["modified_solid"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -24689,6 +29191,7 @@ parents = [
     "multiple_arity_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -24709,6 +29212,7 @@ union_safe = true
 [entity.multiple_arity_function_call]
 parents = ["multiple_arity_numeric_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -24722,6 +29226,7 @@ own_attrs = []
 [entity.multiple_arity_generic_expression]
 parents = ["generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -24742,6 +29247,7 @@ parents = [
     "multiple_arity_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -24852,6 +29358,7 @@ union_safe = true
 [entity.multiply_defined_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -24938,6 +29445,7 @@ union_safe = true
 
 [entity.name_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -25047,6 +29555,7 @@ union_safe = true
 [entity.nearly_degenerate_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -25346,6 +29855,7 @@ own_attrs = []
 [entity.non_smooth_geometry_transition_across_edge]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -25404,6 +29914,7 @@ parents = [
     "defined_function",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -25417,6 +29928,7 @@ own_attrs = []
 [entity.numeric_expression]
 parents = ["expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = [
     "is_int",
@@ -25752,6 +30264,7 @@ ty = "OPTIONAL text"
 
 [entity.organization_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -25837,6 +30350,7 @@ ty = "OPTIONAL text"
 
 [entity.organization_type_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -25935,6 +30449,7 @@ ty = "SET [1:?] OF organization"
 
 [entity.organizational_project_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -26247,6 +30762,7 @@ union_safe = true
 [entity.overcomplex_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -26259,6 +30775,7 @@ own_attrs = []
 [entity.overcomplex_topology_and_geometry_relationship]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -26285,6 +30802,7 @@ own_attrs = []
 [entity.overlapping_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -26355,6 +30873,10 @@ union_safe = true
 
 [entity.pair_value]
 parents = ["geometric_representation_item"]
+edition_parents = [
+    [],
+    ["geometric_representation_item"],
+]
 is_abstract = true
 is_complex_part = true
 schemas = [
@@ -26786,6 +31308,7 @@ own_attrs = []
 [entity.path_node]
 parents = ["kinematic_path_segment"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -27098,6 +31621,7 @@ union_safe = true
 
 [entity.person_and_organization_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e1",
@@ -27152,6 +31676,7 @@ ty = "OPTIONAL text"
 
 [entity.person_type_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -27198,6 +31723,7 @@ ty = "person_type_definition_formation"
 
 [entity.person_type_definition_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -27444,6 +31970,7 @@ union_safe = true
 [entity.picture_representation_item]
 parents = ["bytes_representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -27520,6 +32047,10 @@ ty = "axis2_placement"
 
 [entity.planar_curve_pair]
 parents = ["high_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["high_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -27544,6 +32075,10 @@ ty = "boolean"
 
 [entity.planar_curve_pair_range]
 parents = ["planar_curve_pair"]
+edition_parents = [
+    ["simple_pair_range"],
+    ["planar_curve_pair"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -27585,6 +32120,10 @@ ty = "length_measure"
 
 [entity.planar_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -28289,6 +32828,10 @@ union_safe = true
 
 [entity.point_on_planar_curve_pair]
 parents = ["high_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["high_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -28454,6 +32997,10 @@ ty = "parameter_value"
 
 [entity.point_on_surface_pair]
 parents = ["high_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["high_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -28820,6 +33367,7 @@ ty = "OPTIONAL text"
 
 [entity.position_in_organization_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -28901,6 +33449,7 @@ ty = "OPTIONAL text"
 
 [entity.position_in_organization_type_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -29441,6 +33990,7 @@ own_attrs = []
 
 [entity.presented_item]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -29554,6 +34104,10 @@ union_safe = true
 
 [entity.prismatic_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -31384,6 +35938,7 @@ ty = "OPTIONAL text"
 
 [entity.qualification_type_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -31501,6 +36056,7 @@ ty = "measure_with_unit"
 [entity.quantifier_expression]
 parents = ["multiple_arity_generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -31556,6 +36112,10 @@ own_attrs = []
 
 [entity.rack_and_pinion_pair]
 parents = ["low_order_kinematic_pair_with_motion_coupling"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair_with_motion_coupling"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -31870,6 +36430,7 @@ union_safe = true
 [entity.real_defined_function]
 parents = ["numeric_defined_function"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -32843,6 +37404,10 @@ union_safe = true
 
 [entity.resulting_path]
 parents = ["link_motion_representation_along_path"]
+edition_parents = [
+    ["motion_link_relationship"],
+    ["link_motion_representation_along_path"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -32872,6 +37437,10 @@ own_attrs = []
 
 [entity.revolute_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -33584,6 +38153,10 @@ union_safe = true
 
 [entity.rotation_about_direction]
 parents = ["geometric_representation_item"]
+edition_parents = [
+    [],
+    ["geometric_representation_item"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -34058,6 +38631,7 @@ ty = "OPTIONAL positive_length_measure"
 [entity.scanner_property]
 parents = ["representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -34075,6 +38649,10 @@ own_attrs = []
 
 [entity.screw_pair]
 parents = ["low_order_kinematic_pair_with_motion_coupling"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair_with_motion_coupling"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -34241,6 +38819,7 @@ ty = "security_classification_level"
 
 [entity.security_classification_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 derives = ["role"]
 schemas = [
@@ -34323,6 +38902,7 @@ union_safe = true
 [entity.self_intersecting_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -34866,6 +39446,7 @@ parents = [
     "qualified_representation_item",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -34931,6 +39512,10 @@ own_attrs = []
 
 [entity.shape_feature_definition]
 parents = ["feature_definition"]
+edition_parents = [
+    ["characterized_object"],
+    ["feature_definition"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -35613,6 +40198,7 @@ parents = [
     "simple_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -35640,6 +40226,7 @@ own_attrs = []
 [entity.simple_generic_expression]
 parents = ["generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -35657,6 +40244,7 @@ parents = [
     "simple_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -35683,6 +40271,7 @@ parents = [
     "simple_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -36232,6 +40821,7 @@ ty = "positive_plane_angle_measure"
 [entity.solid_with_chamfered_edges]
 parents = ["edge_blended_solid"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -36357,6 +40947,7 @@ ty = "bounded_curve"
 [entity.solid_with_depression]
 parents = ["modified_solid_with_placed_configuration"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -36499,6 +41090,7 @@ ty = "boolean"
 [entity.solid_with_hole]
 parents = ["solid_with_depression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -36544,6 +41136,7 @@ ty = "SET [1:?] OF LIST [2:2] OF positive_integer"
 [entity.solid_with_pocket]
 parents = ["solid_with_depression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -36564,6 +41157,7 @@ ty = "plane_angle_measure"
 [entity.solid_with_protrusion]
 parents = ["modified_solid_with_placed_configuration"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -36660,6 +41254,7 @@ ty = "non_negative_length_measure"
 [entity.solid_with_shape_element_pattern]
 parents = ["modified_solid_with_placed_configuration"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -36692,6 +41287,8 @@ ty = "positive_length_measure"
 [entity.solid_with_slot]
 parents = ["solid_with_depression"]
 is_abstract = true
+abstract_everywhere = true
+supertype_has_and = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -36844,6 +41441,13 @@ ty = "non_negative_length_measure"
 
 [entity.solid_with_variable_radius_edge_blend]
 parents = ["track_blended_solid"]
+edition_parents = [
+    [
+    "edge_blended_solid",
+    "track_blended_solid",
+],
+    ["track_blended_solid"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -36998,6 +41602,10 @@ own_attrs = []
 
 [entity.spherical_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -37290,6 +41898,7 @@ union_safe = true
 [entity.sql_mappable_defined_function]
 parents = ["defined_function"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -37430,6 +42039,7 @@ ty = "OPTIONAL text"
 
 [entity.state_observed_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -37516,6 +42126,7 @@ ty = "OPTIONAL text"
 
 [entity.state_type_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -37695,6 +42306,7 @@ union_safe = true
 [entity.steep_geometry_transition_across_edge]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -37778,6 +42390,7 @@ parents = [
     "string_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -37791,6 +42404,7 @@ own_attrs = []
 [entity.string_expression]
 parents = ["expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -38289,6 +42903,10 @@ ty = "axis1_placement"
 
 [entity.surface_pair]
 parents = ["high_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["high_order_kinematic_pair"],
+]
 is_abstract = true
 is_complex_part = true
 schemas = [
@@ -39629,6 +44247,7 @@ ty = "boolean"
 [entity.tessellated_face]
 parents = ["tessellated_structured_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -39688,6 +44307,7 @@ ty = "SET [1:?] OF tessellated_item"
 [entity.tessellated_item]
 parents = ["geometric_representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -39828,6 +44448,7 @@ own_attrs = []
 [entity.tessellated_surface_set]
 parents = ["tessellated_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -40214,6 +44835,7 @@ ty = "character_spacing_select"
 [entity.texture_style_specification]
 parents = ["founded_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -40225,6 +44847,7 @@ own_attrs = []
 [entity.texture_style_tessellation_specification]
 parents = ["texture_style_specification"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -40430,6 +45053,7 @@ ty = "OPTIONAL text"
 
 [entity.time_interval_assignment]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -40679,6 +45303,7 @@ own_attrs = []
 [entity.topology_related_to_multiply_defined_geometry]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -40691,6 +45316,7 @@ own_attrs = []
 [entity.topology_related_to_nearly_degenerate_geometry]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -40703,6 +45329,7 @@ own_attrs = []
 [entity.topology_related_to_overlapping_geometry]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -40715,6 +45342,7 @@ own_attrs = []
 [entity.topology_related_to_self_intersecting_geometry]
 parents = ["inapt_topology_and_geometry_relationship"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -40852,6 +45480,7 @@ own_attrs = []
 [entity.track_blended_solid]
 parents = ["edge_blended_solid"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -41010,6 +45639,7 @@ ty = "LIST [1:?] OF LIST [3:3] OF integer"
 [entity.triangulated_face_element]
 parents = ["geometric_representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -41297,6 +45927,7 @@ parents = [
     "unary_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -41310,6 +45941,7 @@ own_attrs = []
 [entity.unary_function_call]
 parents = ["unary_numeric_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -41323,6 +45955,7 @@ own_attrs = []
 [entity.unary_generic_expression]
 parents = ["generic_expression"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -41343,6 +45976,7 @@ parents = [
     "unary_generic_expression",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -41457,6 +46091,10 @@ ty = "text"
 
 [entity.unconstrained_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -41591,6 +46229,10 @@ own_attrs = []
 
 [entity.universal_pair]
 parents = ["low_order_kinematic_pair"]
+edition_parents = [
+    ["kinematic_pair"],
+    ["low_order_kinematic_pair"],
+]
 is_abstract = false
 is_complex_part = true
 derives = [
@@ -41851,6 +46493,7 @@ own_attrs = []
 
 [entity.uuid_attribute]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = ["ap242e4"]
 
@@ -42050,6 +46693,7 @@ ty = "measure_value"
 [entity.variable]
 parents = ["generic_variable"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap214e3",
@@ -42077,6 +46721,7 @@ ty = "property_variable_rep_select"
 
 [entity.variable_semantics]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -42115,6 +46760,7 @@ parents = [
     "maths_variable",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e1",
@@ -42146,6 +46792,7 @@ own_attrs = []
 [entity.variational_representation_item]
 parents = ["representation_item"]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap203e2",
@@ -42507,6 +47154,10 @@ own_attrs = []
 
 [entity.volume_unit]
 parents = ["derived_unit"]
+edition_parents = [
+    ["named_unit"],
+    ["derived_unit"],
+]
 is_abstract = false
 is_complex_part = true
 schemas = [
@@ -42526,6 +47177,7 @@ parents = [
     "topological_representation_item",
 ]
 is_abstract = true
+abstract_everywhere = true
 is_complex_part = true
 schemas = [
     "ap242e2",
@@ -42774,6 +47426,7 @@ own_attrs = []
 [entity.zone_structural_makeup]
 parents = ["laminate_table"]
 is_abstract = false
+supertype_has_and = true
 is_complex_part = true
 schemas = [
     "ap203e2",

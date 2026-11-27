@@ -163,7 +163,10 @@ fn main() {
         &format!("{dir}/model.rs"),
         &emit::emit_model(&ir, &narrowing),
     );
-    write_fmt(&format!("{dir}/read.rs"), &emit::emit_read(&ir, crate_path));
+    write_fmt(
+        &format!("{dir}/read.rs"),
+        &emit::emit_read(&ir, &schema, crate_path),
+    );
     write_fmt(&format!("{dir}/write.rs"), &emit::emit_write(&ir));
     write_fmt(&format!("{dir}/walk.rs"), &emit::emit_walk(&ir));
     write_fmt(&format!("{dir}/resolve.rs"), &emit::emit_resolvers(&ir));

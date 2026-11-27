@@ -43,7 +43,10 @@
 //! and why, and what the parser repaired. Messy files are common in the
 //! wild — non-standard content is healed, dropped, or (a list outside its
 //! size bounds) kept as read rather than failing the import, and the report
-//! is the record of what happened on the way in.
+//! is the record of what happened on the way in. Reading checks each
+//! entity's form against the schema — attributes, reference types, list
+//! sizes, complex-entity parts — but not its `WHERE` rules, global `RULE`s,
+//! or `UNIQUE` and `INVERSE` constraints (see [`read`]).
 //!
 //! The model is raw and complete, schema-faithful: everything the reader
 //! kept is there to read, `model.all::<T>()` listing the entities of a type

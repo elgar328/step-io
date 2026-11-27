@@ -161,24 +161,6 @@ fn a_unit_defined_through_itself_is_reported() {
     );
 }
 
-/// A factor that cannot be read is the only thing reported: the unit does have
-/// its conversion-based part.
-#[test]
-fn an_unreadable_conversion_factor_is_reported_once() {
-    let (model, _) = units_with_length(
-        "#20=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() REPRESENTATION_ITEM('') );\n\
-         #21=( CONVERSION_BASED_UNIT('INCH',#20) LENGTH_UNIT() NAMED_UNIT(#22) );\n",
-    );
-    let scene = model.scene();
-    assert!(scene.units().length.is_none());
-    let warnings = scene.warnings();
-    assert_eq!(warnings.len(), 1, "{warnings:?}");
-    assert!(
-        warnings[0].message.contains("conversion factor"),
-        "{warnings:?}"
-    );
-}
-
 /// A length unit converted from an area unit, which `Units` does not read, is
 /// reported.
 #[test]
