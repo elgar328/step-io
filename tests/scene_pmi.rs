@@ -1085,12 +1085,13 @@ fn feature_geometry_reaches_meshes_and_geometric_sets() {
 
 /// A tolerance on a dimension or relationship that joins shape aspects,
 /// plain or a complex instance, belongs to the parts of the aspects it joins
-/// and has no feature of its own.
+/// and has no feature of its own. The complex location has two leaves; the
+/// complex size has one, so it reads as the simple angular size.
 #[test]
 fn a_tolerance_on_a_complex_dimension_belongs_to_its_parts() {
     for (target, in_b) in [
         (
-            "#31=( DIMENSIONAL_LOCATION() DIRECTED_DIMENSIONAL_LOCATION() SHAPE_ASPECT_RELATIONSHIP('loc',$,#14,#24) );",
+            "#31=( ANGULAR_LOCATION(.EQUAL.) DIMENSIONAL_LOCATION() DIRECTED_DIMENSIONAL_LOCATION() SHAPE_ASPECT_RELATIONSHIP('loc',$,#14,#24) );",
             true,
         ),
         (

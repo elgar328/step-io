@@ -134,15 +134,17 @@ fn narrowed_attribute_drops_a_wider_reference() {
 /// The same narrowing made by one part of a complex instance holds for the
 /// attribute another part declares: `PRESENTATION_REPRESENTATION` narrows
 /// `REPRESENTATION.context_of_items`, so `#4` over a plain context is dropped
-/// and `#3` over a geometric one is kept.
+/// and `#3` over a geometric one is kept. The shape representation part
+/// makes a second leaf, in a combination the schema allows, not one seen in
+/// a file.
 #[test]
 fn narrowing_by_one_complex_part_holds_for_another() {
     let r = read_body(
         "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
          #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)REPRESENTATION_CONTEXT('',''));\n\
-         #3=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#2));\n\
+         #3=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#2)SHAPE_REPRESENTATION());\n\
          #5=REPRESENTATION_CONTEXT('','');\n\
-         #4=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#5));\n",
+         #4=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#5)SHAPE_REPRESENTATION());\n",
     );
     assert_eq!(dropped_kind(&r, 4), Some(&DropKind::NonstandardReference));
     assert!(dropped_kind(&r, 3).is_none(), "#3 must survive: {r:?}");
@@ -731,4 +733,102 @@ fn older_edition_complex_forms_are_kept() {
          #14=(MAPPED_ITEM(#5,#6)REPRESENTATION_ITEM('')STYLED_ITEM((#13),#6));\n",
     );
     assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert!(r.normalized.is_empty(), "{:?}", r.normalized);
+}
+
+/// The id the text gives the one entity whose line contains `needle`.
+fn id_of(text: &str, needle: &str) -> String {
+    let mut lines = text.lines().filter(|l| l.contains(needle));
+    let line = lines
+        .next()
+        .unwrap_or_else(|| panic!("no {needle}: {text}"));
+    assert!(lines.next().is_none(), "more than one {needle}: {text}");
+    line.split(' ').next().expect("an id").to_owned()
+}
+
+/// Part 21 (12.2.5.1) writes parts with one leaf as a simple entity of the
+/// leaf, inherited attributes first, each supertype once. Such a complex
+/// entity reads as that simple entity, with a note, and references to it
+/// hold: one whose leaf has one supertype chain, a diamond, two supertypes,
+/// and an integer the part form of `LITERAL_NUMBER` would take as a real.
+#[test]
+fn one_leaf_complex_entities_are_read_as_simple_ones() {
+    let body = "#1=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT($,.METRE.));\n\
+                #2=DERIVED_UNIT_ELEMENT(#1,2.);\n\
+                #3=(AREA_UNIT()DERIVED_UNIT((#2)));\n\
+                #4=(CARTESIAN_POINT((0.,0.,1.))GEOMETRIC_REPRESENTATION_ITEM()POINT()\
+                REPRESENTATION_ITEM('n'));\n\
+                #5=VERTEX_POINT('v',#4);\n\
+                #6=(GEOMETRIC_REPRESENTATION_ITEM()REPRESENTATION_ITEM('d')\
+                TOPOLOGICAL_REPRESENTATION_ITEM()VERTEX()VERTEX_POINT(#4));\n\
+                #7=(MEASURE_REPRESENTATION_ITEM()MEASURE_WITH_UNIT(LENGTH_MEASURE(1.),#1)\
+                REPRESENTATION_ITEM('m'));\n\
+                #8=(EXPRESSION()GENERIC_EXPRESSION()GENERIC_LITERAL()\
+                INTEGER_REPRESENTATION_ITEM()INT_LITERAL()LITERAL_NUMBER(5)NUMERIC_EXPRESSION()\
+                REPRESENTATION_ITEM('i')SIMPLE_GENERIC_EXPRESSION()SIMPLE_NUMERIC_EXPRESSION());\n\
+                #9=AREA_UNIT((#2));\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    let note = "complex entity with one leaf rewritten as a simple entity";
+    assert_eq!(
+        r.normalized,
+        [(3, note), (4, note), (6, note), (7, note), (8, note)]
+    );
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    let point = id_of(&text, "CARTESIAN_POINT('n',(0.,0.,1.))");
+    let unit = id_of(&text, "SI_UNIT($,.METRE.)");
+    let element = id_of(&text, "DERIVED_UNIT_ELEMENT(");
+    for line in [
+        format!("VERTEX_POINT('v',{point});"),
+        format!("VERTEX_POINT('d',{point});"),
+        format!("MEASURE_REPRESENTATION_ITEM('m',LENGTH_MEASURE(1.),{unit});"),
+        "INTEGER_REPRESENTATION_ITEM('i',5);".to_owned(),
+    ] {
+        assert!(text.contains(&line), "{line}: {text}");
+    }
+    let area = format!("AREA_UNIT(({element}));");
+    assert_eq!(text.matches(&area).count(), 2, "{text}");
+
+    let again = read(text.as_bytes()).expect("written text parses").1;
+    assert!(again.dropped.is_empty(), "{:?}", again.dropped);
+    assert!(again.normalized.is_empty(), "{:?}", again.normalized);
+}
+
+/// AP203 edition 1 declares an area unit and a volume unit as named units:
+/// `AREA_UNIT(#dims)` is standard there, and reads with no note. The complex
+/// form of the same reads with a note, and both write as the simple form.
+#[test]
+fn edition_1_area_and_volume_units_are_read() {
+    let body = "#1=DIMENSIONAL_EXPONENTS(2.,0.,0.,0.,0.,0.,0.);\n\
+                #2=AREA_UNIT(#1);\n\
+                #3=VOLUME_UNIT(#1);\n\
+                #4=DERIVED_UNIT_ELEMENT(#2,1.);\n\
+                #5=DERIVED_UNIT_ELEMENT(#3,1.);\n\
+                #6=(AREA_UNIT()NAMED_UNIT(#1));\n\
+                #7=DERIVED_UNIT_ELEMENT(#6,1.);\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert_eq!(
+        r.normalized,
+        [(
+            6,
+            "complex entity with one leaf rewritten as a simple entity"
+        )]
+    );
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    let dims = id_of(&text, "DIMENSIONAL_EXPONENTS(");
+    assert_eq!(
+        text.matches(&format!("AREA_UNIT({dims});")).count(),
+        2,
+        "{text}"
+    );
+    assert!(text.contains(&format!("VOLUME_UNIT({dims});")), "{text}");
+    assert!(!text.contains("NAMED_UNIT"), "{text}");
+
+    let (again_model, again) = read(text.as_bytes()).expect("written text parses");
+    assert!(again.dropped.is_empty(), "{:?}", again.dropped);
+    assert!(again.normalized.is_empty(), "{:?}", again.normalized);
+    assert_eq!(common::text(&again_model), text);
 }

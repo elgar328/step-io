@@ -156,6 +156,30 @@ impl Schema {
             .unwrap_or_default()
     }
 
+    /// The entities whose own attributes make up `ent_name`'s, in the order
+    /// [`Self::flattened_attrs`] takes them, given `parents` as its direct
+    /// supertypes: each supertype once, ending with `ent_name`.
+    pub fn flatten_origins(&self, ent_name: &str, parents: &[String]) -> Vec<String> {
+        fn visit(schema: &Schema, n: &str, seen: &mut BTreeSet<String>, out: &mut Vec<String>) {
+            for p in schema.entity.get(n).map_or(&[][..], |e| &e.parents) {
+                if seen.insert(p.clone()) {
+                    visit(schema, p, seen, out);
+                    out.push(p.clone());
+                }
+            }
+        }
+        let mut seen = BTreeSet::new();
+        let mut out = Vec::new();
+        for p in parents {
+            if seen.insert(p.clone()) {
+                visit(self, p, &mut seen, &mut out);
+                out.push(p.clone());
+            }
+        }
+        out.push(ent_name.to_owned());
+        out
+    }
+
     /// Collect `ent_name`'s inherited attributes and redeclarations, each with
     /// the entity it comes from.
     pub fn collect_inherited<'a>(

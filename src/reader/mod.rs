@@ -20,7 +20,7 @@ use crate::generated::read::{
     COMPLEX_PART_NAMES, ComplexNarrowing, RefSlot, SIMPLE_NAMES, build_complex_entity,
     build_entity, complex_narrowings, complex_part_index, complex_ref_field_slots,
     complex_ref_slots, complex_violation, finalize_arenas, ref_field_slots, ref_slots,
-    resolve_complex_entity, resolve_entity, shrink_arenas, simple_index,
+    resolve_complex_entity, resolve_entity, shrink_arenas, simple_index, single_leaf_form,
 };
 use crate::parser::p21::{Parser, Stream};
 use crate::parser::{Attribute, Error, ParseWarning, RawEntity, RawEntityPart};
@@ -137,6 +137,70 @@ fn complex_name(parts: &[RawEntityPart]) -> String {
     format!("({})", n.join("+"))
 }
 
+/// `ent` as the model holds it, and whether it was a complex entity Part 21
+/// (12.2.5.1) maps to a simple one, as its parts have one leaf. Such a
+/// complex entity with its latest supertypes is read as the simple entity;
+/// with an earlier edition's it stays complex, as does an earlier edition's
+/// simple form of it, since the model has no simple entity of that form.
+fn single_leaf(ent: RawEntity) -> (RawEntity, bool) {
+    match ent {
+        RawEntity::Simple {
+            id,
+            name,
+            attributes,
+            span,
+        } => match generic_normalize::edition_form_parts(&name, &attributes) {
+            Some(parts) => (RawEntity::Complex { id, parts, span }, false),
+            None => (
+                RawEntity::Simple {
+                    id,
+                    name,
+                    attributes,
+                    span,
+                },
+                false,
+            ),
+        },
+        RawEntity::Complex {
+            id,
+            mut parts,
+            span,
+        } => {
+            let form = {
+                let mut names: Vec<&str> = parts.iter().map(|p| p.name.as_str()).collect();
+                names.sort_unstable();
+                single_leaf_form(&names)
+            };
+            let Some(form) = form.filter(|f| {
+                f.order
+                    .iter()
+                    .all(|&(p, n)| parts.iter().any(|x| x.name == p && x.attributes.len() == n))
+            }) else {
+                return (RawEntity::Complex { id, parts, span }, false);
+            };
+            if form.edition {
+                return (RawEntity::Complex { id, parts, span }, true);
+            }
+            let mut attributes = Vec::new();
+            for &(p, _) in form.order {
+                if let Some(x) = parts.iter_mut().find(|x| x.name == p) {
+                    attributes.append(&mut x.attributes);
+                }
+            }
+            let name = form.leaf.to_owned();
+            (
+                RawEntity::Simple {
+                    id,
+                    name,
+                    attributes,
+                    span,
+                },
+                true,
+            )
+        }
+    }
+}
+
 /// A synthetic entity added by normalization, until it is numbered.
 struct Synthetic {
     /// The id of the entity whose fix references it.
@@ -170,8 +234,15 @@ struct Scan {
 impl Scan {
     /// Normalize one entity, build it into the model, and keep its row and
     /// reference slots.
-    fn entity(&mut self, mut ent: RawEntity) {
+    fn entity(&mut self, ent: RawEntity) {
         let id = ent.id();
+        let (mut ent, one_leaf) = single_leaf(ent);
+        if one_leaf {
+            self.norm.push((
+                id,
+                "complex entity with one leaf rewritten as a simple entity",
+            ));
+        }
         self.max_id = Some(self.max_id.map_or(id, |m| m.max(id)));
         let mut row = Row {
             id,
@@ -654,6 +725,11 @@ fn resolve(
 /// and AP242, whatever the file's `FILE_SCHEMA` names) is accepted, each rule
 /// judged on its own. The schema's `WHERE` rules, global
 /// `RULE`s, and `UNIQUE` and `INVERSE` constraints are not checked.
+///
+/// A complex entity whose parts have one leaf reads as the simple entity of
+/// that leaf, with a note, as Part 21 (12.2.5.1) writes it. An AP203
+/// edition 1 area or volume unit, a named unit in that edition, is held as
+/// the complex entity of its parts and written back in its simple form.
 ///
 /// # Errors
 /// [`Error::Io`] if `input` fails, and another [`Error`] if the file does not

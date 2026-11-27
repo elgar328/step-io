@@ -325,14 +325,16 @@ fn reads_edge_and_point_styles() {
 }
 
 /// A point written as a complex instance (AP242 edition 4 lets
-/// `CARTESIAN_POINT` combine) places the circle through its coordinates.
+/// `CARTESIAN_POINT` combine) places the circle through its coordinates. Its
+/// second leaf, a descriptive item, makes it a complex instance; the schema
+/// allows the combination, not one seen in a file.
 #[test]
 fn a_complex_point_places_a_circle() {
     let brep = BREP
         .replace(
             "#10=CARTESIAN_POINT('',(0.0,0.0,0.0));",
-            "#10=(CARTESIAN_POINT((0.0,0.0,5.0))GEOMETRIC_REPRESENTATION_ITEM()POINT()\
-             REPRESENTATION_ITEM(''));",
+            "#10=(CARTESIAN_POINT((0.0,0.0,5.0))DESCRIPTIVE_REPRESENTATION_ITEM('d')\
+             GEOMETRIC_REPRESENTATION_ITEM()POINT()REPRESENTATION_ITEM(''));",
         )
         .replace("#18=LINE('',#10,#17);", "#18=CIRCLE('',#15,1.0);");
     let src = format!("{HEADER}{brep}{FOOTER}");
@@ -592,13 +594,15 @@ fn reads_a_pre_defined_colour() {
 }
 
 /// A vertex whose point is a complex instance with a `CARTESIAN_POINT` part
-/// reads its coordinates, and the point is one of `Scene::all_points`.
+/// reads its coordinates, and the point is one of `Scene::all_points`. The
+/// point's second leaf is a descriptive item, a combination the schema
+/// allows, not one seen in a file.
 #[test]
 fn a_vertex_reads_a_complex_point() {
     let brep = BREP.replace(
         "#10=CARTESIAN_POINT('',(0.0,0.0,0.0));",
-        "#10=(CARTESIAN_POINT((0.0,0.0,5.0))GEOMETRIC_REPRESENTATION_ITEM()POINT()\
-         REPRESENTATION_ITEM(''));",
+        "#10=(CARTESIAN_POINT((0.0,0.0,5.0))DESCRIPTIVE_REPRESENTATION_ITEM('d')\
+         GEOMETRIC_REPRESENTATION_ITEM()POINT()REPRESENTATION_ITEM(''));",
     );
     let src = format!("{HEADER}{brep}{FOOTER}");
     let (model, report) = read(src.as_bytes()).expect("read");

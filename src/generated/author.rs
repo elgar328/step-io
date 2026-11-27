@@ -14325,9 +14325,11 @@ impl Ap242Author {
     /// Complex (multi-part) instance — rule-based strict AP242 assembler.
     /// The part-name set is validated by the schema name-set rule (legality,
     /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
-    /// subtype part beside each `ABSTRACT` part), then every part's fields are
-    /// checked (types, sizes, references, finite reals, narrowings); parts are
-    /// stored in Part 21 order (alphabetical).
+    /// subtype part beside each `ABSTRACT` part, more than one leaf: parts
+    /// with one leaf are that leaf's simple entity, which its own constructor
+    /// adds), then every part's fields are checked (types, sizes, references,
+    /// finite reals, narrowings); parts are stored in Part 21 order
+    /// (alphabetical).
     pub fn add_complex(
         &mut self,
         mut parts: Vec<PartialEntity>,
@@ -20224,9 +20226,9 @@ static ONEOF_GROUPS: &[&[&[&str]]] = &[
 /// AP242-legal, no duplicates, supertype chains complete (each part's
 /// transitive supertypes all present — Part 21 external mapping), the set
 /// connected through those chains (one inheritance graph, no disjoint
-/// clusters), no ONEOF group drawn from two branches, and beside each
-/// `ABSTRACT` part a part of one of its subtypes. Reference fields are
-/// checked separately by [`Ap242Author::add_complex`].
+/// clusters), no ONEOF group drawn from two branches, beside each
+/// `ABSTRACT` part a part of one of its subtypes, and more than one leaf.
+/// Reference fields are checked separately by [`Ap242Author::add_complex`].
 pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
     if names.is_empty() {
         return Err(AuthorError::InvalidComplex {
@@ -20302,6 +20304,12 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                 reason: "abstract part without a subtype part",
             });
         }
+    }
+    // Part 21 (12.2.5.1) writes parts with one leaf as a simple entity.
+    if crate::generated::read::single_leaf_form(&sorted).is_some_and(|f| !f.edition) {
+        return Err(AuthorError::InvalidComplex {
+            reason: "one leaf: add it as a simple entity",
+        });
     }
     Ok(())
 }

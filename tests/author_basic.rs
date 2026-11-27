@@ -746,7 +746,8 @@ fn narrowed_attributes_are_checked_where_the_type_cannot() {
         .expect("point");
     let name = a.text("");
     // PRESENTATION_REPRESENTATION narrows REPRESENTATION.context_of_items to a
-    // geometric context.
+    // geometric context. The shape representation part makes a second leaf,
+    // in a combination the schema allows, not one seen in a file.
     let err = a
         .add_complex(vec![
             m::PartialEntity::PresentationRepresentation,
@@ -755,6 +756,7 @@ fn narrowed_attributes_are_checked_where_the_type_cannot() {
                 items: vec![m::RepresentationItemRef::CartesianPoint(point)],
                 context_of_items: m::RepresentationContextRef::RepresentationContext(plain),
             },
+            m::PartialEntity::ShapeRepresentation,
         ])
         .unwrap_err();
     assert!(
@@ -1171,20 +1173,12 @@ fn a_constructive_item_may_be_a_listed_subtype() {
         .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(p), None, None)
         .expect("axis");
     let circle = a
-        .add_complex(vec![
-            m::PartialEntity::Circle { radius: 1.0 },
-            m::PartialEntity::Conic {
-                position: m::Axis2PlacementRef::Axis2Placement3d(axis),
-            },
-            m::PartialEntity::Curve,
-            m::PartialEntity::GeometricRepresentationItem,
-            m::PartialEntity::RepresentationItem { name },
-        ])
-        .expect("circle complex");
+        .add_circle("", m::Axis2PlacementRef::Axis2Placement3d(axis), 1.0)
+        .expect("circle");
     a.add_constructive_geometry_representation(
         "",
         vec![
-            m::Ap242ConstructiveGeometryRepresentationItemsRef::Complex(circle),
+            m::Ap242ConstructiveGeometryRepresentationItemsRef::Circle(circle),
             m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(p),
         ],
         ctx,
@@ -1220,20 +1214,23 @@ fn exactly_one_of_several_types_counts_every_part() {
         ]
     };
 
-    // An axis placement is one of them, though it has four parts.
-    let parts = axis_parts(&mut a);
-    let axis = a.add_complex(parts).expect("axis placement complex");
+    // An axis placement is one of them.
+    let origin = a
+        .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(p), None, None)
+        .expect("origin");
     a.add_geometrically_bounded_surface_shape_representation(
         "",
-        vec![m::Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Complex(axis)],
+        vec![
+            m::Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Axis2Placement3d(
+                origin,
+            ),
+        ],
         ctx.clone(),
     )
     .expect("one axis placement");
 
-    // An axis placement that is also a mapped item is two of them.
-    let origin = a
-        .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(p), None, None)
-        .expect("origin");
+    // An axis placement that is also a mapped item, written as five parts,
+    // is two of them.
     let origin = m::RepresentationItemRef::Axis2Placement3d(origin);
     let shape = a
         .add_shape_representation("", vec![origin.clone()], ctx.clone())
@@ -1273,7 +1270,9 @@ fn exactly_one_of_several_types_counts_every_part() {
 
 /// `STYLED_ITEM.WR3` (AP242 edition 4): a styled item styles a mapped item,
 /// a geometric item, or a set of them — a context-dependent over-riding
-/// styled item included. A complex instance's type is its parts.
+/// styled item included. A complex instance's type is its parts; the
+/// geometric part makes a second leaf, in a combination the schema allows,
+/// not one seen in a file.
 #[test]
 fn a_styled_item_styles_mapped_and_geometric_items_or_a_set_of_them() {
     let mut a = Ap242Author::new();
@@ -1314,6 +1313,7 @@ fn a_styled_item_styles_mapped_and_geometric_items_or_a_set_of_them() {
             )
             .collect();
         parts.extend([
+            m::PartialEntity::GeometricRepresentationItem,
             m::PartialEntity::OverRidingStyledItem {
                 over_ridden_style: m::StyledItemRef::StyledItem(set),
             },
@@ -1667,5 +1667,32 @@ fn a_list_held_in_a_select_is_checked_for_its_size() {
             min: 1,
             max: None,
         }
+    );
+}
+
+/// Parts with one leaf are that leaf's simple entity (Part 21 12.2.5.1),
+/// which its own constructor adds: `add_complex` refuses them.
+#[test]
+fn one_leaf_parts_are_refused() {
+    let mut a = Ap242Author::new();
+    let name = a.text("");
+    let err = a
+        .add_complex(vec![
+            m::PartialEntity::CartesianPoint {
+                coordinates: [0.0, 0.0, 0.0].into(),
+            },
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::Point,
+            m::PartialEntity::RepresentationItem { name },
+        ])
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::InvalidComplex {
+                reason: "one leaf: add it as a simple entity"
+            }
+        ),
+        "{err:?}"
     );
 }

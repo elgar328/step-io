@@ -68,11 +68,13 @@ fn reads_a_complex_uncertainty_as_the_precision() {
 }
 
 /// An inch whose conversion factor is a complex measure or a positive length
-/// measure: both resolve to 25.4 mm.
+/// measure: both resolve to 25.4 mm. The complex one is also a measure
+/// representation item, so it has two leaves.
 #[test]
 fn reads_a_complex_or_positive_conversion_factor() {
     for factor in [
-        "#20=(LENGTH_MEASURE_WITH_UNIT()MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#10));",
+        "#20=(LENGTH_MEASURE_WITH_UNIT()MEASURE_REPRESENTATION_ITEM()\
+         MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#10)REPRESENTATION_ITEM('f'));",
         "#20=POSITIVE_LENGTH_MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(25.4),#10);",
     ] {
         let units = UNITS.replace(

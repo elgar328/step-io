@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a combination one edition allows is kept.
 - `read()`'s documentation says what it checks: each entity's form, not the
   schema's `WHERE` rules, global `RULE`s, `UNIQUE` or `INVERSE` constraints.
+- A complex entity whose parts have one leaf is written as the simple
+  entity of that leaf, as Part 21 requires, noted in `Report::normalized`;
+  it used to stay complex. With the latest edition's supertypes it also
+  reads as that simple entity. `Ap242Author::add_complex`
+  refuses such parts (`InvalidComplex`): the leaf's own constructor adds
+  them.
 
 ### Fixed
 
@@ -41,6 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An entity referencing one that fails to read is dropped as a `cascade`
   (`via-unclassified`); it used to be dropped as `unclassified`, with a
   dangling reference as its detail.
+- An AP203 edition 1 area or volume unit (`AREA_UNIT(#dims)`,
+  `VOLUME_UNIT(#dims)`, a named unit in that edition) reads, and writes back
+  in that form; it used to be dropped as a `nonstandard reference`.
 
 ## [0.4.0] - 2026-11-26
 
