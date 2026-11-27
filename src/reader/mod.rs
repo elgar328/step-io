@@ -686,7 +686,9 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
 
     // Outer cascade fixpoint: drop_pass (graph/ref validity) -> resolve
     // (own-attr and ref validity). Read failures feed `known_bad` so the next
-    // drop_pass cascades their referrers. `drop_pass` always seeds from the
+    // drop_pass cascades their referrers. Build failures go first, before any
+    // resolve: a referrer resolved in the same round would find no built
+    // target and fail on its own, where it should cascade. `drop_pass` always seeds from the
     // whole table (never `kept`) and `known_bad` only grows, so the kept set
     // shrinks monotonically — this guarantees termination, and lets each
     // round trim the arenas the previous one left.
@@ -710,7 +712,9 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
             .filter(|(p, _, _)| kept[*p])
             .map(|(p, _, e)| (*p, e.clone()))
             .collect();
-        fails.extend(resolve(&mut model, &table, &refs, &kept, &mut dedup));
+        if fails.is_empty() {
+            fails = resolve(&mut model, &table, &refs, &kept, &mut dedup);
+        }
         if fails.is_empty() {
             break (kept_dropped, n_kept);
         }

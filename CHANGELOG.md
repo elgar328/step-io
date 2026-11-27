@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A BOOLEAN attribute that is neither `.T.` nor `.F.` (`.U.`, `$`, a number)
   read as false; the entity is now dropped as `unclassified`.
+- An entity referencing one that fails to read is dropped as a `cascade`
+  (`via-unclassified`); it used to be dropped as `unclassified`, with a
+  dangling reference as its detail.
 
 ## [0.4.0] - 2026-11-26
 

@@ -398,8 +398,8 @@ fn complex_entity_references_resolve_in_place() {
     assert!(text.contains("GLOBAL_UNIT_ASSIGNED_CONTEXT((#"), "{text}");
 }
 
-/// An entity that fails to read takes its referrers with it, and the read
-/// still accounts for every entity once.
+/// An entity that fails to read takes its referrers with it, as a cascade,
+/// and the read still accounts for every entity once.
 #[test]
 fn read_failures_reach_their_referrers() {
     let r = read_body(
@@ -409,7 +409,12 @@ fn read_failures_reach_their_referrers() {
          #4=CARTESIAN_POINT('',(0.,0.,0.));\n",
     );
     assert_eq!(dropped_kind(&r, 1), Some(&DropKind::Unclassified));
-    assert!(dropped_kind(&r, 2).is_some(), "{:?}", r.dropped);
+    let d2 = r.dropped.iter().find(|(i, _)| *i == 2).map(|(_, d)| d);
+    let d2 = d2.unwrap_or_else(|| panic!("{:?}", r.dropped));
+    assert_eq!(
+        (&d2.kind, d2.detail.as_str()),
+        (&DropKind::Cascade, "via-unclassified")
+    );
     assert_eq!(r.entities_kept, 2, "{:?}", r.dropped);
 }
 
@@ -627,7 +632,8 @@ fn boolean_neither_true_nor_false_drops_the_entity() {
     }
     assert_eq!(dropped_kind(&r, 15), Some(&DropKind::Cascade));
     assert_eq!(detail(15), Some("via-dangling"));
-    assert!(dropped_kind(&r, 20).is_some(), "{:?}", r.dropped);
+    assert_eq!(dropped_kind(&r, 20), Some(&DropKind::Cascade));
+    assert_eq!(detail(20), Some("via-unclassified"));
     assert_eq!(r.dropped.len(), 5, "{:?}", r.dropped);
     let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
     let senses: Vec<bool> = model
