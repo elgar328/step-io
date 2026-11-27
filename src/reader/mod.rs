@@ -39,7 +39,8 @@ use table::{EntityTable, IdMap, Labels, Member, NONE, Row, first_duplicate, sort
 pub enum DropKind {
     /// One of the entity's own values is nonstandard and has no standard
     /// rewrite: a required reference is missing, an integer field holds a
-    /// fractional value, a list held inline has more than three reals.
+    /// fractional value, a list held inline has more than three reals, more
+    /// attributes than the entity has.
     NonstandardValue,
     /// The entity type is not one step-io reads: not yet supported, or not a
     /// schema entity at all.
@@ -51,8 +52,8 @@ pub enum DropKind {
     /// define.
     Cascade,
     /// Its own values could not be read (a value of the wrong kind, an
-    /// unknown enumeration value, too few attributes) for a reason none of
-    /// the other kinds names.
+    /// unknown enumeration value, a boolean neither true nor false, too few
+    /// attributes) for a reason none of the other kinds names.
     Unclassified,
 }
 

@@ -48,6 +48,13 @@ fn as_text(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<Text, String
         other => Err(format!("{ctx}: expected string, got {other:?}")),
     }
 }
+fn as_bool(a: &Attribute, ctx: &str) -> Result<bool, String> {
+    match a {
+        Attribute::Enum(s) if s == "T" => Ok(true),
+        Attribute::Enum(s) if s == "F" => Ok(false),
+        other => Err(format!("{ctx}: expected boolean, got {other:?}")),
+    }
+}
 fn as_logical(a: &Attribute, ctx: &str) -> Result<Logical, String> {
     match a {
         Attribute::Enum(s) => Logical::parse(s).ok_or_else(|| format!("{ctx}: bad logical {s:?}")),
@@ -15753,8 +15760,9 @@ fn build_advanced_face_arena(
         ))?,
         bounds: Vec::new(),
         face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
-        same_sense: (Ok::<bool, String>(
-            matches!(req(attributes, 3, "ADVANCED_FACE.same_sense")?, Attribute::Enum(s) if s == "T"),
+        same_sense: (as_bool(
+            req(attributes, 3, "ADVANCED_FACE.same_sense")?,
+            "ADVANCED_FACE.same_sense",
         ))?,
     })
 }
@@ -16908,8 +16916,9 @@ fn build_basic_round_hole_arena(
         placement: ShapeRepresentationRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
-        through_hole: (Ok::<bool, String>(
-            matches!(req(attributes, 7, "BASIC_ROUND_HOLE.through_hole")?, Attribute::Enum(s) if s == "T"),
+        through_hole: (as_bool(
+            req(attributes, 7, "BASIC_ROUND_HOLE.through_hole")?,
+            "BASIC_ROUND_HOLE.through_hole",
         ))?,
     })
 }
@@ -17177,8 +17186,13 @@ fn build_camera_model_d3_with_hlhsr_arena(
         ))?,
         view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)),
-        hidden_line_surface_removal: (Ok::<bool, String>(
-            matches!(req(attributes, 3, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal")?, Attribute::Enum(s) if s == "T"),
+        hidden_line_surface_removal: (as_bool(
+            req(
+                attributes,
+                3,
+                "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal",
+            )?,
+            "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal",
         ))?,
     })
 }
@@ -17746,8 +17760,9 @@ fn build_composite_curve_segment_arena(
                 "COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}"
             )),
         })?,
-        same_sense: (Ok::<bool, String>(
-            matches!(req(attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T"),
+        same_sense: (as_bool(
+            req(attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?,
+            "COMPOSITE_CURVE_SEGMENT.same_sense",
         ))?,
         parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
     })
@@ -18254,8 +18269,9 @@ fn build_counterbore_hole_definition_arena(
             PositiveLengthMeasureWithUnitId(u32::MAX),
         ),
         drilled_hole_diameter_tolerance: None,
-        through_hole: (Ok::<bool, String>(
-            matches!(req(attributes, 8, "COUNTERBORE_HOLE_DEFINITION.through_hole")?, Attribute::Enum(s) if s == "T"),
+        through_hole: (as_bool(
+            req(attributes, 8, "COUNTERBORE_HOLE_DEFINITION.through_hole")?,
+            "COUNTERBORE_HOLE_DEFINITION.through_hole",
         ))?,
     })
 }
@@ -18288,8 +18304,9 @@ fn build_counterdrill_hole_definition_arena(
             PositiveLengthMeasureWithUnitId(u32::MAX),
         ),
         drilled_hole_diameter_tolerance: None,
-        through_hole: (Ok::<bool, String>(
-            matches!(req(attributes, 10, "COUNTERDRILL_HOLE_DEFINITION.through_hole")?, Attribute::Enum(s) if s == "T"),
+        through_hole: (as_bool(
+            req(attributes, 10, "COUNTERDRILL_HOLE_DEFINITION.through_hole")?,
+            "COUNTERDRILL_HOLE_DEFINITION.through_hole",
         ))?,
     })
 }
@@ -18325,8 +18342,9 @@ fn build_countersink_hole_definition_arena(
             PositiveLengthMeasureWithUnitId(u32::MAX),
         ),
         drilled_hole_diameter_tolerance: None,
-        through_hole: (Ok::<bool, String>(
-            matches!(req(attributes, 11, "COUNTERSINK_HOLE_DEFINITION.through_hole")?, Attribute::Enum(s) if s == "T"),
+        through_hole: (as_bool(
+            req(attributes, 11, "COUNTERSINK_HOLE_DEFINITION.through_hole")?,
+            "COUNTERSINK_HOLE_DEFINITION.through_hole",
         ))?,
     })
 }
@@ -18892,8 +18910,9 @@ fn build_degenerate_toroidal_surface_arena(
             req(attributes, 3, "DEGENERATE_TOROIDAL_SURFACE.minor_radius")?,
             "DEGENERATE_TOROIDAL_SURFACE.minor_radius",
         ))?,
-        select_outer: (Ok::<bool, String>(
-            matches!(req(attributes, 4, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?, Attribute::Enum(s) if s == "T"),
+        select_outer: (as_bool(
+            req(attributes, 4, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?,
+            "DEGENERATE_TOROIDAL_SURFACE.select_outer",
         ))?,
     })
 }
@@ -19542,8 +19561,9 @@ fn build_edge_curve_arena(
         edge_start: VertexRef::Vertex(VertexId(u32::MAX)),
         edge_end: VertexRef::Vertex(VertexId(u32::MAX)),
         edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
-        same_sense: (Ok::<bool, String>(
-            matches!(req(attributes, 4, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T"),
+        same_sense: (as_bool(
+            req(attributes, 4, "EDGE_CURVE.same_sense")?,
+            "EDGE_CURVE.same_sense",
         ))?,
     })
 }
@@ -19860,8 +19880,9 @@ fn build_face_bound_arena(
             tt,
         ))?,
         bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)),
-        orientation: (Ok::<bool, String>(
-            matches!(req(attributes, 2, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T"),
+        orientation: (as_bool(
+            req(attributes, 2, "FACE_BOUND.orientation")?,
+            "FACE_BOUND.orientation",
         ))?,
     })
 }
@@ -19877,8 +19898,9 @@ fn build_face_outer_bound_arena(
             tt,
         ))?,
         bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)),
-        orientation: (Ok::<bool, String>(
-            matches!(req(attributes, 2, "FACE_OUTER_BOUND.orientation")?, Attribute::Enum(s) if s == "T"),
+        orientation: (as_bool(
+            req(attributes, 2, "FACE_OUTER_BOUND.orientation")?,
+            "FACE_OUTER_BOUND.orientation",
         ))?,
     })
 }
@@ -19895,8 +19917,9 @@ fn build_face_surface_arena(
         ))?,
         bounds: Vec::new(),
         face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
-        same_sense: (Ok::<bool, String>(
-            matches!(req(attributes, 3, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T"),
+        same_sense: (as_bool(
+            req(attributes, 3, "FACE_SURFACE.same_sense")?,
+            "FACE_SURFACE.same_sense",
         ))?,
     })
 }
@@ -21706,8 +21729,9 @@ fn build_oriented_closed_shell_arena(
             tt,
         ))?,
         closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)),
-        orientation: (Ok::<bool, String>(
-            matches!(req(attributes, 3, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T"),
+        orientation: (as_bool(
+            req(attributes, 3, "ORIENTED_CLOSED_SHELL.orientation")?,
+            "ORIENTED_CLOSED_SHELL.orientation",
         ))?,
     })
 }
@@ -21723,8 +21747,9 @@ fn build_oriented_edge_arena(
             tt,
         ))?,
         edge_element: EdgeRef::Edge(EdgeId(u32::MAX)),
-        orientation: (Ok::<bool, String>(
-            matches!(req(attributes, 4, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T"),
+        orientation: (as_bool(
+            req(attributes, 4, "ORIENTED_EDGE.orientation")?,
+            "ORIENTED_EDGE.orientation",
         ))?,
     })
 }
@@ -25077,8 +25102,9 @@ fn build_trimmed_curve_arena(
         basis_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         trim_1: Vec::new(),
         trim_2: Vec::new(),
-        sense_agreement: (Ok::<bool, String>(
-            matches!(req(attributes, 4, "TRIMMED_CURVE.sense_agreement")?, Attribute::Enum(s) if s == "T"),
+        sense_agreement: (as_bool(
+            req(attributes, 4, "TRIMMED_CURVE.sense_agreement")?,
+            "TRIMMED_CURVE.sense_agreement",
         ))?,
         master_representation: (match req(attributes, 5, "TRIMMED_CURVE.master_representation")? {
             Attribute::Enum(s) => TrimmingPreference::parse(s)
@@ -25405,18 +25431,21 @@ fn build_view_volume_arena(
             req(attributes, 3, "VIEW_VOLUME.front_plane_distance")?,
             "VIEW_VOLUME.front_plane_distance",
         ))?,
-        front_plane_clipping: (Ok::<bool, String>(
-            matches!(req(attributes, 4, "VIEW_VOLUME.front_plane_clipping")?, Attribute::Enum(s) if s == "T"),
+        front_plane_clipping: (as_bool(
+            req(attributes, 4, "VIEW_VOLUME.front_plane_clipping")?,
+            "VIEW_VOLUME.front_plane_clipping",
         ))?,
         back_plane_distance: (as_real(
             req(attributes, 5, "VIEW_VOLUME.back_plane_distance")?,
             "VIEW_VOLUME.back_plane_distance",
         ))?,
-        back_plane_clipping: (Ok::<bool, String>(
-            matches!(req(attributes, 6, "VIEW_VOLUME.back_plane_clipping")?, Attribute::Enum(s) if s == "T"),
+        back_plane_clipping: (as_bool(
+            req(attributes, 6, "VIEW_VOLUME.back_plane_clipping")?,
+            "VIEW_VOLUME.back_plane_clipping",
         ))?,
-        view_volume_sides_clipping: (Ok::<bool, String>(
-            matches!(req(attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, Attribute::Enum(s) if s == "T"),
+        view_volume_sides_clipping: (as_bool(
+            req(attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?,
+            "VIEW_VOLUME.view_volume_sides_clipping",
         ))?,
         view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)),
     })
@@ -49726,7 +49755,7 @@ fn read_complex_parts_norefs(
         "B_SPLINE_CURVE_WITH_KNOTS" => PartialEntity::BSplineCurveWithKnots { knot_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities: expected list, got {o:?}")) })?, knots: (match req(&p.attributes, 1, "B_SPLINE_CURVE_WITH_KNOTS.knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_CURVE_WITH_KNOTS.knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 2, "B_SPLINE_CURVE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
         "B_SPLINE_SURFACE" => PartialEntity::BSplineSurface { u_degree: (as_int(req(&p.attributes, 0, "B_SPLINE_SURFACE.u_degree")?, "B_SPLINE_SURFACE.u_degree"))?, v_degree: (as_int(req(&p.attributes, 1, "B_SPLINE_SURFACE.v_degree")?, "B_SPLINE_SURFACE.v_degree"))?, control_points_list: Vec::new(), surface_form: (match req(&p.attributes, 3, "B_SPLINE_SURFACE.surface_form")? { Attribute::Enum(s) => BSplineSurfaceForm::parse(s).ok_or_else(|| format!("B_SPLINE_SURFACE.surface_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_SURFACE.surface_form: expected enum, got {o:?}")) })?, u_closed: (as_logical(req(&p.attributes, 4, "B_SPLINE_SURFACE.u_closed")?, "B_SPLINE_SURFACE.u_closed"))?, v_closed: (as_logical(req(&p.attributes, 5, "B_SPLINE_SURFACE.v_closed")?, "B_SPLINE_SURFACE.v_closed"))?, self_intersect: (as_logical(req(&p.attributes, 6, "B_SPLINE_SURFACE.self_intersect")?, "B_SPLINE_SURFACE.self_intersect"))?, },
         "B_SPLINE_SURFACE_WITH_KNOTS" => PartialEntity::BSplineSurfaceWithKnots { u_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities: expected list, got {o:?}")) })?, v_multiplicities: (match req(&p.attributes, 1, "B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities: expected list, got {o:?}")) })?, u_knots: (match req(&p.attributes, 2, "B_SPLINE_SURFACE_WITH_KNOTS.u_knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_SURFACE_WITH_KNOTS.u_knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.u_knots: expected list, got {o:?}")) })?, v_knots: (match req(&p.attributes, 3, "B_SPLINE_SURFACE_WITH_KNOTS.v_knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_SURFACE_WITH_KNOTS.v_knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.v_knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 4, "B_SPLINE_SURFACE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
-        "BASIC_ROUND_HOLE" => PartialEntity::BasicRoundHole { depth: None, depth_tolerance: None, diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), diameter_tolerance: None, placement: ShapeRepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), through_hole: (Ok::<bool, String>(matches!(req(&p.attributes, 5, "BASIC_ROUND_HOLE.through_hole")?, Attribute::Enum(s) if s == "T")))?, },
+        "BASIC_ROUND_HOLE" => PartialEntity::BasicRoundHole { depth: None, depth_tolerance: None, diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), diameter_tolerance: None, placement: ShapeRepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), through_hole: (as_bool(req(&p.attributes, 5, "BASIC_ROUND_HOLE.through_hole")?, "BASIC_ROUND_HOLE.through_hole"))?, },
         "BEZIER_CURVE" => PartialEntity::BezierCurve,
         "BEZIER_SURFACE" => PartialEntity::BezierSurface,
         "BOUNDED_CURVE" => PartialEntity::BoundedCurve,
@@ -49740,7 +49769,7 @@ fn read_complex_parts_norefs(
         "CAMERA_MODEL" => PartialEntity::CameraModel,
         "CAMERA_MODEL_D3" => PartialEntity::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)), },
         "CAMERA_MODEL_D3_MULTI_CLIPPING" => PartialEntity::CameraModelD3MultiClipping { shape_clipping: Vec::new(), },
-        "CAMERA_MODEL_D3_WITH_HLHSR" => PartialEntity::CameraModelD3WithHlhsr { hidden_line_surface_removal: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal")?, Attribute::Enum(s) if s == "T")))?, },
+        "CAMERA_MODEL_D3_WITH_HLHSR" => PartialEntity::CameraModelD3WithHlhsr { hidden_line_surface_removal: (as_bool(req(&p.attributes, 0, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal")?, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal"))?, },
         "CAMERA_USAGE" => PartialEntity::CameraUsage,
         "CARTESIAN_POINT" => PartialEntity::CartesianPoint { coordinates: (match req(&p.attributes, 0, "CARTESIAN_POINT.coordinates")? { Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, "CARTESIAN_POINT.coordinates")), "CARTESIAN_POINT.coordinates"), o => Err(format!("CARTESIAN_POINT.coordinates: expected list, got {o:?}")) })?, },
         "CC_DESIGN_APPROVAL" => PartialEntity::CcDesignApproval { items: Vec::new(), },
@@ -49766,7 +49795,7 @@ fn read_complex_parts_norefs(
         "COMPLEX_TRIANGULATED_FACE" => PartialEntity::ComplexTriangulatedFace { pnindex: (match req(&p.attributes, 0, "COMPLEX_TRIANGULATED_FACE.pnindex")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "COMPLEX_TRIANGULATED_FACE.pnindex")).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_FACE.pnindex: expected list, got {o:?}")) })?, triangle_strips: (match req(&p.attributes, 1, "COMPLEX_TRIANGULATED_FACE.triangle_strips")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_int(e, "COMPLEX_TRIANGULATED_FACE.triangle_strips")).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_FACE.triangle_strips: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_FACE.triangle_strips: expected list, got {o:?}")) })?, triangle_fans: (match req(&p.attributes, 2, "COMPLEX_TRIANGULATED_FACE.triangle_fans")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_int(e, "COMPLEX_TRIANGULATED_FACE.triangle_fans")).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_FACE.triangle_fans: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_FACE.triangle_fans: expected list, got {o:?}")) })?, },
         "COMPLEX_TRIANGULATED_SURFACE_SET" => PartialEntity::ComplexTriangulatedSurfaceSet { pnindex: (match req(&p.attributes, 0, "COMPLEX_TRIANGULATED_SURFACE_SET.pnindex")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "COMPLEX_TRIANGULATED_SURFACE_SET.pnindex")).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_SURFACE_SET.pnindex: expected list, got {o:?}")) })?, triangle_strips: (match req(&p.attributes, 1, "COMPLEX_TRIANGULATED_SURFACE_SET.triangle_strips")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_int(e, "COMPLEX_TRIANGULATED_SURFACE_SET.triangle_strips")).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_SURFACE_SET.triangle_strips: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_SURFACE_SET.triangle_strips: expected list, got {o:?}")) })?, triangle_fans: (match req(&p.attributes, 2, "COMPLEX_TRIANGULATED_SURFACE_SET.triangle_fans")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_int(e, "COMPLEX_TRIANGULATED_SURFACE_SET.triangle_fans")).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_SURFACE_SET.triangle_fans: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("COMPLEX_TRIANGULATED_SURFACE_SET.triangle_fans: expected list, got {o:?}")) })?, },
         "COMPOSITE_CURVE" => PartialEntity::CompositeCurve { segments: Vec::new(), self_intersect: (as_logical(req(&p.attributes, 1, "COMPOSITE_CURVE.self_intersect")?, "COMPOSITE_CURVE.self_intersect"))?, },
-        "COMPOSITE_CURVE_SEGMENT" => PartialEntity::CompositeCurveSegment { transition: (match req(&p.attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? { Attribute::Enum(s) => TransitionCode::parse(s).ok_or_else(|| format!("COMPOSITE_CURVE_SEGMENT.transition: bad enum {s:?}")), o => Err(format!("COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}")) })?, same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T")))?, parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), },
+        "COMPOSITE_CURVE_SEGMENT" => PartialEntity::CompositeCurveSegment { transition: (match req(&p.attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? { Attribute::Enum(s) => TransitionCode::parse(s).ok_or_else(|| format!("COMPOSITE_CURVE_SEGMENT.transition: bad enum {s:?}")), o => Err(format!("COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}")) })?, same_sense: (as_bool(req(&p.attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, "COMPOSITE_CURVE_SEGMENT.same_sense"))?, parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), },
         "COMPOSITE_GROUP_SHAPE_ASPECT" => PartialEntity::CompositeGroupShapeAspect,
         "COMPOSITE_HOLE" => PartialEntity::CompositeHole,
         "COMPOSITE_SHAPE_ASPECT" => PartialEntity::CompositeShapeAspect,
@@ -49786,9 +49815,9 @@ fn read_complex_parts_norefs(
         "CONTINUOUS_SHAPE_ASPECT" => PartialEntity::ContinuousShapeAspect,
         "CONVERSION_BASED_UNIT" => PartialEntity::ConversionBasedUnit { name: (as_text(req(&p.attributes, 0, "CONVERSION_BASED_UNIT.name")?, "CONVERSION_BASED_UNIT.name", tt))?, conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "COORDINATES_LIST" => PartialEntity::CoordinatesList { npoints: (as_int(req(&p.attributes, 0, "COORDINATES_LIST.npoints")?, "COORDINATES_LIST.npoints"))?, position_coords: (match req(&p.attributes, 1, "COORDINATES_LIST.position_coords")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, "COORDINATES_LIST.position_coords")), "COORDINATES_LIST.position_coords"), o => Err(format!("COORDINATES_LIST.position_coords: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("COORDINATES_LIST.position_coords: expected list, got {o:?}")) })?, },
-        "COUNTERBORE_HOLE_DEFINITION" => PartialEntity::CounterboreHoleDefinition { counterbore: Vec::new(), drilled_hole_depth: None, drilled_hole_depth_tolerance: None, drilled_hole_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), drilled_hole_diameter_tolerance: None, through_hole: (Ok::<bool, String>(matches!(req(&p.attributes, 5, "COUNTERBORE_HOLE_DEFINITION.through_hole")?, Attribute::Enum(s) if s == "T")))?, },
-        "COUNTERDRILL_HOLE_DEFINITION" => PartialEntity::CounterdrillHoleDefinition { counterbore: ExplicitRoundHoleRef::ExplicitRoundHole(ExplicitRoundHoleId(u32::MAX)), counterdrill_angle: PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(PositivePlaneAngleMeasureWithUnitId(u32::MAX)), counterdrill_angle_tolerance: None, drilled_hole_depth: None, drilled_hole_depth_tolerance: None, drilled_hole_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), drilled_hole_diameter_tolerance: None, through_hole: (Ok::<bool, String>(matches!(req(&p.attributes, 7, "COUNTERDRILL_HOLE_DEFINITION.through_hole")?, Attribute::Enum(s) if s == "T")))?, },
-        "COUNTERSINK_HOLE_DEFINITION" => PartialEntity::CountersinkHoleDefinition { countersink_angle: PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(PositivePlaneAngleMeasureWithUnitId(u32::MAX)), countersink_angle_tolerance: None, countersink_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), countersink_diameter_tolerance: None, drilled_hole_depth: None, drilled_hole_depth_tolerance: None, drilled_hole_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), drilled_hole_diameter_tolerance: None, through_hole: (Ok::<bool, String>(matches!(req(&p.attributes, 8, "COUNTERSINK_HOLE_DEFINITION.through_hole")?, Attribute::Enum(s) if s == "T")))?, },
+        "COUNTERBORE_HOLE_DEFINITION" => PartialEntity::CounterboreHoleDefinition { counterbore: Vec::new(), drilled_hole_depth: None, drilled_hole_depth_tolerance: None, drilled_hole_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), drilled_hole_diameter_tolerance: None, through_hole: (as_bool(req(&p.attributes, 5, "COUNTERBORE_HOLE_DEFINITION.through_hole")?, "COUNTERBORE_HOLE_DEFINITION.through_hole"))?, },
+        "COUNTERDRILL_HOLE_DEFINITION" => PartialEntity::CounterdrillHoleDefinition { counterbore: ExplicitRoundHoleRef::ExplicitRoundHole(ExplicitRoundHoleId(u32::MAX)), counterdrill_angle: PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(PositivePlaneAngleMeasureWithUnitId(u32::MAX)), counterdrill_angle_tolerance: None, drilled_hole_depth: None, drilled_hole_depth_tolerance: None, drilled_hole_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), drilled_hole_diameter_tolerance: None, through_hole: (as_bool(req(&p.attributes, 7, "COUNTERDRILL_HOLE_DEFINITION.through_hole")?, "COUNTERDRILL_HOLE_DEFINITION.through_hole"))?, },
+        "COUNTERSINK_HOLE_DEFINITION" => PartialEntity::CountersinkHoleDefinition { countersink_angle: PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(PositivePlaneAngleMeasureWithUnitId(u32::MAX)), countersink_angle_tolerance: None, countersink_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), countersink_diameter_tolerance: None, drilled_hole_depth: None, drilled_hole_depth_tolerance: None, drilled_hole_diameter: PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId(u32::MAX)), drilled_hole_diameter_tolerance: None, through_hole: (as_bool(req(&p.attributes, 8, "COUNTERSINK_HOLE_DEFINITION.through_hole")?, "COUNTERSINK_HOLE_DEFINITION.through_hole"))?, },
         "CURVE" => PartialEntity::Curve,
         "CURVE_STYLE" => PartialEntity::CurveStyle { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE.name")?, "CURVE_STYLE.name", tt))?, curve_font: None, curve_width: None, curve_colour: None, },
         "CURVE_STYLE_FONT" => PartialEntity::CurveStyleFont { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE_FONT.name")?, "CURVE_STYLE_FONT.name", tt))?, pattern_list: Vec::new(), },
@@ -49812,7 +49841,7 @@ fn read_complex_parts_norefs(
         "DEFINITIONAL_REPRESENTATION" => PartialEntity::DefinitionalRepresentation,
         "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => PartialEntity::DefinitionalRepresentationRelationship,
         "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => PartialEntity::DefinitionalRepresentationRelationshipWithSameContext,
-        "DEGENERATE_TOROIDAL_SURFACE" => PartialEntity::DegenerateToroidalSurface { select_outer: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?, Attribute::Enum(s) if s == "T")))?, },
+        "DEGENERATE_TOROIDAL_SURFACE" => PartialEntity::DegenerateToroidalSurface { select_outer: (as_bool(req(&p.attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?, "DEGENERATE_TOROIDAL_SURFACE.select_outer"))?, },
         "DERIVED_SHAPE_ASPECT" => PartialEntity::DerivedShapeAspect,
         "DERIVED_UNIT" => PartialEntity::DerivedUnit { elements: Vec::new(), },
         "DESCRIPTIVE_REPRESENTATION_ITEM" => PartialEntity::DescriptiveRepresentationItem { description: (as_text(req(&p.attributes, 0, "DESCRIPTIVE_REPRESENTATION_ITEM.description")?, "DESCRIPTIVE_REPRESENTATION_ITEM.description", tt))?, },
@@ -49840,7 +49869,7 @@ fn read_complex_parts_norefs(
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => PartialEntity::DraughtingPreDefinedCurveFont,
         "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => PartialEntity::DraughtingPreDefinedTextFont,
         "EDGE" => PartialEntity::Edge { edge_start: None, edge_end: None, },
-        "EDGE_CURVE" => PartialEntity::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
+        "EDGE_CURVE" => PartialEntity::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), same_sense: (as_bool(req(&p.attributes, 1, "EDGE_CURVE.same_sense")?, "EDGE_CURVE.same_sense"))?, },
         "EDGE_LOOP" => PartialEntity::EdgeLoop,
         "EFFECTIVITY" => PartialEntity::Effectivity { id: (as_text(req(&p.attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id", tt))?, },
         "ELEMENTARY_SURFACE" => PartialEntity::ElementarySurface { position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
@@ -49861,9 +49890,9 @@ fn read_complex_parts_norefs(
         "EXTERNALLY_DEFINED_TILE" => PartialEntity::ExternallyDefinedTile,
         "EXTERNALLY_DEFINED_TILE_STYLE" => PartialEntity::ExternallyDefinedTileStyle,
         "FACE" => PartialEntity::Face { bounds: Vec::new(), },
-        "FACE_BOUND" => PartialEntity::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "FACE_BOUND" => PartialEntity::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)), orientation: (as_bool(req(&p.attributes, 1, "FACE_BOUND.orientation")?, "FACE_BOUND.orientation"))?, },
         "FACE_OUTER_BOUND" => PartialEntity::FaceOuterBound,
-        "FACE_SURFACE" => PartialEntity::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
+        "FACE_SURFACE" => PartialEntity::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), same_sense: (as_bool(req(&p.attributes, 1, "FACE_SURFACE.same_sense")?, "FACE_SURFACE.same_sense"))?, },
         "FEATURE_DEFINITION" => PartialEntity::FeatureDefinition,
         "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP" => PartialEntity::FeatureForDatumTargetRelationship,
         "FILL_AREA_STYLE" => PartialEntity::FillAreaStyle { name: (as_text(req(&p.attributes, 0, "FILL_AREA_STYLE.name")?, "FILL_AREA_STYLE.name", tt))?, fill_styles: Vec::new(), },
@@ -49936,8 +49965,8 @@ fn read_complex_parts_norefs(
         "ONE_DIRECTION_REPEAT_FACTOR" => PartialEntity::OneDirectionRepeatFactor { repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
         "OPEN_SHELL" => PartialEntity::OpenShell,
         "ORGANIZATIONAL_ADDRESS" => PartialEntity::OrganizationalAddress { organizations: Vec::new(), description: match req(&p.attributes, 1, "ORGANIZATIONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.description", tt))?) }, },
-        "ORIENTED_CLOSED_SHELL" => PartialEntity::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T")))?, },
-        "ORIENTED_EDGE" => PartialEntity::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "ORIENTED_CLOSED_SHELL" => PartialEntity::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), orientation: (as_bool(req(&p.attributes, 1, "ORIENTED_CLOSED_SHELL.orientation")?, "ORIENTED_CLOSED_SHELL.orientation"))?, },
+        "ORIENTED_EDGE" => PartialEntity::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(u32::MAX)), orientation: (as_bool(req(&p.attributes, 1, "ORIENTED_EDGE.orientation")?, "ORIENTED_EDGE.orientation"))?, },
         "OVER_RIDING_STYLED_ITEM" => PartialEntity::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
         "PARABOLA" => PartialEntity::Parabola { focal_dist: (as_real(req(&p.attributes, 0, "PARABOLA.focal_dist")?, "PARABOLA.focal_dist"))?, },
         "PARALLELISM_TOLERANCE" => PartialEntity::ParallelismTolerance,
@@ -50089,7 +50118,7 @@ fn read_complex_parts_norefs(
         "TOPOLOGICAL_REPRESENTATION_ITEM" => PartialEntity::TopologicalRepresentationItem,
         "TOROIDAL_SURFACE" => PartialEntity::ToroidalSurface { major_radius: (as_real(req(&p.attributes, 0, "TOROIDAL_SURFACE.major_radius")?, "TOROIDAL_SURFACE.major_radius"))?, minor_radius: (as_real(req(&p.attributes, 1, "TOROIDAL_SURFACE.minor_radius")?, "TOROIDAL_SURFACE.minor_radius"))?, },
         "TOTAL_RUNOUT_TOLERANCE" => PartialEntity::TotalRunoutTolerance,
-        "TRIMMED_CURVE" => PartialEntity::TrimmedCurve { basis_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), trim_1: Vec::new(), trim_2: Vec::new(), sense_agreement: (Ok::<bool, String>(matches!(req(&p.attributes, 3, "TRIMMED_CURVE.sense_agreement")?, Attribute::Enum(s) if s == "T")))?, master_representation: (match req(&p.attributes, 4, "TRIMMED_CURVE.master_representation")? { Attribute::Enum(s) => TrimmingPreference::parse(s).ok_or_else(|| format!("TRIMMED_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("TRIMMED_CURVE.master_representation: expected enum, got {o:?}")) })?, },
+        "TRIMMED_CURVE" => PartialEntity::TrimmedCurve { basis_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), trim_1: Vec::new(), trim_2: Vec::new(), sense_agreement: (as_bool(req(&p.attributes, 3, "TRIMMED_CURVE.sense_agreement")?, "TRIMMED_CURVE.sense_agreement"))?, master_representation: (match req(&p.attributes, 4, "TRIMMED_CURVE.master_representation")? { Attribute::Enum(s) => TrimmingPreference::parse(s).ok_or_else(|| format!("TRIMMED_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("TRIMMED_CURVE.master_representation: expected enum, got {o:?}")) })?, },
         "TWO_DIRECTION_REPEAT_FACTOR" => PartialEntity::TwoDirectionRepeatFactor { second_repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
         "UNCERTAINTY_MEASURE_WITH_UNIT" => PartialEntity::UncertaintyMeasureWithUnit { name: (as_text(req(&p.attributes, 0, "UNCERTAINTY_MEASURE_WITH_UNIT.name")?, "UNCERTAINTY_MEASURE_WITH_UNIT.name", tt))?, description: match req(&p.attributes, 1, "UNCERTAINTY_MEASURE_WITH_UNIT.description")? { Attribute::Unset => None, other => Some((as_text(other, "UNCERTAINTY_MEASURE_WITH_UNIT.description", tt))?) }, },
         "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => PartialEntity::UnequallyDisposedGeometricTolerance { displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
@@ -50101,7 +50130,7 @@ fn read_complex_parts_norefs(
         "VERTEX_LOOP" => PartialEntity::VertexLoop { loop_vertex: VertexRef::Vertex(VertexId(u32::MAX)), },
         "VERTEX_POINT" => PartialEntity::VertexPoint { vertex_geometry: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
         "VERTEX_SHELL" => PartialEntity::VertexShell { vertex_shell_extent: VertexLoopRef::VertexLoop(VertexLoopId(u32::MAX)), },
-        "VIEW_VOLUME" => PartialEntity::ViewVolume { projection_type: (match req(&p.attributes, 0, "VIEW_VOLUME.projection_type")? { Attribute::Enum(s) => CentralOrParallel::parse(s).ok_or_else(|| format!("VIEW_VOLUME.projection_type: bad enum {s:?}")), o => Err(format!("VIEW_VOLUME.projection_type: expected enum, got {o:?}")) })?, projection_point: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), view_plane_distance: (as_real(req(&p.attributes, 2, "VIEW_VOLUME.view_plane_distance")?, "VIEW_VOLUME.view_plane_distance"))?, front_plane_distance: (as_real(req(&p.attributes, 3, "VIEW_VOLUME.front_plane_distance")?, "VIEW_VOLUME.front_plane_distance"))?, front_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 4, "VIEW_VOLUME.front_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, back_plane_distance: (as_real(req(&p.attributes, 5, "VIEW_VOLUME.back_plane_distance")?, "VIEW_VOLUME.back_plane_distance"))?, back_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 6, "VIEW_VOLUME.back_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, view_volume_sides_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, Attribute::Enum(s) if s == "T")))?, view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)), },
+        "VIEW_VOLUME" => PartialEntity::ViewVolume { projection_type: (match req(&p.attributes, 0, "VIEW_VOLUME.projection_type")? { Attribute::Enum(s) => CentralOrParallel::parse(s).ok_or_else(|| format!("VIEW_VOLUME.projection_type: bad enum {s:?}")), o => Err(format!("VIEW_VOLUME.projection_type: expected enum, got {o:?}")) })?, projection_point: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), view_plane_distance: (as_real(req(&p.attributes, 2, "VIEW_VOLUME.view_plane_distance")?, "VIEW_VOLUME.view_plane_distance"))?, front_plane_distance: (as_real(req(&p.attributes, 3, "VIEW_VOLUME.front_plane_distance")?, "VIEW_VOLUME.front_plane_distance"))?, front_plane_clipping: (as_bool(req(&p.attributes, 4, "VIEW_VOLUME.front_plane_clipping")?, "VIEW_VOLUME.front_plane_clipping"))?, back_plane_distance: (as_real(req(&p.attributes, 5, "VIEW_VOLUME.back_plane_distance")?, "VIEW_VOLUME.back_plane_distance"))?, back_plane_clipping: (as_bool(req(&p.attributes, 6, "VIEW_VOLUME.back_plane_clipping")?, "VIEW_VOLUME.back_plane_clipping"))?, view_volume_sides_clipping: (as_bool(req(&p.attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, "VIEW_VOLUME.view_volume_sides_clipping"))?, view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)), },
         "VOLUME_UNIT" => PartialEntity::VolumeUnit,
         "WIRE_SHELL" => PartialEntity::WireShell { wire_shell_extent: Vec::new(), },
         other => return Err(format!("unknown complex part: {other}")),

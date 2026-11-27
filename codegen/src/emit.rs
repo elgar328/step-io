@@ -962,6 +962,9 @@ impl TextIn<'_> { fn intern(&mut self, s: &str) -> Text { self.dedup.intern(self
 fn as_text(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<Text, String> {
     match a { Attribute::String(s) => Ok(tt.intern(s)), other => Err(format!("{ctx}: expected string, got {other:?}")) }
 }
+fn as_bool(a: &Attribute, ctx: &str) -> Result<bool, String> {
+    match a { Attribute::Enum(s) if s == "T" => Ok(true), Attribute::Enum(s) if s == "F" => Ok(false), other => Err(format!("{ctx}: expected boolean, got {other:?}")) }
+}
 fn as_logical(a: &Attribute, ctx: &str) -> Result<Logical, String> {
     match a { Attribute::Enum(s) => Logical::parse(s).ok_or_else(|| format!("{ctx}: bad logical {s:?}")), other => Err(format!("{ctx}: expected logical, got {other:?}")) }
 }
@@ -1370,9 +1373,7 @@ fn scalar_fallible(ir: &ModelIr, k: &Kind, a: &str, ctx: &str) -> String {
         Kind::Int => format!("as_int({a}, {ctx:?})"),
         Kind::Str => format!("as_text({a}, {ctx:?}, tt)"),
         Kind::Binary => format!("as_str({a}, {ctx:?})"),
-        Kind::Bool => {
-            format!("Ok::<bool, String>(matches!({a}, Attribute::Enum(s) if s == \"T\"))")
-        }
+        Kind::Bool => format!("as_bool({a}, {ctx:?})"),
         Kind::Logical => format!("as_logical({a}, {ctx:?})"),
         Kind::MeasureSelect(_) => format!("read_measure_value({a}, {ctx:?}, tt)"),
         Kind::StringSelect(_) => format!("read_string_select({a}, {ctx:?}, tt)"),
@@ -2537,7 +2538,7 @@ fn emit_slot_table<'a>(
     simple: bool,
     ents: impl Iterator<Item = (&'a String, &'a Vec<Field>)>,
 ) {
-    writeln!(s, "fn {fname}(n: &str) -> &'static [Slot] {{").unwrap();
+    writeln!(s, "fn {fname}(n: &str) -> Option<&'static [Slot]> {{").unwrap();
     s.push_str("    match n {\n");
     for (name, fields) in ents {
         let slots: Vec<String> = fields
@@ -2582,9 +2583,9 @@ fn emit_slot_table<'a>(
                 )
             })
             .collect();
-        writeln!(s, "        \"{}\" => &[{}],", name, slots.join(",")).unwrap();
+        writeln!(s, "        \"{}\" => Some(&[{}]),", name, slots.join(",")).unwrap();
     }
-    s.push_str("        _ => &[],\n    }\n}\n\n");
+    s.push_str("        _ => None,\n    }\n}\n\n");
 }
 
 pub fn emit_normalize(ir: &ModelIr, crate_path: &str) -> String {
@@ -2750,12 +2751,15 @@ fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
 /// non-normalizable slot sets `drop_out` to its reason and returns false (the
 /// entity is removed — nonstandard-value drop, surfaced on the drops channel).
 fn norm_attrs(
-    slots: &[Slot],
+    slots: Option<&[Slot]>,
     attrs: &mut Vec<Attribute>,
     warns: &mut Vec<&'static str>,
     kept: &mut Vec<&'static str>,
     drop_out: &mut Option<&'static str>,
 ) -> bool {
+    // `None`: not an entity read; only the value-level canon applies.
+    let known = slots.is_some();
+    let slots = slots.unwrap_or(&[]);
     for (i, a) in attrs.iter_mut().enumerate() {
         canon(a);
         if let Some(s) = slots.get(i).copied() {
@@ -2800,6 +2804,10 @@ fn norm_attrs(
                 }
             }
         }
+    }
+    if known && attrs.len() > slots.len() {
+        *drop_out = Some("more attributes than the entity has");
+        return false;
     }
     true
 }

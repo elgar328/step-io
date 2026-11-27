@@ -595,3 +595,65 @@ fn nested_list_below_its_lower_bound_is_kept_and_noted() {
     assert!(r.normalized.is_empty(), "{:?}", r.normalized);
     assert_eq!(r.kept_nonstandard, [(4, SHORT)]);
 }
+
+/// A BOOLEAN reads `.T.` as true and `.F.` as false; anything else fails the
+/// read, and what references the entity goes with it. An edge with a
+/// dangling reference is dropped for that first.
+#[test]
+fn boolean_neither_true_nor_false_drops_the_entity() {
+    let body = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+                #2=VERTEX_POINT('',#1);\n\
+                #3=DIRECTION('',(1.,0.,0.));\n\
+                #4=VECTOR('',#3,1.);\n\
+                #5=LINE('',#1,#4);\n\
+                #10=EDGE_CURVE('',#2,#2,#5,.T.);\n\
+                #11=EDGE_CURVE('',#2,#2,#5,.F.);\n\
+                #12=EDGE_CURVE('',#2,#2,#5,.U.);\n\
+                #13=EDGE_CURVE('',#2,#2,#5,$);\n\
+                #14=EDGE_CURVE('',#2,#2,#5,1);\n\
+                #15=EDGE_CURVE('',#2,#2,#0,);\n\
+                #20=ORIENTED_EDGE('',*,*,#12,.T.);\n";
+    let r = read_body(body);
+    let detail = |id: u64| {
+        r.dropped
+            .iter()
+            .find(|(i, _)| *i == id)
+            .map(|(_, d)| d.detail.as_str())
+    };
+    for (id, got) in [(12, "Enum(\"U\")"), (13, "Unset"), (14, "Integer(1)")] {
+        assert_eq!(dropped_kind(&r, id), Some(&DropKind::Unclassified));
+        let want = format!("EDGE_CURVE.same_sense: expected boolean, got {got}");
+        assert_eq!(detail(id), Some(want.as_str()));
+    }
+    assert_eq!(dropped_kind(&r, 15), Some(&DropKind::Cascade));
+    assert_eq!(detail(15), Some("via-dangling"));
+    assert!(dropped_kind(&r, 20).is_some(), "{:?}", r.dropped);
+    assert_eq!(r.dropped.len(), 5, "{:?}", r.dropped);
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let senses: Vec<bool> = model
+        .all::<step_io::model::EdgeCurve>()
+        .map(|(_, e)| e.same_sense)
+        .collect();
+    assert_eq!(senses, [true, false]);
+}
+
+/// An entity, or a complex entity's part, with more attributes than it has
+/// is dropped as a nonstandard value; a trailing comma is one more.
+#[test]
+fn extra_attributes_drop_the_entity() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.),5.);\n\
+         #2=CARTESIAN_POINT('',(0.,0.,0.),);\n\
+         #3=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.,1));\n\
+         #4=(LENGTH_UNIT(1)NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+         #5=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #6=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n",
+    );
+    for id in 1..=4 {
+        let d = r.dropped.iter().find(|(i, _)| *i == id).map(|(_, d)| d);
+        let d = d.unwrap_or_else(|| panic!("#{id} kept: {:?}", r.dropped));
+        assert_eq!(d.kind, DropKind::NonstandardValue);
+        assert_eq!(d.detail, "more attributes than the entity has");
+    }
+    assert_eq!(r.entities_kept, 2, "{:?}", r.dropped);
+}

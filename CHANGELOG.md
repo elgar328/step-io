@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `read()` puts a complex entity's parts in name order, as Part 21 writes
   them, and removes an element repeated in a SET. Both used to pass into the
   model unnoticed; each is now noted in `Report::normalized`.
+- An entity, or a complex entity's part, with more attributes than it has
+  is dropped as a `nonstandard value` (`more attributes than the entity
+  has`); the extra attributes used to be ignored. A trailing comma, which
+  reads as one more blank attribute, counts too.
+
+### Fixed
+
+- A BOOLEAN attribute that is neither `.T.` nor `.F.` (`.U.`, `$`, a number)
+  read as false; the entity is now dropped as `unclassified`.
 
 ## [0.4.0] - 2026-11-26
 
