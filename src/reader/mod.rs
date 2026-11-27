@@ -224,7 +224,8 @@ impl Scan {
                     parts.iter().map(|p| complex_part_index(&p.name)).collect()
                 };
                 let mut pixs = index(&parts);
-                // Part 21 writes a complex entity's parts in name order.
+                // Part 21 (12.2.5.3) orders a complex entity's parts by name,
+                // as octets.
                 if pixs.is_some() && !parts.is_sorted_by(|a, b| a.name <= b.name) {
                     parts.sort_by(|a, b| a.name.cmp(&b.name));
                     pixs = index(&parts);
@@ -642,14 +643,16 @@ fn resolve(
 /// references for later. Each entity reads as UTF-8 or ISO 8859-1 as
 /// [`parse`](crate::parser::parse) describes. An entity that cannot enter the
 /// model is dropped with its reason, and so is every entity that references
-/// it; the rest of the file reads as usual. A list with more or fewer
-/// elements than its schema bounds allow is kept as read and listed in
-/// [`Report::kept_nonstandard`].
+/// it; the rest of the file reads as usual. An OPTIONAL list given no
+/// elements where its schema bounds need some reads as unset; any other list
+/// with more or fewer elements than its bounds allow is kept as read and
+/// listed in [`Report::kept_nonstandard`].
 ///
 /// What is checked is each entity's form: its attributes' count and kinds,
 /// the types its references name, its lists' sizes, and the parts a complex
-/// entity combines. A form any edition of the file's AP family allows is
-/// accepted, each rule judged on its own. The schema's `WHERE` rules, global
+/// entity combines. A form any edition step-io reads allows (AP203, AP214
+/// and AP242, whatever the file's `FILE_SCHEMA` names) is accepted, each rule
+/// judged on its own. The schema's `WHERE` rules, global
 /// `RULE`s, and `UNIQUE` and `INVERSE` constraints are not checked.
 ///
 /// # Errors
@@ -704,10 +707,10 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
     // (own-attr and ref validity). Read failures feed `known_bad` so the next
     // drop_pass cascades their referrers. Build failures go first, before any
     // resolve: a referrer resolved in the same round would find no built
-    // target and fail on its own, where it should cascade. `drop_pass` always seeds from the
-    // whole table (never `kept`) and `known_bad` only grows, so the kept set
-    // shrinks monotonically — this guarantees termination, and lets each
-    // round trim the arenas the previous one left.
+    // target and fail on its own, where it should cascade. `drop_pass` always
+    // seeds from the whole table (never `kept`) and `known_bad` only grows, so
+    // the kept set shrinks monotonically — this guarantees termination, and
+    // lets each round trim the arenas the previous one left.
     let build_fail: Vec<(usize, u64, String)> = build_fail
         .into_iter()
         .filter_map(|(id, e)| table.pos(id).map(|p| (p, id, e)))

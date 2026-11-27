@@ -2576,7 +2576,8 @@ fn emit_slot_table<'a>(
                     .map(|&(lo, hi)| format!("({lo},{})", bound(hi)))
                     .collect();
                 format!(
-                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire},r3:{r3},set:{},lo:{},hi:{},nest:&[{}]}}",
+                    "Slot{{k:Sk::{k},req:{req},opt:{},der:{},swire:{swire},r3:{r3},set:{},lo:{},hi:{},nest:&[{}]}}",
+                    f.optional,
                     f.derived,
                     f.set,
                     f.min,
@@ -2602,6 +2603,8 @@ enum Sk { Real, Int, Str, Bin, Bool, Log, Enum, Ref, Vec, Meas }
 struct Slot {
     k: Sk,
     req: bool,
+    /// The attribute is OPTIONAL.
+    opt: bool,
     der: bool,
     swire: Option<&'static str>,
     r3: u8,
@@ -2793,6 +2796,11 @@ fn norm_attrs(
             }
             if !s.der {
                 match a {
+                    // An OPTIONAL list that needs elements, given none, is unset.
+                    Attribute::List(v) if s.opt && s.lo > 0 && v.is_empty() => {
+                        *a = Attribute::Unset;
+                        warns.push("empty optional list set to unset");
+                    }
                     Attribute::List(v) => norm_aggregate(v, s.set, s.lo, s.hi, s.nest, warns, kept),
                     // A named aggregation a SELECT admits, `WIRE((..))`.
                     Attribute::Typed { type_name, value } => {

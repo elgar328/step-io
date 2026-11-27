@@ -20,6 +20,8 @@ enum Sk {
 struct Slot {
     k: Sk,
     req: bool,
+    /// The attribute is OPTIONAL.
+    opt: bool,
     der: bool,
     swire: Option<&'static str>,
     r3: u8,
@@ -254,6 +256,11 @@ fn norm_attrs(
             }
             if !s.der {
                 match a {
+                    // An OPTIONAL list that needs elements, given none, is unset.
+                    Attribute::List(v) if s.opt && s.lo > 0 && v.is_empty() => {
+                        *a = Attribute::Unset;
+                        warns.push("empty optional list set to unset");
+                    }
                     Attribute::List(v) => norm_aggregate(v, s.set, s.lo, s.hi, s.nest, warns, kept),
                     // A named aggregation a SELECT admits, `WIRE((..))`.
                     Attribute::Typed { type_name, value } => {
@@ -331,6 +338,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -342,6 +350,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -353,6 +362,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -365,6 +375,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "ACTION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -377,6 +388,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -388,6 +400,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -399,6 +412,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -410,6 +424,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -421,6 +436,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -434,6 +450,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -445,6 +462,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -456,6 +474,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -467,6 +486,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -480,6 +500,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -491,6 +512,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -502,6 +524,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -513,6 +536,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -526,6 +550,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -537,6 +562,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -548,6 +574,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -561,6 +588,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -572,6 +600,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -583,6 +612,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -594,6 +624,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -606,6 +637,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "ACTION_REQUEST_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -618,6 +650,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -629,6 +662,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -642,6 +676,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -653,6 +688,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -664,6 +700,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -675,6 +712,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -688,6 +726,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -699,6 +738,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -710,6 +750,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -721,6 +762,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -734,6 +776,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -745,6 +788,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -756,6 +800,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -767,6 +812,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -780,6 +826,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -791,6 +838,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -802,6 +850,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -813,6 +862,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -825,6 +875,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "ACTION_RESOURCE_TYPE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -837,6 +888,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -848,6 +900,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -859,6 +912,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -870,6 +924,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -881,6 +936,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -892,6 +948,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -903,6 +960,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -914,6 +972,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -925,6 +984,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -936,6 +996,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -947,6 +1008,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -958,6 +1020,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -971,6 +1034,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -982,6 +1046,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -993,6 +1058,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1006,6 +1072,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1017,6 +1084,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1028,6 +1096,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1039,6 +1108,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1052,6 +1122,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1063,6 +1134,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1074,6 +1146,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1085,6 +1158,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1098,6 +1172,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1109,6 +1184,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1120,6 +1196,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1131,6 +1208,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1142,6 +1220,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1155,6 +1234,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1166,6 +1246,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1177,6 +1258,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1190,6 +1272,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1201,6 +1284,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1212,6 +1296,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1223,6 +1308,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1234,6 +1320,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1247,6 +1334,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1258,6 +1346,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1269,6 +1358,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1282,6 +1372,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1293,6 +1384,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1304,6 +1396,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1317,6 +1410,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1328,6 +1422,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1339,6 +1434,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1350,6 +1446,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1363,6 +1460,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1374,6 +1472,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1385,6 +1484,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1396,6 +1496,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1409,6 +1510,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1420,6 +1522,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1433,6 +1536,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1444,6 +1548,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1455,6 +1560,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1466,6 +1572,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1477,6 +1584,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1490,6 +1598,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1501,6 +1610,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1512,6 +1622,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1523,6 +1634,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1534,6 +1646,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1545,6 +1658,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1558,6 +1672,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1569,6 +1684,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1580,6 +1696,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1591,6 +1708,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1604,6 +1722,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1615,6 +1734,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1626,6 +1746,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1639,6 +1760,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1650,6 +1772,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1661,6 +1784,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1674,6 +1798,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1685,6 +1810,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1696,6 +1822,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1707,6 +1834,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1720,6 +1848,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1731,6 +1860,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1742,6 +1872,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1755,6 +1886,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1766,6 +1898,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1779,6 +1912,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1790,6 +1924,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1803,6 +1938,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1814,6 +1950,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 1,
@@ -1825,6 +1962,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1838,6 +1976,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1849,6 +1988,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 1,
@@ -1860,6 +2000,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1871,6 +2012,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1883,6 +2025,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLICATION_CONTEXT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -1895,6 +2038,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1906,6 +2050,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1919,6 +2064,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1930,6 +2076,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1941,6 +2088,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1952,6 +2100,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1965,6 +2114,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1976,6 +2126,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -1989,6 +2140,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2000,6 +2152,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2011,6 +2164,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2024,6 +2178,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2035,6 +2190,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2046,6 +2202,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2059,6 +2216,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2070,6 +2228,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2081,6 +2240,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2092,6 +2252,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2105,6 +2266,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2116,6 +2278,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2129,6 +2292,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2140,6 +2304,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2151,6 +2316,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2163,6 +2329,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_PRESENTED_ITEM" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -2175,6 +2342,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2186,6 +2354,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2199,6 +2368,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2210,6 +2380,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2222,6 +2393,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROVAL_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -2234,6 +2406,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2245,6 +2418,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2258,6 +2432,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2269,6 +2444,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2280,6 +2456,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2292,6 +2469,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROVAL_ROLE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -2303,6 +2481,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROVAL_STATUS" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -2314,6 +2493,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROXIMATION_TOLERANCE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -2326,6 +2506,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2337,6 +2518,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2348,6 +2530,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2360,6 +2543,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROXIMATION_TOLERANCE_PARAMETER" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -2372,6 +2556,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2383,6 +2568,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2395,6 +2581,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "AREA_UNIT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -2407,6 +2594,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2418,6 +2606,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2429,6 +2618,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2440,6 +2630,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2453,6 +2644,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2464,6 +2656,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2475,6 +2668,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2486,6 +2680,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2499,6 +2694,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2510,39 +2706,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: false,
-                lo: 0,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Str,
-                req: false,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: false,
-                lo: 0,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: false,
-                lo: 0,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2554,6 +2718,43 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: false,
+                lo: 0,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                opt: false,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: false,
+                lo: 0,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                opt: false,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: false,
+                lo: 0,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2567,6 +2768,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2578,6 +2780,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2589,6 +2792,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2602,6 +2806,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2613,6 +2818,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2624,6 +2830,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2637,6 +2844,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2648,6 +2856,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2659,6 +2868,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2672,6 +2882,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2683,6 +2894,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2694,6 +2906,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2705,6 +2918,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2718,6 +2932,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2729,6 +2944,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2740,6 +2956,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2751,6 +2968,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2762,6 +2980,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2773,6 +2992,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2786,6 +3006,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2797,6 +3018,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2808,6 +3030,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2819,6 +3042,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2830,6 +3054,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2841,6 +3066,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2852,6 +3078,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2863,6 +3090,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2874,6 +3102,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2887,6 +3116,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2898,6 +3128,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2909,6 +3140,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2920,6 +3152,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2931,6 +3164,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2942,6 +3176,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2953,6 +3188,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2964,6 +3200,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2977,6 +3214,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2988,6 +3226,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -2999,6 +3238,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3010,6 +3250,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3021,6 +3262,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3032,6 +3274,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3043,6 +3286,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3054,6 +3298,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3065,6 +3310,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3076,6 +3322,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3087,6 +3334,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3098,6 +3346,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3109,6 +3358,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3122,6 +3372,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3133,6 +3384,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3144,6 +3396,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3155,6 +3408,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3166,6 +3420,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3177,6 +3432,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3188,6 +3444,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3199,6 +3456,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3212,6 +3470,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3223,6 +3482,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3234,6 +3494,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3245,6 +3506,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3256,6 +3518,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3267,6 +3530,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3280,6 +3544,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3291,6 +3556,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3302,6 +3568,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3313,6 +3580,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3324,6 +3592,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3335,6 +3604,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3346,6 +3616,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3357,6 +3628,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3369,6 +3641,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "BOUNDED_CURVE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -3381,6 +3654,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3392,6 +3666,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3403,6 +3678,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3415,6 +3691,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "BOUNDED_SURFACE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -3427,6 +3704,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3438,6 +3716,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3449,6 +3728,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3460,6 +3740,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3473,6 +3754,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3484,6 +3766,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3495,6 +3778,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3508,6 +3792,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3519,6 +3804,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3530,6 +3816,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3543,6 +3830,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3554,6 +3842,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3565,6 +3854,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3578,6 +3868,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3589,6 +3880,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3600,6 +3892,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3612,6 +3905,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "CAMERA_MODEL" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -3624,6 +3918,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3635,6 +3930,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3646,6 +3942,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3659,6 +3956,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3670,6 +3968,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3681,6 +3980,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3692,6 +3992,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3705,6 +4006,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3716,6 +4018,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3727,6 +4030,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3738,6 +4042,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3751,6 +4056,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3762,6 +4068,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3775,6 +4082,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3786,6 +4094,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 1,
@@ -3799,6 +4108,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3810,6 +4120,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3823,6 +4134,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3834,6 +4146,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3845,6 +4158,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3858,6 +4172,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3869,6 +4184,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3880,6 +4196,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3893,6 +4210,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3904,6 +4222,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3917,6 +4236,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3928,6 +4248,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3939,6 +4260,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3950,6 +4272,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3963,6 +4286,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3974,6 +4298,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3985,6 +4310,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -3997,6 +4323,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "CERTIFICATION_TYPE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -4009,6 +4336,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4020,6 +4348,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4033,6 +4362,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4044,6 +4374,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4056,6 +4387,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "CHARACTER_GLYPH_STYLE_OUTLINE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -4067,6 +4399,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "CHARACTER_GLYPH_STYLE_STROKE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -4079,6 +4412,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4090,6 +4424,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4101,6 +4436,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4112,6 +4448,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4125,6 +4462,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4136,6 +4474,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4149,6 +4488,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -4160,6 +4500,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4171,6 +4512,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4182,6 +4524,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -4193,6 +4536,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -4206,6 +4550,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4217,6 +4562,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4228,6 +4574,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4241,6 +4588,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4252,6 +4600,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4263,6 +4612,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4274,6 +4624,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4285,6 +4636,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4298,6 +4650,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4309,6 +4662,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4322,6 +4676,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4333,6 +4688,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4344,6 +4700,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4355,6 +4712,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4366,6 +4724,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4380,6 +4739,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4391,6 +4751,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4402,6 +4763,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4413,6 +4775,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4425,6 +4788,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "COLOUR_SPECIFICATION" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -4437,6 +4801,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4448,6 +4813,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4459,6 +4825,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4470,6 +4837,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4481,6 +4849,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4494,6 +4863,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4505,6 +4875,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4516,6 +4887,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4527,6 +4899,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -4538,6 +4911,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4549,6 +4923,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4560,6 +4935,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4571,6 +4947,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4584,6 +4961,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4595,6 +4973,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4606,6 +4985,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4617,6 +4997,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -4628,6 +5009,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4639,6 +5021,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4650,6 +5033,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4663,6 +5047,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4674,6 +5059,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4685,6 +5071,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4698,6 +5085,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4709,6 +5097,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4720,6 +5109,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4733,6 +5123,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4744,6 +5135,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4755,6 +5147,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4766,6 +5159,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4779,6 +5173,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4790,6 +5185,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4803,6 +5199,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4814,6 +5211,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4825,6 +5223,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4836,6 +5235,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4849,6 +5249,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4860,6 +5261,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4873,6 +5275,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4884,6 +5287,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4897,6 +5301,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4908,6 +5313,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4921,6 +5327,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4932,6 +5339,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4943,6 +5351,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4954,6 +5363,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4965,6 +5375,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4978,6 +5389,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -4989,6 +5401,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5002,6 +5415,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5013,6 +5427,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5024,6 +5439,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5037,6 +5453,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5048,6 +5465,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5059,6 +5477,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5070,6 +5489,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5081,6 +5501,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5094,6 +5515,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5105,6 +5527,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5118,6 +5541,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5129,6 +5553,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5140,6 +5565,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5151,6 +5577,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5164,6 +5591,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5175,6 +5603,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5188,6 +5617,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5199,6 +5629,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5210,6 +5641,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5223,6 +5655,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5234,6 +5667,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5245,6 +5679,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5256,6 +5691,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5269,6 +5705,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5280,6 +5717,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5291,6 +5729,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5302,6 +5741,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5313,6 +5753,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5326,6 +5767,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5337,6 +5779,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5350,6 +5793,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5361,6 +5805,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5374,6 +5819,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5385,6 +5831,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5396,6 +5843,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5407,6 +5855,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5420,6 +5869,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5431,6 +5881,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5442,6 +5893,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5454,6 +5906,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "CONTRACT_TYPE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -5466,6 +5919,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5477,6 +5931,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5488,6 +5943,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5501,6 +5957,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5512,6 +5969,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5523,6 +5981,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5536,6 +5995,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5547,6 +6007,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5558,6 +6019,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -5571,6 +6033,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5582,6 +6045,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5593,6 +6057,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5604,6 +6069,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5615,6 +6081,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5626,6 +6093,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5637,6 +6105,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5648,6 +6117,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5659,6 +6129,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5672,6 +6143,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5683,6 +6155,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5694,6 +6167,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5705,6 +6179,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5716,6 +6191,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5727,6 +6203,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5738,6 +6215,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5749,6 +6227,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5760,6 +6239,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5771,6 +6251,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5782,6 +6263,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5795,6 +6277,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5806,6 +6289,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5817,6 +6301,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5828,6 +6313,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5839,6 +6325,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5850,6 +6337,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5861,6 +6349,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5872,6 +6361,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5883,6 +6373,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5894,6 +6385,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5905,6 +6397,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5916,6 +6409,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5928,6 +6422,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "CURVE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -5940,6 +6435,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5951,6 +6447,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5962,6 +6459,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5973,6 +6471,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5986,6 +6485,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -5997,6 +6497,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6010,6 +6511,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6021,6 +6523,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6032,6 +6535,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6045,6 +6549,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6056,6 +6561,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6069,6 +6575,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6080,6 +6587,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6093,6 +6601,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6104,6 +6613,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6115,6 +6625,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6128,6 +6639,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6139,6 +6651,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6150,6 +6663,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6161,6 +6675,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6173,6 +6688,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DATE" => Some(&[Slot {
             k: Sk::Int,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -6185,6 +6701,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6196,6 +6713,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6209,6 +6727,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6220,6 +6739,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6232,6 +6752,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DATE_ROLE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -6243,6 +6764,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DATE_TIME_ROLE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -6255,6 +6777,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6266,6 +6789,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6277,6 +6801,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6288,6 +6813,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6299,6 +6825,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6312,6 +6839,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6323,6 +6851,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6334,6 +6863,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6345,6 +6875,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6358,6 +6889,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6369,6 +6901,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6382,6 +6915,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6393,6 +6927,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6404,6 +6939,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6415,6 +6951,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6426,6 +6963,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6437,6 +6975,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6450,6 +6989,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6461,6 +7001,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6472,6 +7013,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6483,6 +7025,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6494,6 +7037,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6505,6 +7049,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6518,6 +7063,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6529,6 +7075,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6542,6 +7089,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6553,6 +7101,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6564,6 +7113,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6575,6 +7125,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6586,6 +7137,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6599,6 +7151,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6610,6 +7163,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6621,6 +7175,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6632,6 +7187,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6643,6 +7199,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6656,6 +7213,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6667,6 +7225,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6678,6 +7237,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6689,6 +7249,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6700,6 +7261,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6711,6 +7273,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6722,6 +7285,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6733,6 +7297,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -6746,6 +7311,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6757,6 +7323,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6768,6 +7335,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6781,6 +7349,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6792,6 +7361,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6803,6 +7373,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6816,6 +7387,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6827,6 +7399,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6838,6 +7411,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6851,6 +7425,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6862,6 +7437,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6873,6 +7449,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6884,6 +7461,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6897,6 +7475,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6908,6 +7487,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6919,6 +7499,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6930,6 +7511,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6943,6 +7525,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6954,6 +7537,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6965,6 +7549,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6976,6 +7561,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -6987,6 +7573,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7000,6 +7587,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7011,6 +7599,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7022,6 +7611,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7033,6 +7623,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7045,6 +7636,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DERIVED_UNIT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -7057,6 +7649,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7068,6 +7661,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7081,6 +7675,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7092,6 +7687,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7105,6 +7701,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7116,6 +7713,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7129,6 +7727,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7140,6 +7739,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7151,6 +7751,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7164,6 +7765,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7175,6 +7777,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7188,6 +7791,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7199,6 +7803,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7210,6 +7815,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7221,6 +7827,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7232,6 +7839,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7243,6 +7851,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7254,6 +7863,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7267,6 +7877,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7278,6 +7889,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7289,6 +7901,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7300,6 +7913,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7313,6 +7927,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7324,6 +7939,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7335,6 +7951,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7346,6 +7963,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7357,6 +7975,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7370,6 +7989,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7381,6 +8001,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7394,6 +8015,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7405,6 +8027,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7416,6 +8039,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7427,6 +8051,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7438,6 +8063,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7449,6 +8075,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7462,6 +8089,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7473,6 +8101,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7484,6 +8113,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7497,6 +8127,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7508,6 +8139,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7519,6 +8151,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7530,6 +8163,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7543,6 +8177,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7554,6 +8189,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 1,
@@ -7567,6 +8203,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7578,6 +8215,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7589,6 +8227,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7600,6 +8239,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7613,6 +8253,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7624,6 +8265,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7635,6 +8277,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7646,6 +8289,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7657,6 +8301,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7668,6 +8313,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7681,6 +8327,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7692,6 +8339,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7703,6 +8351,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7714,6 +8363,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7727,6 +8377,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7738,6 +8389,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7749,6 +8401,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7760,6 +8413,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7773,6 +8427,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7784,6 +8439,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7797,6 +8453,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7808,6 +8465,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7820,6 +8478,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DOCUMENT_TYPE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -7832,6 +8491,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7843,6 +8503,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7854,6 +8515,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7867,6 +8529,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7878,6 +8541,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7891,6 +8555,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7902,6 +8567,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7913,6 +8579,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7924,6 +8591,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7937,6 +8605,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7948,6 +8617,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7959,6 +8629,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7972,6 +8643,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7983,6 +8655,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -7994,6 +8667,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8005,6 +8679,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8016,6 +8691,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8029,6 +8705,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8040,6 +8717,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8051,6 +8729,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8062,6 +8741,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8073,6 +8753,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8084,6 +8765,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8096,6 +8778,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DRAUGHTING_PRE_DEFINED_COLOUR" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -8107,6 +8790,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -8118,6 +8802,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -8130,6 +8815,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8141,6 +8827,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8152,6 +8839,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8165,6 +8853,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8176,6 +8865,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8187,6 +8877,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8198,6 +8889,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8209,6 +8901,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8222,6 +8915,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8233,6 +8927,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8245,6 +8940,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "EFFECTIVITY" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -8257,6 +8953,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8268,6 +8965,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8281,6 +8979,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8292,6 +8991,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8303,6 +9003,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8314,6 +9015,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8327,6 +9029,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8338,6 +9041,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8349,6 +9053,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8362,6 +9067,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8373,6 +9079,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8384,6 +9091,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8395,6 +9103,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8406,6 +9115,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8417,6 +9127,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8428,6 +9139,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8442,6 +9154,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8453,6 +9166,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8464,6 +9178,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8477,6 +9192,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8488,6 +9204,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8499,6 +9216,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8510,6 +9228,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8521,6 +9240,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8533,6 +9253,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "EXTERNAL_SOURCE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -8545,6 +9266,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8556,6 +9278,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8569,6 +9292,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8580,6 +9304,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8593,6 +9318,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8604,6 +9330,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8615,6 +9342,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8628,6 +9356,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8639,6 +9368,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8652,6 +9382,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8663,6 +9394,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8676,6 +9408,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8687,6 +9420,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8700,6 +9434,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8711,6 +9446,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8724,6 +9460,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8735,6 +9472,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8748,6 +9486,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8759,6 +9498,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8770,6 +9510,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8783,6 +9524,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8794,6 +9536,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8807,6 +9550,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8818,6 +9562,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8829,6 +9574,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8842,6 +9588,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8853,6 +9600,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8864,6 +9612,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8877,6 +9626,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8888,6 +9638,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8899,6 +9650,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8910,6 +9662,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8923,6 +9676,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8934,6 +9688,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8947,6 +9702,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8958,6 +9714,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8969,6 +9726,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8980,6 +9738,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -8993,6 +9752,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9004,6 +9764,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9017,6 +9778,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9028,6 +9790,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9041,6 +9804,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9052,6 +9816,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9063,6 +9828,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9074,6 +9840,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9085,6 +9852,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9096,6 +9864,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9109,6 +9878,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9120,6 +9890,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9131,6 +9902,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9144,6 +9916,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9155,6 +9928,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9168,6 +9942,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9179,6 +9954,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9192,6 +9968,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9203,6 +9980,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9214,6 +9992,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9225,6 +10004,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9238,6 +10018,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9249,6 +10030,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9260,6 +10042,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9271,6 +10054,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9285,6 +10069,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9296,6 +10081,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9309,6 +10095,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9320,6 +10107,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9331,6 +10119,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9342,6 +10131,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9353,6 +10143,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9364,6 +10155,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9377,6 +10169,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9388,6 +10181,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9399,6 +10193,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9412,6 +10207,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9423,6 +10219,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9434,6 +10231,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9445,6 +10243,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9459,6 +10258,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -9471,6 +10271,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9482,6 +10283,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9495,6 +10297,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9506,6 +10309,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9517,6 +10321,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9528,6 +10333,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9539,6 +10345,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9552,6 +10359,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9563,6 +10371,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9574,6 +10383,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9586,6 +10396,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "GEOMETRIC_REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -9598,6 +10409,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9609,6 +10421,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9622,6 +10435,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9633,6 +10447,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9644,6 +10459,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9655,6 +10471,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9668,6 +10485,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9679,6 +10497,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9690,6 +10509,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9701,6 +10521,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9714,6 +10535,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9725,6 +10547,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9736,6 +10559,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9747,6 +10571,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9758,6 +10583,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9771,6 +10597,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9782,6 +10609,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9793,6 +10621,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9804,6 +10633,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9815,6 +10645,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9826,6 +10657,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9837,6 +10669,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9850,6 +10683,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9861,6 +10695,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9872,6 +10707,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9883,6 +10719,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9894,6 +10731,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9907,6 +10745,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9918,6 +10757,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9929,6 +10769,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9940,6 +10781,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9951,6 +10793,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9962,6 +10805,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9975,6 +10819,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9986,6 +10831,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -9997,6 +10843,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10008,6 +10855,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10019,6 +10867,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10032,6 +10881,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10043,6 +10893,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10054,6 +10905,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10067,6 +10919,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10078,6 +10931,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10089,6 +10943,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10102,6 +10957,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10113,6 +10969,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10124,6 +10981,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10137,6 +10995,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10148,6 +11007,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10159,6 +11019,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10172,6 +11033,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10183,6 +11045,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10195,6 +11058,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "GROUP_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -10207,6 +11071,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10218,6 +11083,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10229,6 +11095,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10240,6 +11107,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10253,6 +11121,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10264,6 +11133,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10277,6 +11147,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10288,6 +11159,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10301,6 +11173,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10312,6 +11185,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10324,6 +11198,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "INT_LITERAL" => Some(&[Slot {
             k: Sk::Int,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -10336,6 +11211,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10347,6 +11223,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10360,6 +11237,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10371,6 +11249,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10382,6 +11261,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10393,6 +11273,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10405,6 +11286,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "INVISIBILITY" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -10417,6 +11299,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10428,6 +11311,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10439,6 +11323,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10450,6 +11335,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10463,6 +11349,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10474,6 +11361,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10485,6 +11373,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10496,6 +11385,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10507,6 +11397,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10520,6 +11411,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10531,6 +11423,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10542,6 +11435,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10555,6 +11449,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10566,6 +11461,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10579,6 +11475,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10590,6 +11487,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10601,6 +11499,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10612,6 +11511,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10625,6 +11525,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10636,6 +11537,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10648,6 +11550,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "LENGTH_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -10660,6 +11563,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10671,6 +11575,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10682,6 +11587,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10693,6 +11599,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10706,6 +11613,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10717,6 +11625,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10728,6 +11637,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10741,6 +11651,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10752,6 +11663,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10763,6 +11675,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10774,6 +11687,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10786,6 +11700,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "LITERAL_NUMBER" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -10798,6 +11713,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10809,6 +11725,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10820,6 +11737,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10831,6 +11749,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10843,6 +11762,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "LOOP" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -10855,6 +11775,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10866,6 +11787,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10877,6 +11799,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10888,6 +11811,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10899,6 +11823,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10910,6 +11835,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10921,6 +11847,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10932,6 +11859,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10945,6 +11873,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10956,6 +11885,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10969,6 +11899,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10980,6 +11911,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -10991,6 +11923,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11004,6 +11937,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11015,6 +11949,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11026,6 +11961,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11039,6 +11975,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11050,6 +11987,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11062,6 +12000,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "MASS_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -11074,6 +12013,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11085,6 +12025,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11096,6 +12037,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11107,6 +12049,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11120,6 +12063,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11131,6 +12075,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11142,6 +12087,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11155,6 +12101,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11166,6 +12113,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11179,6 +12127,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11190,6 +12139,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11201,6 +12151,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11214,6 +12165,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11225,6 +12177,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11236,6 +12189,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11247,6 +12201,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11260,6 +12215,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11271,6 +12227,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11282,6 +12239,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11295,6 +12253,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11306,6 +12265,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11317,6 +12277,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11330,6 +12291,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11341,6 +12303,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11352,6 +12315,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11365,6 +12329,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11376,6 +12341,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11387,6 +12353,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11398,6 +12365,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11411,6 +12379,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11422,6 +12391,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11433,6 +12403,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11444,6 +12415,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11455,6 +12427,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11468,6 +12441,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11479,6 +12453,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11491,6 +12466,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "NAMED_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -11503,6 +12479,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11514,39 +12491,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: false,
-                lo: 0,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Str,
-                req: false,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: false,
-                lo: 0,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: false,
-                lo: 0,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11558,6 +12503,43 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: false,
+                lo: 0,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                opt: false,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: false,
+                lo: 0,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                opt: false,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: false,
+                lo: 0,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11572,6 +12554,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11583,6 +12566,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11596,6 +12580,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11607,6 +12592,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11618,6 +12604,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11629,6 +12616,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11642,6 +12630,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11653,6 +12642,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11666,6 +12656,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11677,6 +12668,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11690,6 +12682,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11701,6 +12694,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11712,6 +12706,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11725,6 +12720,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11736,6 +12732,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11747,6 +12744,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11758,6 +12756,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11770,6 +12769,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "ORGANIZATION_ROLE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -11782,6 +12782,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11793,6 +12794,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11804,6 +12806,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11817,6 +12820,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11828,6 +12832,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11839,6 +12844,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11852,6 +12858,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11863,6 +12870,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11874,6 +12882,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11885,6 +12894,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11896,6 +12906,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11907,6 +12918,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11918,6 +12930,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11929,6 +12942,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11940,6 +12954,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11951,6 +12966,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11962,6 +12978,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11973,6 +12990,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11984,6 +13002,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11995,6 +13014,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12008,6 +13028,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12019,6 +13040,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12030,6 +13052,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12043,6 +13066,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12054,6 +13078,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12065,6 +13090,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12076,6 +13102,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12089,6 +13116,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12100,6 +13128,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12113,6 +13142,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12124,6 +13154,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -12135,6 +13166,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12146,6 +13178,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12159,6 +13192,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12170,6 +13204,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -12181,6 +13216,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -12192,6 +13228,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12203,6 +13240,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12216,6 +13254,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12227,6 +13266,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12238,6 +13278,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12249,6 +13290,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12262,6 +13304,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12273,6 +13316,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12284,6 +13328,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12297,6 +13342,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12308,6 +13354,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12319,6 +13366,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12330,6 +13378,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12341,6 +13390,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12354,6 +13404,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12365,6 +13416,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12378,6 +13430,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12389,6 +13442,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12402,6 +13456,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12413,6 +13468,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12424,6 +13480,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12437,6 +13494,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12448,6 +13506,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12459,6 +13518,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12470,6 +13530,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12481,6 +13542,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12494,6 +13556,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12505,6 +13568,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12516,6 +13580,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12527,6 +13592,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12538,6 +13604,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12549,6 +13616,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12562,6 +13630,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12573,6 +13642,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12586,6 +13656,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12597,6 +13668,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12608,6 +13680,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12619,6 +13692,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12630,6 +13704,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12641,6 +13716,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12652,6 +13728,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12663,6 +13740,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12674,6 +13752,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12685,6 +13764,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12696,6 +13776,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12707,28 +13788,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: false,
-                lo: 0,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Vec,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-                set: true,
-                lo: 1,
-                hi: None,
-                nest: &[],
-            },
-            Slot {
-                k: Sk::Str,
-                req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12740,6 +13800,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12751,6 +13812,31 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: false,
+                lo: 0,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Vec,
+                req: true,
+                opt: false,
+                der: false,
+                swire: None,
+                r3: 0,
+                set: true,
+                lo: 1,
+                hi: None,
+                nest: &[],
+            },
+            Slot {
+                k: Sk::Str,
+                req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12764,6 +13850,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12775,6 +13862,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12787,6 +13875,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PERSON_AND_ORGANIZATION_ROLE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -12799,6 +13888,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12810,6 +13900,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12821,6 +13912,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12832,6 +13924,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12843,6 +13936,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12854,6 +13948,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12865,6 +13960,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12876,6 +13972,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12887,6 +13984,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12898,6 +13996,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12909,6 +14008,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12920,6 +14020,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12931,6 +14032,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12942,6 +14044,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12955,6 +14058,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12966,6 +14070,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12977,6 +14082,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12988,6 +14094,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -12999,6 +14106,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13012,6 +14120,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13023,6 +14132,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13036,6 +14146,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13047,6 +14158,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13058,6 +14170,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13069,6 +14182,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13082,6 +14196,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13093,6 +14208,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13104,6 +14220,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13117,6 +14234,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13128,6 +14246,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13141,6 +14260,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13152,6 +14272,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13164,6 +14285,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PLANE_ANGLE_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13176,6 +14298,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13187,6 +14310,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13199,6 +14323,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "POINT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13211,6 +14336,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13222,6 +14348,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13233,6 +14360,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13244,6 +14372,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13257,6 +14386,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13268,6 +14398,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13281,6 +14412,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13292,6 +14424,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13305,6 +14438,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13316,6 +14450,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13327,6 +14462,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13338,6 +14474,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13351,6 +14488,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13362,6 +14500,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13375,6 +14514,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13386,6 +14526,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13398,6 +14539,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_CHARACTER_GLYPH" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13409,6 +14551,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_COLOUR" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13420,6 +14563,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_CURVE_FONT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13431,6 +14575,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13442,6 +14587,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_MARKER" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13453,6 +14599,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_POINT_MARKER_SYMBOL" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13464,6 +14611,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_PRESENTATION_STYLE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13475,6 +14623,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_SURFACE_SIDE_STYLE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13486,6 +14635,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_SYMBOL" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13497,6 +14647,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_TERMINATOR_SYMBOL" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13508,6 +14659,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_TEXT_FONT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13519,6 +14671,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_TILE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13530,6 +14683,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRECISION_QUALIFIER" => Some(&[Slot {
             k: Sk::Int,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13542,6 +14696,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13553,6 +14708,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13564,6 +14720,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13577,6 +14734,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13588,6 +14746,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13599,6 +14758,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13612,6 +14772,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13623,6 +14784,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13634,6 +14796,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13648,6 +14811,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13659,6 +14823,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13671,6 +14836,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "PRESENTATION_STYLE_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -13683,6 +14849,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13694,6 +14861,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13707,6 +14875,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13718,6 +14887,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13729,6 +14899,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13743,6 +14914,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13754,6 +14926,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13767,6 +14940,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13778,6 +14952,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13789,6 +14964,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13800,6 +14976,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13813,6 +14990,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13824,6 +15002,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13837,6 +15016,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13848,6 +15028,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13859,6 +15040,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13870,6 +15052,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13883,6 +15066,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13894,6 +15078,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13905,6 +15090,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13916,6 +15102,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13929,6 +15116,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13940,6 +15128,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13951,6 +15140,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13964,6 +15154,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13975,6 +15166,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13986,6 +15178,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -13999,6 +15192,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14010,6 +15204,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14023,6 +15218,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14034,6 +15230,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14045,6 +15242,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14058,6 +15256,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14069,6 +15268,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14080,6 +15280,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14091,6 +15292,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14104,6 +15306,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14115,6 +15318,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14126,6 +15330,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14139,6 +15344,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14150,6 +15356,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14161,6 +15368,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14174,6 +15382,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14185,6 +15394,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14198,6 +15408,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14209,6 +15420,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14222,6 +15434,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14233,6 +15446,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14244,6 +15458,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14257,6 +15472,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14268,6 +15484,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14279,6 +15496,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14290,6 +15508,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14303,6 +15522,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14314,6 +15534,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14325,6 +15546,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14336,6 +15558,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14347,6 +15570,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14360,6 +15584,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14371,6 +15596,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14382,6 +15608,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14393,6 +15620,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14404,6 +15632,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14417,6 +15646,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14428,6 +15658,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14439,6 +15670,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14450,6 +15682,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14461,6 +15694,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14474,6 +15708,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14485,6 +15720,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14496,6 +15732,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14509,6 +15746,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14520,6 +15758,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14531,6 +15770,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14544,6 +15784,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14555,6 +15796,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14566,6 +15808,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14577,6 +15820,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14588,6 +15832,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14601,6 +15846,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14612,6 +15858,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14623,6 +15870,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14634,6 +15882,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14645,6 +15894,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14658,6 +15908,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14669,6 +15920,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14680,6 +15932,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14693,6 +15946,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14704,6 +15958,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14715,6 +15970,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14726,6 +15982,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14739,6 +15996,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14750,6 +16008,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14761,6 +16020,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14774,6 +16034,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14785,6 +16046,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14796,6 +16058,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14807,6 +16070,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14820,6 +16084,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14831,6 +16096,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14844,6 +16110,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14855,6 +16122,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14868,6 +16136,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14879,6 +16148,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14890,6 +16160,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14901,6 +16172,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14912,6 +16184,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14923,6 +16196,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14936,6 +16210,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14947,6 +16222,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14958,6 +16234,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14969,6 +16246,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14980,6 +16258,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -14991,6 +16270,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15002,6 +16282,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15013,6 +16294,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15026,6 +16308,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15037,6 +16320,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15049,6 +16333,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "RATIO_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -15061,6 +16346,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15072,6 +16358,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15083,6 +16370,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15094,6 +16382,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15105,6 +16394,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15116,6 +16406,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15127,6 +16418,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15140,6 +16432,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15151,6 +16444,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15162,6 +16456,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15173,6 +16468,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15184,6 +16480,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15195,6 +16492,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15206,6 +16504,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15217,6 +16516,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15228,6 +16528,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15240,6 +16541,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "REAL_LITERAL" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -15252,6 +16554,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15263,6 +16566,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15276,6 +16580,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15287,6 +16592,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15300,6 +16606,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15311,6 +16618,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15322,6 +16630,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15335,6 +16644,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15346,6 +16656,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15358,6 +16669,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "REPRESENTATION_CONTEXT_REFERENCE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -15369,6 +16681,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -15381,6 +16694,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15392,6 +16706,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15405,6 +16720,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15416,6 +16732,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15429,6 +16746,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15440,6 +16758,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15451,6 +16770,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15462,6 +16782,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15475,6 +16796,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15486,6 +16808,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15497,6 +16820,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15508,6 +16832,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15519,6 +16844,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15532,6 +16858,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15543,6 +16870,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15554,6 +16882,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15567,6 +16896,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15578,6 +16908,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15591,6 +16922,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15602,6 +16934,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15615,6 +16948,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15626,6 +16960,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15639,6 +16974,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15650,6 +16986,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15661,6 +16998,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15672,6 +17010,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15683,6 +17022,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15694,6 +17034,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15705,6 +17046,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15718,6 +17060,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15729,6 +17072,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15740,6 +17084,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15751,6 +17096,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15764,6 +17110,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15775,6 +17122,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15786,6 +17134,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15797,6 +17146,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15810,6 +17160,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15821,6 +17172,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15832,6 +17184,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15844,6 +17197,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SECURITY_CLASSIFICATION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -15855,6 +17209,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SECURITY_CLASSIFICATION_LEVEL" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -15867,6 +17222,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15878,6 +17234,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15889,6 +17246,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15900,6 +17258,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15913,6 +17272,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15924,6 +17284,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15935,6 +17296,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15946,6 +17308,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15959,6 +17322,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15970,6 +17334,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15981,6 +17346,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -15992,6 +17358,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16005,6 +17372,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16016,6 +17384,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16027,6 +17396,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16038,6 +17408,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16051,6 +17422,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16062,6 +17434,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16075,6 +17448,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16086,6 +17460,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16097,6 +17472,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16110,6 +17486,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16121,6 +17498,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16132,6 +17510,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16145,6 +17524,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16156,6 +17536,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16167,6 +17548,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16178,6 +17560,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16191,6 +17574,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16202,6 +17586,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16213,6 +17598,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16226,6 +17612,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16237,6 +17624,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16250,6 +17638,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: true,
                 swire: None,
                 r3: 0,
@@ -16261,6 +17650,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16272,6 +17662,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16286,6 +17677,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SOLID_ANGLE_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16297,6 +17689,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SOLID_MODEL" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16309,6 +17702,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16320,6 +17714,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16331,6 +17726,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16344,6 +17740,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16355,6 +17752,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16368,6 +17766,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16379,6 +17778,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16392,6 +17792,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16403,6 +17804,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16416,6 +17818,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16427,6 +17830,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16440,6 +17844,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16451,6 +17856,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16462,6 +17868,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16473,6 +17880,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16486,6 +17894,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16497,6 +17906,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16508,6 +17918,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16520,6 +17931,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16532,6 +17944,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16543,6 +17956,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16554,6 +17968,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16565,6 +17980,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16578,6 +17994,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16589,6 +18006,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16600,6 +18018,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16613,6 +18032,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16624,6 +18044,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16635,6 +18056,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16648,6 +18070,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16659,6 +18082,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16670,6 +18094,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16681,6 +18106,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16693,6 +18119,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_RENDERING_PROPERTIES" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16705,6 +18132,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16716,6 +18144,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16728,6 +18157,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_BOUNDARY" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16739,6 +18169,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_CONTROL_GRID" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16750,6 +18181,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_FILL_AREA" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16762,6 +18194,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16773,6 +18206,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16785,6 +18219,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_REFLECTANCE_AMBIENT" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16797,6 +18232,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16808,6 +18244,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16821,6 +18258,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16832,6 +18270,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16843,6 +18282,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16855,6 +18295,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_SEGMENTATION_CURVE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16866,6 +18307,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_SILHOUETTE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16877,6 +18319,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_TRANSPARENT" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16889,6 +18332,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16900,6 +18344,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16913,6 +18358,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16924,6 +18370,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16936,6 +18383,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "SYMBOL_COLOUR" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -16948,6 +18396,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16959,6 +18408,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16970,6 +18420,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16983,6 +18434,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -16994,6 +18446,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17007,6 +18460,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17018,6 +18472,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17029,6 +18484,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17040,6 +18496,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17053,6 +18510,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17064,6 +18522,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17075,6 +18534,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17086,6 +18546,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17097,6 +18558,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17110,6 +18572,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17121,6 +18584,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17132,6 +18596,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17143,6 +18608,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17156,6 +18622,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17167,6 +18634,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17178,6 +18646,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17191,6 +18660,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17202,6 +18672,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17213,6 +18684,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17226,6 +18698,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17237,6 +18710,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17248,6 +18722,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17259,6 +18734,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -17270,6 +18746,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17283,6 +18760,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17294,6 +18772,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17306,6 +18785,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "TESSELLATED_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -17318,6 +18798,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17329,6 +18810,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17340,6 +18822,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17353,6 +18836,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17364,6 +18848,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17375,6 +18860,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17388,6 +18874,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17399,6 +18886,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17410,6 +18898,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17422,6 +18911,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "TESSELLATED_STRUCTURED_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -17434,6 +18924,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17445,6 +18936,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17456,6 +18948,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17467,6 +18960,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -17480,6 +18974,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17491,6 +18986,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17502,6 +18998,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17515,6 +19012,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17526,6 +19024,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17537,6 +19036,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17548,6 +19048,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17559,6 +19060,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17570,6 +19072,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17583,6 +19086,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17594,6 +19098,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17606,6 +19111,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "TEXT_STYLE_FOR_DEFINED_FONT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -17618,6 +19124,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17629,6 +19136,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17640,6 +19148,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17654,6 +19163,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "TIME_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -17666,6 +19176,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17677,6 +19188,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17690,6 +19202,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17701,6 +19214,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17712,6 +19226,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17723,6 +19238,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17734,6 +19250,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17745,6 +19262,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17758,6 +19276,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17769,6 +19288,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17781,6 +19301,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "TOLERANCE_ZONE_FORM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -17793,6 +19314,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17804,6 +19326,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17815,6 +19338,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17826,6 +19350,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17837,6 +19362,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17848,6 +19374,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17859,6 +19386,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17871,6 +19399,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "TOPOLOGICAL_REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -17883,6 +19412,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17894,6 +19424,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17905,6 +19436,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17916,6 +19448,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17929,6 +19462,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17940,6 +19474,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17951,6 +19486,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17962,6 +19498,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17973,6 +19510,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17986,6 +19524,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -17997,6 +19536,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18008,6 +19548,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: Some("PARAMETER_VALUE"),
                 r3: 0,
@@ -18019,6 +19560,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: Some("PARAMETER_VALUE"),
                 r3: 0,
@@ -18030,6 +19572,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18041,6 +19584,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18054,6 +19598,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18065,6 +19610,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18076,6 +19622,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18088,6 +19635,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "TYPE_QUALIFIER" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -18100,6 +19648,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18111,6 +19660,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18122,6 +19672,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18133,6 +19684,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18146,6 +19698,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18157,6 +19710,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18170,6 +19724,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18181,6 +19736,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18192,6 +19748,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18203,6 +19760,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18214,6 +19772,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18227,6 +19786,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18238,6 +19798,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18249,6 +19810,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18260,6 +19822,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18271,6 +19834,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18282,6 +19846,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18295,6 +19860,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18306,6 +19872,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18317,6 +19884,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18328,6 +19896,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18339,6 +19908,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18350,6 +19920,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18361,6 +19932,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18372,6 +19944,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18384,6 +19957,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "VALUE_FORMAT_TYPE_QUALIFIER" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -18396,6 +19970,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18407,6 +19982,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18420,6 +19996,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18431,6 +20008,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18442,6 +20020,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18455,6 +20034,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18466,6 +20046,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18477,6 +20058,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18488,6 +20070,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18500,6 +20083,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "VERTEX" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -18512,6 +20096,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18523,6 +20108,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18536,6 +20122,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18547,6 +20134,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18560,6 +20148,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18571,6 +20160,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18584,6 +20174,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18595,6 +20186,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18606,6 +20198,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18617,6 +20210,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18628,6 +20222,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18639,6 +20234,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18650,6 +20246,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18661,6 +20258,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18672,6 +20270,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18684,6 +20283,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
         "VOLUME_UNIT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -18696,6 +20296,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18707,6 +20308,7 @@ fn simple_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18726,6 +20328,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18737,6 +20340,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18748,6 +20352,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18760,6 +20365,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ACTION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -18772,6 +20378,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18783,6 +20390,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18794,6 +20402,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18805,6 +20414,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18818,6 +20428,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18829,6 +20440,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18840,6 +20452,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18851,6 +20464,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18864,6 +20478,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18875,6 +20490,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18886,6 +20502,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18897,6 +20514,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18909,6 +20527,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ACTION_REQUEST_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -18921,6 +20540,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18932,6 +20552,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18943,6 +20564,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18954,6 +20576,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18967,6 +20590,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18978,6 +20602,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -18989,6 +20614,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19000,6 +20626,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19013,6 +20640,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19024,6 +20652,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19035,6 +20664,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19046,6 +20676,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19057,6 +20688,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19068,6 +20700,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19079,6 +20712,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19090,6 +20724,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19101,6 +20736,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19112,6 +20748,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19123,6 +20760,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19134,6 +20772,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19149,6 +20788,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ANGULAR_LOCATION" => Some(&[Slot {
             k: Sk::Enum,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19160,6 +20800,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ANGULAR_SIZE" => Some(&[Slot {
             k: Sk::Enum,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19176,6 +20817,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19187,6 +20829,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19198,6 +20841,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19209,6 +20853,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19221,6 +20866,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ANNOTATION_PLACEHOLDER_LEADER_LINE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19233,6 +20879,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19244,6 +20891,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19256,6 +20904,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19267,6 +20916,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ANNOTATION_PLANE" => Some(&[Slot {
             k: Sk::Vec,
             req: false,
+            opt: true,
             der: false,
             swire: None,
             r3: 0,
@@ -19280,6 +20930,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ANNOTATION_TEXT_CHARACTER" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19294,6 +20945,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APLL_POINT" => Some(&[Slot {
             k: Sk::Enum,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19306,6 +20958,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19317,6 +20970,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19330,6 +20984,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19341,6 +20996,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19353,6 +21009,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_APPROVAL_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19364,6 +21021,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_DATE_AND_TIME_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19375,6 +21033,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_DOCUMENT_REFERENCE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19386,6 +21045,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19397,6 +21057,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_GROUP_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19408,6 +21069,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19419,6 +21081,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_PRESENTED_ITEM" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19430,6 +21093,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19441,6 +21105,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROVAL_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19452,6 +21117,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROXIMATION_TOLERANCE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19464,6 +21130,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19475,6 +21142,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19486,6 +21154,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19498,6 +21167,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "APPROXIMATION_TOLERANCE_PARAMETER" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19510,6 +21180,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19521,6 +21192,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19535,6 +21207,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19546,6 +21219,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19557,6 +21231,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19568,6 +21243,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19580,6 +21256,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ASSEMBLY_COMPONENT_USAGE" => Some(&[Slot {
             k: Sk::Str,
             req: false,
+            opt: true,
             der: false,
             swire: None,
             r3: 0,
@@ -19591,6 +21268,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "AUXILIARY_LEADER_LINE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19602,6 +21280,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "AXIS1_PLACEMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: false,
+            opt: true,
             der: false,
             swire: None,
             r3: 0,
@@ -19613,6 +21292,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "AXIS2_PLACEMENT_2D" => Some(&[Slot {
             k: Sk::Ref,
             req: false,
+            opt: true,
             der: false,
             swire: None,
             r3: 0,
@@ -19625,6 +21305,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19636,6 +21317,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19649,6 +21331,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19660,6 +21343,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19671,6 +21355,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19682,6 +21367,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19693,6 +21379,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19706,6 +21393,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19717,6 +21405,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19728,6 +21417,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19741,6 +21431,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19752,6 +21443,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19763,6 +21455,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19774,6 +21467,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19785,6 +21479,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19796,6 +21491,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19807,6 +21503,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19820,6 +21517,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19831,6 +21529,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19842,6 +21541,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19853,6 +21553,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19864,6 +21565,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19877,6 +21579,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19888,6 +21591,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19899,6 +21603,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19910,6 +21615,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19921,6 +21627,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19932,6 +21639,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19950,6 +21658,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "BREP_WITH_VOIDS" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -19962,6 +21671,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19973,6 +21683,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -19989,6 +21700,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20000,6 +21712,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20012,6 +21725,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CAMERA_MODEL_D3_MULTI_CLIPPING" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20023,6 +21737,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CAMERA_MODEL_D3_WITH_HLHSR" => Some(&[Slot {
             k: Sk::Bool,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20035,6 +21750,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CARTESIAN_POINT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 1,
@@ -20046,6 +21762,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CC_DESIGN_APPROVAL" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20057,6 +21774,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20068,6 +21786,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20079,6 +21798,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CC_DESIGN_SECURITY_CLASSIFICATION" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20091,6 +21811,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CHANGE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20102,6 +21823,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CHANGE_REQUEST" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20113,6 +21835,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CHARACTER_GLYPH_STYLE_OUTLINE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20124,6 +21847,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CHARACTER_GLYPH_STYLE_STROKE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20136,6 +21860,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20147,6 +21872,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20160,6 +21886,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20171,6 +21898,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20184,6 +21912,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CIRCLE" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20200,6 +21929,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20211,6 +21941,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20222,6 +21953,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20234,6 +21966,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "COLOUR_SPECIFICATION" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20247,6 +21980,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20258,6 +21992,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20269,6 +22004,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20282,6 +22018,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20293,6 +22030,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20304,6 +22042,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20317,6 +22056,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20328,6 +22068,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20341,6 +22082,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20352,6 +22094,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20363,6 +22106,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20378,6 +22122,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "COMPOSITE_TEXT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20390,6 +22135,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "COMPOUND_REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20402,6 +22148,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CONFIGURATION_EFFECTIVITY" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20414,6 +22161,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20425,6 +22173,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20436,6 +22185,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20447,6 +22197,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20458,6 +22209,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20470,6 +22222,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CONIC" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20482,6 +22235,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20493,6 +22247,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20505,6 +22260,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CONNECTED_FACE_SET" => Some(&[Slot {
             k: Sk::Vec,
             req: false,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20518,6 +22274,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20529,6 +22286,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CONTEXT_DEPENDENT_UNIT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20542,6 +22300,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20553,6 +22312,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20566,6 +22326,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20577,6 +22338,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -20590,6 +22352,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20601,6 +22364,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20612,6 +22376,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20623,6 +22388,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20634,6 +22400,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20645,6 +22412,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20658,6 +22426,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20669,6 +22438,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20680,6 +22450,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20691,6 +22462,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20702,6 +22474,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20713,6 +22486,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20724,6 +22498,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20735,6 +22510,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20748,6 +22524,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20759,6 +22536,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20770,6 +22548,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20781,6 +22560,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20792,6 +22572,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20803,6 +22584,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20814,6 +22596,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20825,6 +22608,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20836,6 +22620,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20850,6 +22635,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20861,6 +22647,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20872,6 +22659,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20883,6 +22671,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20896,6 +22685,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20907,6 +22697,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20920,6 +22711,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20931,6 +22723,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20942,6 +22735,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20955,6 +22749,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20966,6 +22761,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -20978,6 +22774,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "CYLINDRICAL_SURFACE" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -20990,6 +22787,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DATE" => Some(&[Slot {
             k: Sk::Int,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21002,6 +22800,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21013,6 +22812,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21026,6 +22826,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21037,6 +22838,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21049,6 +22851,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DATUM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21062,6 +22865,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21073,6 +22877,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21087,6 +22892,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DATUM_SYSTEM" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21098,6 +22904,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DATUM_TARGET" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21111,6 +22918,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21122,6 +22930,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21135,6 +22944,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21146,6 +22956,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21161,6 +22972,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DEGENERATE_TOROIDAL_SURFACE" => Some(&[Slot {
             k: Sk::Bool,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21173,6 +22985,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DERIVED_UNIT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21184,6 +22997,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DESCRIPTIVE_REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21197,6 +23011,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21208,6 +23023,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21221,6 +23037,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DIMENSIONAL_LOCATION_WITH_PATH" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21233,6 +23050,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21244,6 +23062,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21257,6 +23076,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DIMENSIONAL_SIZE_WITH_PATH" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21269,6 +23089,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DIRECTION" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 1,
@@ -21281,6 +23102,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21292,6 +23114,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21303,6 +23126,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21314,6 +23138,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21328,6 +23153,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21339,6 +23165,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21350,6 +23177,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21361,6 +23189,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21375,6 +23204,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21386,6 +23216,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21399,6 +23230,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DRAUGHTING_CALLOUT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21411,6 +23243,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21422,6 +23255,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21433,6 +23267,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21444,6 +23279,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21458,6 +23294,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21473,6 +23310,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21484,6 +23322,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21497,6 +23336,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21508,6 +23348,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21521,6 +23362,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "EFFECTIVITY" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21532,6 +23374,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ELEMENTARY_SURFACE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21544,6 +23387,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21555,6 +23399,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21567,6 +23412,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "EXPLICIT_COMPOSITE_HOLE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21579,6 +23425,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21590,6 +23437,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21601,6 +23449,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21612,6 +23461,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21623,6 +23473,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21636,6 +23487,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21648,6 +23500,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21659,6 +23512,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21671,6 +23525,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "EXTERNAL_SOURCE" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21686,6 +23541,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21697,6 +23553,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21714,6 +23571,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "FACE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21726,6 +23584,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21737,6 +23596,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21751,6 +23611,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21762,6 +23623,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21777,6 +23639,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21788,6 +23651,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21801,6 +23665,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21812,6 +23677,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21823,6 +23689,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21834,6 +23701,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21845,6 +23713,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21858,6 +23727,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21869,6 +23739,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21881,6 +23752,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21892,6 +23764,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -21904,6 +23777,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21915,6 +23789,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21926,6 +23801,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21941,6 +23817,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21952,6 +23829,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21965,6 +23843,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21976,6 +23855,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -21989,6 +23869,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22000,6 +23881,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22011,6 +23893,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22025,6 +23908,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22038,6 +23922,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GEOMETRIC_REPRESENTATION_CONTEXT" => Some(&[Slot {
             k: Sk::Int,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22050,6 +23935,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GEOMETRIC_SET" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22062,6 +23948,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22073,6 +23960,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22084,6 +23972,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22095,6 +23984,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22107,6 +23997,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22119,6 +24010,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22130,6 +24022,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22142,6 +24035,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22153,6 +24047,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22164,6 +24059,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22177,6 +24073,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22188,6 +24085,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GLOBAL_UNIT_ASSIGNED_CONTEXT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22200,6 +24098,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22211,6 +24110,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22223,6 +24123,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "GROUP_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22235,6 +24136,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22246,6 +24148,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22259,6 +24162,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22270,6 +24174,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22285,6 +24190,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "INVISIBILITY" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22297,6 +24203,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22308,6 +24215,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22319,6 +24227,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22330,6 +24239,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22343,6 +24253,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22354,6 +24265,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22365,6 +24277,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22376,6 +24289,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22387,6 +24301,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22405,6 +24320,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22416,6 +24332,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22429,6 +24346,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "LITERAL_NUMBER" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22442,6 +24360,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22453,6 +24372,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22464,6 +24384,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22476,6 +24397,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "MANIFOLD_SOLID_BREP" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22489,6 +24411,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22500,6 +24423,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22516,6 +24440,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Meas,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22527,6 +24452,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22545,6 +24471,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "MODIFIED_GEOMETRIC_TOLERANCE" => Some(&[Slot {
             k: Sk::Enum,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22556,6 +24483,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "NAMED_UNIT" => Some(&[Slot {
             k: Sk::Ref,
             req: false,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22570,6 +24498,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22581,6 +24510,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22592,6 +24522,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22604,6 +24535,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "ONE_DIRECTION_REPEAT_FACTOR" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22617,6 +24549,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22628,6 +24561,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22641,6 +24575,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22652,6 +24587,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22665,6 +24601,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22676,6 +24613,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22688,6 +24626,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "OVER_RIDING_STYLED_ITEM" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22699,6 +24638,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PARABOLA" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22712,6 +24652,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PATH" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22724,6 +24665,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22735,6 +24677,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22750,6 +24693,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22761,6 +24705,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22774,6 +24719,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22785,6 +24731,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22798,6 +24745,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PLACEMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22809,6 +24757,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PLANAR_BOX" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22821,6 +24770,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22832,6 +24782,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22849,6 +24800,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22860,6 +24812,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22871,6 +24824,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22882,6 +24836,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22894,6 +24849,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "POLY_LOOP" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22905,6 +24861,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "POLYLINE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22922,6 +24879,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRE_DEFINED_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22944,6 +24902,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRESENTATION_STYLE_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22955,6 +24914,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRESENTATION_STYLE_BY_CONTEXT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -22969,6 +24929,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22980,6 +24941,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -22991,6 +24953,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23002,6 +24965,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23015,6 +24979,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23026,6 +24991,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23039,6 +25005,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23050,6 +25017,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23061,6 +25029,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23072,6 +25041,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23085,6 +25055,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23096,6 +25067,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23107,6 +25079,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23120,6 +25093,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRODUCT_CONTEXT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23132,6 +25106,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23143,6 +25118,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23154,6 +25130,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23165,6 +25142,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23177,6 +25155,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRODUCT_DEFINITION_CONTEXT" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23188,6 +25167,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRODUCT_DEFINITION_EFFECTIVITY" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23200,6 +25180,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23211,6 +25192,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23222,6 +25204,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23234,6 +25217,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => Some(&[Slot {
             k: Sk::Enum,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23246,6 +25230,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23257,6 +25242,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23268,6 +25254,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23279,6 +25266,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23290,6 +25278,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23303,6 +25292,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23314,6 +25304,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23325,6 +25316,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23336,6 +25328,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23347,6 +25340,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23360,6 +25354,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23371,6 +25366,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23382,6 +25378,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23393,6 +25390,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23404,6 +25402,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23418,6 +25417,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23429,6 +25429,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23441,6 +25442,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23452,6 +25454,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23465,6 +25468,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23476,6 +25480,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23487,6 +25492,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23500,6 +25506,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23511,6 +25518,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23523,6 +25531,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "QUALIFIED_REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23538,6 +25547,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "RATIONAL_B_SPLINE_CURVE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23549,6 +25559,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "RATIONAL_B_SPLINE_SURFACE" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23562,6 +25573,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "REPOSITIONED_TESSELLATED_ITEM" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23574,6 +25586,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23585,6 +25598,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23596,6 +25610,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23609,6 +25624,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23620,6 +25636,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23632,6 +25649,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Str,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23644,6 +25662,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23655,6 +25674,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23668,6 +25688,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23679,6 +25700,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23692,6 +25714,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23703,6 +25726,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23714,6 +25738,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23725,6 +25750,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23737,6 +25763,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23751,6 +25778,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SECURITY_CLASSIFICATION_ASSIGNMENT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23763,6 +25791,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23774,6 +25803,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23785,6 +25815,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23796,6 +25827,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Log,
                 req: false,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23811,6 +25843,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23822,6 +25855,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23833,6 +25867,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23844,6 +25879,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23861,6 +25897,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SHELL_BASED_SURFACE_MODEL" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23873,6 +25910,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23884,6 +25922,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23900,6 +25939,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SPHERICAL_SURFACE" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23911,6 +25951,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "START_REQUEST" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23922,6 +25963,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "START_WORK" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -23934,6 +25976,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23945,6 +25988,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23958,6 +26002,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23969,6 +26014,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23983,6 +26029,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -23994,6 +26041,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24008,6 +26056,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24019,6 +26068,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24030,6 +26080,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24042,6 +26093,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_OF_LINEAR_EXTRUSION" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24053,6 +26105,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_OF_REVOLUTION" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24066,6 +26119,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24077,6 +26131,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24089,6 +26144,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_BOUNDARY" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24100,6 +26156,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_CONTROL_GRID" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24111,6 +26168,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_FILL_AREA" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24123,6 +26181,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24134,6 +26193,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24146,6 +26206,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_REFLECTANCE_AMBIENT" => Some(&[Slot {
             k: Sk::Real,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24158,6 +26219,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24169,6 +26231,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24181,6 +26244,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24192,6 +26256,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_SEGMENTATION_CURVE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24203,6 +26268,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SURFACE_STYLE_SILHOUETTE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24215,6 +26281,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24226,6 +26293,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24238,6 +26306,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "SWEPT_SURFACE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24251,6 +26320,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24262,6 +26332,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24275,6 +26346,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24286,6 +26358,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24297,6 +26370,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24310,6 +26384,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "TERMINATOR_SYMBOL" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24323,6 +26398,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24334,6 +26410,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24347,6 +26424,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24358,6 +26436,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24369,6 +26448,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -24380,6 +26460,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24392,6 +26473,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "TESSELLATED_GEOMETRIC_SET" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24406,6 +26488,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24417,6 +26500,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24430,6 +26514,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24441,6 +26526,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24455,6 +26541,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24466,6 +26553,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Int,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24477,6 +26565,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 2,
@@ -24490,6 +26579,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24501,6 +26591,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24512,6 +26603,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24523,6 +26615,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24534,6 +26627,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24547,6 +26641,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24558,6 +26653,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24570,6 +26666,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24585,6 +26682,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24596,6 +26694,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24609,6 +26708,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24620,6 +26720,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24632,6 +26733,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "TOLERANCE_ZONE_WITH_DATUM" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24645,6 +26747,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24656,6 +26759,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24670,6 +26774,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24681,6 +26786,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: Some("PARAMETER_VALUE"),
                 r3: 0,
@@ -24692,6 +26798,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Vec,
                 req: true,
+                opt: false,
                 der: false,
                 swire: Some("PARAMETER_VALUE"),
                 r3: 0,
@@ -24703,6 +26810,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24714,6 +26822,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24726,6 +26835,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "TWO_DIRECTION_REPEAT_FACTOR" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24738,6 +26848,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24749,6 +26860,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Str,
                 req: false,
+                opt: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24761,6 +26873,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24774,6 +26887,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "VALUE_REPRESENTATION_ITEM" => Some(&[Slot {
             k: Sk::Meas,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24786,6 +26900,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24797,6 +26912,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24810,6 +26926,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "VERTEX_LOOP" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24821,6 +26938,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "VERTEX_POINT" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24832,6 +26950,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "VERTEX_SHELL" => Some(&[Slot {
             k: Sk::Ref,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,
@@ -24844,6 +26963,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Enum,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24855,6 +26975,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24866,6 +26987,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24877,6 +26999,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24888,6 +27011,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24899,6 +27023,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Real,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24910,6 +27035,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24921,6 +27047,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Bool,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24932,6 +27059,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
             Slot {
                 k: Sk::Ref,
                 req: true,
+                opt: false,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -24945,6 +27073,7 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         "WIRE_SHELL" => Some(&[Slot {
             k: Sk::Vec,
             req: true,
+            opt: false,
             der: false,
             swire: None,
             r3: 0,

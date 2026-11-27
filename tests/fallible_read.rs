@@ -569,6 +569,20 @@ fn list_below_its_lower_bound_is_kept_and_noted() {
     assert_eq!(r.kept_nonstandard, [(4, SHORT), (7, SHORT)]);
 }
 
+/// An OPTIONAL list given no elements where `LIST [1:?]` needs one reads as
+/// unset, with a note.
+#[test]
+fn empty_optional_list_that_needs_elements_reads_as_unset() {
+    let body = "#1=PERSON('1',$,'Doe',(),('A'),$);\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert_eq!(r.normalized, [(1, "empty optional list set to unset")]);
+    assert!(r.kept_nonstandard.is_empty(), "{:?}", r.kept_nonstandard);
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    assert!(text.contains("PERSON('1',$,'Doe',$,('A'),$);"), "{text}");
+}
+
 /// Three trims where `SET [1:2]` allows two are kept, and noted.
 #[test]
 fn list_above_its_upper_bound_is_kept_and_noted() {
