@@ -302,6 +302,15 @@ pub fn agg_bounds(ty: &str) -> Option<(u32, Option<u32>)> {
     agg_parts(ty).map(|(_, lo, hi)| (lo, hi))
 }
 
+/// The aggregation keyword of an aggregation repr (`LIST`, `SET`, `BAG` or
+/// `ARRAY`), or `None` for a non-aggregate.
+pub fn agg_keyword(ty: &str) -> Option<&'static str> {
+    ["LIST", "SET", "BAG", "ARRAY"].into_iter().find(|kw| {
+        ty.strip_prefix(kw)
+            .is_some_and(|rest| rest.starts_with(" OF ") || rest.starts_with(" ["))
+    })
+}
+
 /// Split an aggregation repr into `(inner, lower, upper)` — handles both the
 /// unbounded (`SET OF x`) and bounded (`SET [1:?] OF x`) forms emitted by the
 /// schema exporter.

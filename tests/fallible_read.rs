@@ -311,11 +311,13 @@ fn file_order_does_not_change_the_read() {
         "#6=VERTEX_POINT('',#9);",
         "#7=VERTEX_POINT('',#2);",
         "#8=EDGE_CURVE('',#6,#5,#4,.T.);",
+        "#10=PRESENTATION_LAYER_ASSIGNMENT('l','',());",
     ];
     let read_lines = |lines: &[&str]| {
         let src = format!("{HEADER}{}\n{FOOTER}", lines.join("\n"));
         let (model, mut r) = read(src.as_bytes()).expect("source parses");
         r.normalized.sort_unstable();
+        r.kept_nonstandard.sort_unstable();
         (common::text(&model), format!("{r:?}"))
     };
     let mut reversed = lines;
@@ -489,4 +491,107 @@ fn coordinates_past_the_bound_drop_the_point() {
     assert_eq!(key(1), Some("list has more values than its type allows"));
     assert_eq!(dropped_kind(&r, 2), Some(&DropKind::Cascade));
     assert_eq!(r.entities_kept, 1, "{:?}", r.dropped);
+}
+
+const SHORT: &str = "list shorter than its schema bounds";
+const LONG: &str = "list longer than its schema bounds";
+
+/// A complex entity's parts out of name order are put in it, with a note,
+/// and what references the entity still resolves to it; parts already in
+/// order get no note.
+#[test]
+fn complex_parts_out_of_order_are_sorted_and_noted() {
+    let body = "#1=(SI_UNIT(.MILLI.,.METRE.)NAMED_UNIT(*)LENGTH_UNIT());\n\
+                #2=(NAMED_UNIT(*)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.));\n\
+                #3=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-07),#1,'d','');\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert_eq!(
+        r.normalized,
+        [(1, "complex entity parts sorted into name order")]
+    );
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    assert!(
+        text.contains("#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );"),
+        "{text}"
+    );
+    assert!(
+        text.contains("UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-7),#1,"),
+        "{text}"
+    );
+}
+
+/// A reference repeated in a SET is kept once, with a note; the same in a
+/// SELECT's named SET (`SET_REPRESENTATION_ITEM`).
+#[test]
+fn duplicate_set_elements_are_removed_and_noted() {
+    let body = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+                #2=PRESENTATION_LAYER_ASSIGNMENT('l','',(#1,#1));\n\
+                #3=COMPOUND_REPRESENTATION_ITEM('',SET_REPRESENTATION_ITEM((#1,#1)));\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    let note = "duplicate set element removed";
+    assert_eq!(r.normalized, [(2, note), (3, note)]);
+    assert!(r.kept_nonstandard.is_empty(), "{:?}", r.kept_nonstandard);
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    for name in [
+        "PRESENTATION_LAYER_ASSIGNMENT(",
+        "COMPOUND_REPRESENTATION_ITEM(",
+    ] {
+        let line = text.lines().find(|l| l.contains(name)).expect(name);
+        assert_eq!(line.matches('#').count(), 2, "{line}");
+    }
+}
+
+/// A sphere's face with its bounds left empty, below `SET [1:?]`, is kept
+/// with the solid it bounds, and noted.
+#[test]
+fn list_below_its_lower_bound_is_kept_and_noted() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=AXIS2_PLACEMENT_3D('',#1,$,$);\n\
+         #3=SPHERICAL_SURFACE('',#2,4.05);\n\
+         #4=ADVANCED_FACE('',(),#3,.T.);\n\
+         #5=CLOSED_SHELL('',(#4));\n\
+         #6=MANIFOLD_SOLID_BREP('',#5);\n\
+         #7=COMPOUND_REPRESENTATION_ITEM('',SET_REPRESENTATION_ITEM(()));\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert_eq!(r.entities_kept, 7);
+    assert!(r.normalized.is_empty(), "{:?}", r.normalized);
+    assert_eq!(r.kept_nonstandard, [(4, SHORT), (7, SHORT)]);
+}
+
+/// Three trims where `SET [1:2]` allows two are kept, and noted.
+#[test]
+fn list_above_its_upper_bound_is_kept_and_noted() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=DIRECTION('',(1.,0.,0.));\n\
+         #3=VECTOR('',#2,1.);\n\
+         #4=LINE('',#1,#3);\n\
+         #5=TRIMMED_CURVE('',#4,(PARAMETER_VALUE(0.),PARAMETER_VALUE(1.),\
+         PARAMETER_VALUE(2.)),(PARAMETER_VALUE(3.)),.T.,.PARAMETER.);\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert!(r.normalized.is_empty(), "{:?}", r.normalized);
+    assert_eq!(r.kept_nonstandard, [(5, LONG)]);
+}
+
+/// A control-point row of one point, where each row of
+/// `LIST [2:?] OF LIST [2:?]` needs two, is kept, and noted.
+#[test]
+fn nested_list_below_its_lower_bound_is_kept_and_noted() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3=CARTESIAN_POINT('',(0.,1.,0.));\n\
+         #4=B_SPLINE_SURFACE_WITH_KNOTS('',1,1,((#1,#2),(#3)),.UNSPECIFIED.,.F.,.F.,.F.,\
+         (2,2),(2,2),(0.,1.),(0.,1.),.UNSPECIFIED.);\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert!(r.normalized.is_empty(), "{:?}", r.normalized);
+    assert_eq!(r.kept_nonstandard, [(4, SHORT)]);
 }

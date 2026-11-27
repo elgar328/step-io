@@ -2566,9 +2566,19 @@ fn emit_slot_table<'a>(
                     Kind::Vec(inner) if matches!(inner.as_ref(), Kind::Reals3 { .. }) => 2,
                     _ => 0,
                 };
+                let bound = |b: Option<u32>| b.map_or("None".to_string(), |b| format!("Some({b})"));
+                let nest: Vec<String> = f
+                    .nested
+                    .iter()
+                    .map(|&(lo, hi)| format!("({lo},{})", bound(hi)))
+                    .collect();
                 format!(
-                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire},r3:{r3}}}",
-                    f.derived
+                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire},r3:{r3},set:{},lo:{},hi:{},nest:&[{}]}}",
+                    f.derived,
+                    f.set,
+                    f.min,
+                    bound(f.max),
+                    nest.join(",")
                 )
             })
             .collect();
@@ -2586,7 +2596,91 @@ pub fn emit_normalize(ir: &ModelIr, crate_path: &str) -> String {
         r#"#[derive(Clone, Copy)]
 enum Sk { Real, Int, Str, Bin, Bool, Log, Enum, Ref, Vec, Meas }
 #[derive(Clone, Copy)]
-struct Slot { k: Sk, req: bool, der: bool, swire: Option<&'static str>, r3: u8 }
+struct Slot {
+    k: Sk,
+    req: bool,
+    der: bool,
+    swire: Option<&'static str>,
+    r3: u8,
+    /// The outer aggregation is a SET.
+    set: bool,
+    /// The outer aggregation's size bounds; `(0, None)` for a scalar.
+    lo: u32,
+    hi: Option<u32>,
+    /// The size bounds of each nested aggregation, outermost first.
+    nest: &'static [(u32, Option<u32>)],
+}
+
+/// A list's note when it, or a list nested in it, has fewer elements than its
+/// schema bounds allow.
+const SHORT: &str = "list shorter than its schema bounds";
+/// A list's note when it, or a list nested in it, has more elements than its
+/// schema bounds allow.
+const LONG: &str = "list longer than its schema bounds";
+
+/// Remove repeated elements of a SET, keeping the first of each. Whether any
+/// was removed.
+fn dedup_set(v: &mut Vec<Attribute>) -> bool {
+    let n = v.len();
+    if v.iter().all(|e| matches!(e, Attribute::EntityRef(_))) {
+        let mut seen = std::collections::HashSet::with_capacity(n);
+        v.retain(|e| match e {
+            Attribute::EntityRef(id) => seen.insert(*id),
+            _ => true,
+        });
+    } else {
+        let mut kept: Vec<Attribute> = Vec::with_capacity(n);
+        for e in v.drain(..) {
+            if !kept.contains(&e) {
+                kept.push(e);
+            }
+        }
+        *v = kept;
+    }
+    v.len() != n
+}
+
+/// Mark in `found` (`[short, long]`) whether `v`, or a list nested in it,
+/// is outside its bounds: `lo..=hi` for `v`, then `nest` level by level.
+fn bounds_found(v: &[Attribute], lo: u32, hi: Option<u32>, nest: &[(u32, Option<u32>)], found: &mut [bool; 2]) {
+    if v.len() < lo as usize {
+        found[0] = true;
+    }
+    if hi.is_some_and(|h| v.len() > h as usize) {
+        found[1] = true;
+    }
+    if let Some((&(lo, hi), rest)) = nest.split_first() {
+        for e in v {
+            if let Attribute::List(inner) = e {
+                bounds_found(inner, lo, hi, rest, found);
+            }
+        }
+    }
+}
+
+/// Remove a SET's repeated elements (a `warns` note) and note in `kept` a
+/// size outside the bounds, once per kind.
+fn norm_aggregate(
+    v: &mut Vec<Attribute>,
+    set: bool,
+    lo: u32,
+    hi: Option<u32>,
+    nest: &[(u32, Option<u32>)],
+    warns: &mut Vec<&'static str>,
+    kept: &mut Vec<&'static str>,
+) {
+    if set && dedup_set(v) {
+        warns.push("duplicate set element removed");
+    }
+    let mut found = [false; 2];
+    bounds_found(v, lo, hi, nest, &mut found);
+    if found[0] {
+        kept.push(SHORT);
+    }
+    if found[1] {
+        kept.push(LONG);
+    }
+}
 
 /// Does a list the model holds inline as `Reals3` (`r3` as in `Slot`) have
 /// more than three values?
@@ -2655,7 +2749,13 @@ fn norm_attr(s: Slot, a: &Attribute) -> NormAction {
 /// Normalize one entity's attrs. Rewrites push to `warns` (norm channel); a
 /// non-normalizable slot sets `drop_out` to its reason and returns false (the
 /// entity is removed — nonstandard-value drop, surfaced on the drops channel).
-fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'static str>, drop_out: &mut Option<&'static str>) -> bool {
+fn norm_attrs(
+    slots: &[Slot],
+    attrs: &mut Vec<Attribute>,
+    warns: &mut Vec<&'static str>,
+    kept: &mut Vec<&'static str>,
+    drop_out: &mut Option<&'static str>,
+) -> bool {
     for (i, a) in attrs.iter_mut().enumerate() {
         canon(a);
         if let Some(s) = slots.get(i).copied() {
@@ -2685,30 +2785,58 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
                 *drop_out = Some("list has more values than its type allows");
                 return false;
             }
+            if !s.der {
+                match a {
+                    Attribute::List(v) => norm_aggregate(v, s.set, s.lo, s.hi, s.nest, warns, kept),
+                    // A named aggregation a SELECT admits, `WIRE((..))`.
+                    Attribute::Typed { type_name, value } => {
+                        if let (Some((set, lo, hi)), Attribute::List(v)) =
+                            (agg_type_bounds(type_name), value.as_mut())
+                        {
+                            norm_aggregate(v, set, lo, hi, &[], warns, kept);
+                        }
+                    }
+                    _ => {}
+                }
+            }
         }
     }
     true
 }
 
-/// Normalize one entity in place. Rewrites push to `warns` (norm channel), kept
-/// even when the entity is then dropped; a non-normalizable slot returns its
-/// reason (a nonstandard-value drop; its referrers cascade later via the drop
-/// pass).
-pub fn normalize_entity(ent: &mut RawEntity, warns: &mut Vec<&'static str>) -> Result<(), &'static str> {
+/// Normalize one entity in place. Rewrites push to `warns` (norm channel) and
+/// values kept outside the schema to `kept`, both kept even when the entity is
+/// then dropped; a non-normalizable slot returns its reason (a
+/// nonstandard-value drop; its referrers cascade later via the drop pass).
+pub fn normalize_entity(
+    ent: &mut RawEntity,
+    warns: &mut Vec<&'static str>,
+    kept: &mut Vec<&'static str>,
+) -> Result<(), &'static str> {
     let mut drop_reason: Option<&'static str> = None;
     let keep = match ent {
         RawEntity::Simple { name, attributes, .. } => {
-            norm_attrs(simple_slots(name), attributes, warns, &mut drop_reason)
+            norm_attrs(simple_slots(name), attributes, warns, kept, &mut drop_reason)
         }
-        RawEntity::Complex { parts, .. } => {
-            parts.iter_mut().all(|p| norm_attrs(part_slots(&p.name), &mut p.attributes, warns, &mut drop_reason))
-        }
+        RawEntity::Complex { parts, .. } => parts.iter_mut().all(|p| {
+            norm_attrs(part_slots(&p.name), &mut p.attributes, warns, kept, &mut drop_reason)
+        }),
     };
     if keep { Ok(()) } else { Err(drop_reason.unwrap_or("unspecified")) }
 }
 
 "#,
     );
+    s.push_str(
+        "/// The bounds of a named aggregation a SELECT admits (`SET` or not,\n\
+         /// lower, upper), by wire name.\n\
+         fn agg_type_bounds(n: &str) -> Option<(bool, u32, Option<u32>)> {\n    match n {\n",
+    );
+    for (wire, (set, lo, hi)) in &ir.aggregate_types {
+        let hi = hi.map_or("None".to_string(), |h| format!("Some({h})"));
+        writeln!(s, "        \"{wire}\" => Some(({set}, {lo}, {hi})),").unwrap();
+    }
+    s.push_str("        _ => None,\n    }\n}\n\n");
     emit_slot_table(
         &mut s,
         "simple_slots",

@@ -18,7 +18,8 @@ writes only modern AP242.
   implementation; the supported entity set is curated to what real STEP
   files actually use.
 - **Heals non-standard input** — what can be fixed is normalized; what
-  cannot is dropped with a reason, never silently.
+  cannot is dropped with a reason, or kept where dropping it would lose
+  real data — never silently.
 - **Ergonomic API** — `scene()` navigates what you read with lightweight
   handles; `StepBuilder` writes new files element by element, the way CAD
   data is held.

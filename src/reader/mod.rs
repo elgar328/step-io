@@ -8,7 +8,8 @@
 //! whole file is read, the drop pass decides what cannot enter the model, with
 //! a [`DropReason`], and the kept references are resolved. The [`Report`]
 //! accounts for everything that came in — kept, normalized, or dropped and
-//! why — and carries what the parser repaired on the way in.
+//! why, and what was kept although it breaks the schema — and carries what
+//! the parser repaired on the way in.
 
 use std::collections::BTreeMap;
 use std::io::Read;
@@ -38,7 +39,7 @@ use table::{EntityTable, IdMap, Labels, Member, NONE, Row, first_duplicate, sort
 pub enum DropKind {
     /// One of the entity's own values is nonstandard and has no standard
     /// rewrite: a required reference is missing, an integer field holds a
-    /// fractional value, a list is longer than its type allows.
+    /// fractional value, a list held inline has more than three reals.
     NonstandardValue,
     /// The entity type is not one step-io reads: not yet supported, or not a
     /// schema entity at all.
@@ -111,6 +112,12 @@ pub struct Report {
     /// (`missing required text set to empty`), in file order. The entity may
     /// still be dropped for another reason.
     pub normalized: Vec<(u64, &'static str)>,
+    /// What was kept as read although it breaks the schema, by entity id and
+    /// note (`list shorter than its schema bounds`), in file order: a value
+    /// with no standard rewrite, kept because dropping its entity would lose
+    /// real data (a sphere's face with its bounds left empty). The entity may
+    /// still be dropped for another reason.
+    pub kept_nonstandard: Vec<(u64, &'static str)>,
     /// What the parser repaired or skipped on the way in (blank attribute
     /// slots, an undecodable string escape, …) — fixed at the syntax level,
     /// before normalization. Each prints as a one-line message.
@@ -147,6 +154,10 @@ struct Scan {
     norm: Vec<(u64, &'static str)>,
     /// The notes of the entity being normalized, before they get its id.
     notes: Vec<&'static str>,
+    kept: Vec<(u64, &'static str)>,
+    /// The kept-nonstandard notes of the entity being normalized, before
+    /// they get its id.
+    kept_notes: Vec<&'static str>,
     build_fail: Vec<(u64, String)>,
     synthetic: Vec<Synthetic>,
     max_id: Option<u64>,
@@ -177,9 +188,12 @@ impl Scan {
             self.add_colour(id);
             (slot, k)
         });
-        let generic = generic_normalize::normalize_entity(&mut ent, &mut self.notes);
+        let generic =
+            generic_normalize::normalize_entity(&mut ent, &mut self.notes, &mut self.kept_notes);
         self.norm
             .extend(self.notes.drain(..).map(|note| (id, note)));
+        self.kept
+            .extend(self.kept_notes.drain(..).map(|note| (id, note)));
         if let Err(reason) = generic {
             row.member = Member::Rejected;
             row.label = self.labels.intern(reason);
@@ -202,10 +216,19 @@ impl Scan {
                 }
                 None => row.label = self.labels.intern(&name),
             },
-            RawEntity::Complex { parts, .. } => {
+            RawEntity::Complex { mut parts, .. } => {
                 row.label = self.labels.intern(&complex_name(&parts));
-                let pixs: Option<Vec<u16>> =
-                    parts.iter().map(|p| complex_part_index(&p.name)).collect();
+                let index = |parts: &[RawEntityPart]| -> Option<Vec<u16>> {
+                    parts.iter().map(|p| complex_part_index(&p.name)).collect()
+                };
+                let mut pixs = index(&parts);
+                // Part 21 writes a complex entity's parts in name order.
+                if pixs.is_some() && !parts.is_sorted_by(|a, b| a.name <= b.name) {
+                    parts.sort_by(|a, b| a.name.cmp(&b.name));
+                    pixs = index(&parts);
+                    self.norm
+                        .push((id, "complex entity parts sorted into name order"));
+                }
                 if let Some(pixs) = pixs.filter(|p| !p.is_empty()) {
                     row.member = Member::Complex;
                     match build_complex_entity(&mut self.model, &parts, &mut self.dedup) {
@@ -303,6 +326,7 @@ impl Scan {
             refs: self.refs,
             labels: self.labels,
             norm: self.norm,
+            kept: self.kept,
             build_fail: self.build_fail,
             n_in,
             n_synth,
@@ -319,6 +343,7 @@ struct Scanned {
     refs: RefStore,
     labels: Labels,
     norm: Vec<(u64, &'static str)>,
+    kept: Vec<(u64, &'static str)>,
     build_fail: Vec<(u64, String)>,
     n_in: usize,
     n_synth: usize,
@@ -606,7 +631,9 @@ fn resolve(
 /// references for later. Each entity reads as UTF-8 or ISO 8859-1 as
 /// [`parse`](crate::parser::parse) describes. An entity that cannot enter the
 /// model is dropped with its reason, and so is every entity that references
-/// it; the rest of the file reads as usual.
+/// it; the rest of the file reads as usual. A list with more or fewer
+/// elements than its schema bounds allow is kept as read and listed in
+/// [`Report::kept_nonstandard`].
 ///
 /// # Errors
 /// [`Error::Io`] if `input` fails, and another [`Error`] if the file does not
@@ -649,6 +676,7 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
         refs,
         mut labels,
         norm,
+        kept,
         build_fail,
         n_in,
         n_synth,
@@ -727,6 +755,7 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
             entities_kept: validated,
             dropped,
             normalized: norm,
+            kept_nonstandard: kept,
             parse_warnings,
         },
     ))

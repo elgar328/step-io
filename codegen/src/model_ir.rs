@@ -26,6 +26,8 @@ pub struct Field {
     /// aggregations.
     pub min: u32,
     pub max: Option<u32>,
+    /// The outer aggregation is a `SET` (no two elements equal).
+    pub set: bool,
     /// The bounds of each aggregation nested inside the outer one, outermost
     /// first (`LIST [2:?] OF LIST [2:?] OF …` → `[(2, None)]`); `(0, None)`
     /// for an unbounded level.
@@ -112,6 +114,9 @@ pub struct ModelIr {
     pub enums: BTreeMap<String, GenEnum>,     // keyed by ENUM alias
     /// True when any complex part-bag instances exist (units).
     pub has_part_bag: bool,
+    /// The bounds of each named aggregation an aggregate arm reads (`SET` or
+    /// not, lower, upper), by UPPER wire name.
+    pub aggregate_types: BTreeMap<String, (bool, u32, Option<u32>)>,
 }
 
 /// Build the schema closure from the domain seeds (fixed point).
@@ -474,6 +479,23 @@ impl ModelIr {
             }
         }
 
+        let mut aggregate_types = BTreeMap::new();
+        for re in ref_enums.values() {
+            for (_, _, wire) in &re.aggregate {
+                let name = wire.to_lowercase();
+                let ty = aggregate_repr(schema, &name);
+                let keyword = crate::schema::agg_keyword(ty);
+                let inner = crate::schema::agg_inner(ty).unwrap_or("");
+                assert!(
+                    matches!(keyword, Some("LIST" | "SET" | "BAG"))
+                        && crate::schema::agg_keyword(aggregate_repr(schema, inner)).is_none(),
+                    "aggregate arm `{wire}` = `{ty}` is not checked on read"
+                );
+                let (lo, hi) = crate::schema::agg_bounds(ty).unwrap_or((0, None));
+                aggregate_types.insert(wire.clone(), (keyword == Some("SET"), lo, hi));
+            }
+        }
+
         let complex_narrowings = complex_narrowings(
             schema,
             res,
@@ -490,6 +512,7 @@ impl ModelIr {
             ref_enums,
             enums,
             has_part_bag,
+            aggregate_types,
         }
     }
 }
@@ -581,17 +604,31 @@ fn make_field(
     // entry makes it conditionally `*` (kept as Option). The latter only
     // applies when not already a hard drop.
     let hard = dset.contains(&a.name);
-    let ty = crate::schema::strip_optional(&a.ty).1;
+    let ty = aggregate_repr(res.schema, crate::schema::strip_optional(&a.ty).1);
     let (min, max) = crate::schema::agg_bounds(ty).unwrap_or((0, None));
+    let keyword = crate::schema::agg_keyword(ty);
     let mut nested = Vec::new();
     let mut level = crate::schema::agg_inner(ty);
     while let Some(inner) = level {
+        // Read checks each level's size; a level whose elements cannot be told
+        // apart by size alone would pass unchecked.
+        assert!(
+            !matches!(crate::schema::agg_keyword(inner), Some("SET" | "ARRAY"))
+                && aggregate_repr(res.schema, inner) == inner,
+            "{}: nested aggregate `{inner}` is not checked on read",
+            a.name
+        );
         let Some(bounds) = crate::schema::agg_bounds(inner) else {
             break;
         };
         nested.push(bounds);
         level = crate::schema::agg_inner(inner);
     }
+    assert!(
+        keyword != Some("ARRAY"),
+        "{}: ARRAY bounds are indices, not checked on read",
+        a.name
+    );
     Field {
         name: a.name.clone(),
         kind,
@@ -600,8 +637,22 @@ fn make_field(
         derivable: !hard && derivable.contains(&a.name),
         min,
         max,
+        set: keyword == Some("SET"),
         nested,
     }
+}
+
+/// `ty`, or the aggregation a named aggregation type (`TYPE x = LIST [2:?] OF
+/// y`) it names stands for, through any chain of type names.
+fn aggregate_repr<'a>(schema: &'a Schema, ty: &'a str) -> &'a str {
+    let mut t = ty;
+    while crate::schema::agg_keyword(t).is_none() {
+        match schema.types.get(t) {
+            Some(td) => t = td.aliased.trim(),
+            None => return ty,
+        }
+    }
+    t
 }
 
 fn build_enum(res: &Resolver, alias: &str) -> Option<GenEnum> {

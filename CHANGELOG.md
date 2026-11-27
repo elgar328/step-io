@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Report::kept_nonstandard` lists what `read()` kept although it breaks the
+  schema: a list with more or fewer elements than its bounds allow, at any
+  nesting level and in a SELECT's named aggregate (`SET_REPRESENTATION_ITEM`).
+  Such a list used to pass unnoticed; it stays in the model, since dropping
+  it would drop what it belongs to (a sphere's face with no bounds, and the
+  solid with it).
+
+### Changed
+
+- `read()` puts a complex entity's parts in name order, as Part 21 writes
+  them, and removes an element repeated in a SET. Both used to pass into the
+  model unnoticed; each is now noted in `Report::normalized`.
+
 ## [0.4.0] - 2026-11-26
 
 ### Added

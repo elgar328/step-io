@@ -9,7 +9,8 @@
 //!   implementation; the supported entity set is curated to what real STEP
 //!   files actually use.
 //! - **Heals non-standard input** — what can be fixed is normalized; what
-//!   cannot is dropped with a reason, never silently.
+//!   cannot is dropped with a reason, or kept where dropping it would lose
+//!   real data — never silently.
 //! - **Ergonomic API** — [`scene()`](StepModel::scene) navigates what you read
 //!   with lightweight handles; [`StepBuilder`] writes new files element by
 //!   element, the way CAD data is held.
@@ -40,8 +41,9 @@
 //! Reading gives the result and the report together: [`read`] returns the
 //! [`StepModel`] plus a [`Report`] of what was kept, normalized, or dropped
 //! and why, and what the parser repaired. Messy files are common in the
-//! wild — non-standard content is healed or dropped rather than failing the
-//! import, and the report is the record of what happened on the way in.
+//! wild — non-standard content is healed, dropped, or (a list outside its
+//! size bounds) kept as read rather than failing the import, and the report
+//! is the record of what happened on the way in.
 //!
 //! The model is raw and complete, schema-faithful: everything the reader
 //! kept is there to read, `model.all::<T>()` listing the entities of a type
@@ -227,6 +229,12 @@ pub mod model {
     //! [`RefGraph::referrers`](crate::RefGraph::referrers). The model is read
     //! only; new entities enter only through the
     //! [`Ap242Author`](crate::Ap242Author) constructors.
+    //!
+    //! A read model holds what the schema allows, with one exception: a list
+    //! with more or fewer elements than its schema bounds allow (a face with
+    //! no bounds) is kept as read, since dropping it would drop the solid it
+    //! bounds too. [`Report::kept_nonstandard`](crate::Report::kept_nonstandard)
+    //! lists each; `Ap242Author` builds no such list.
     //!
     //! ```no_run
     //! use step_io::model::{Axis2PlacementRef, CartesianPointRef, Circle};
