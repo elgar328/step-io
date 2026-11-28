@@ -10,37 +10,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Report::kept_nonstandard` lists what `read()` kept although it breaks the
-  schema: a list with more or fewer elements than its bounds allow (other
-  than an empty OPTIONAL one, see below), at any nesting level and in a SELECT's named aggregate (`SET_REPRESENTATION_ITEM`).
-  Such a list used to pass unnoticed; it stays in the model, since dropping
-  it would drop what it belongs to (a sphere's face with no bounds, and the
-  solid with it).
-- `AuthorError::DerivedAttribute` names the attribute a subtype may derive
-  that is given or left unset against what derives it (see Fixed).
+  schema: a list with more or fewer elements than its bounds allow, at any
+  nesting level and in a named aggregate a SELECT holds (such as
+  `SET_REPRESENTATION_ITEM`), other than an empty OPTIONAL one (see
+  Changed). Such a list used to pass unnoticed. It stays in the model, since
+  dropping it would drop what it belongs to (a sphere's face with no bounds,
+  and the solid with it).
+- `AuthorError::DerivedAttribute`: an attribute a subtype may derive is given
+  a value although a part beside it derives it, or is left unset although
+  nothing derives it and it is not OPTIONAL (see Fixed).
 
 ### Changed
 
 - `read()` puts a complex entity's parts in name order, as Part 21
-  requires, removes an element repeated in a SET, and reads an empty list in
-  an OPTIONAL attribute that needs elements as unset (`$`). Each used to pass
-  into the model unnoticed; each is now noted in `Report::normalized`.
-- An entity, or a complex entity's part, with more attributes than it has
-  is dropped as a `nonstandard value` (`more attributes than the entity
-  has`); the extra attributes used to be ignored. A trailing comma, which
-  reads as one more blank attribute, counts too.
+  requires, and removes an element repeated in a SET. An OPTIONAL list given
+  no elements where its bounds need some reads as unset (`$`). Each used to
+  pass into the model unnoticed, and is now noted in `Report::normalized`.
+- An entity, or a part of a complex entity, written with more attributes than
+  its type declares is dropped as a `nonstandard value` (`more attributes than
+  the entity has`); the extra attributes used to be ignored. A trailing comma
+  counts too, as it reads as one more blank attribute.
 - A complex entity whose parts no edition lets combine is dropped as a
   `nonstandard value`: a part repeated, a supertype part missing, parts of
   unrelated hierarchies, two branches of a ONEOF group, or an abstract part
   with none of its subtypes. Each rule is judged against every edition, so
   a combination one edition allows is kept.
-- `read()`'s documentation says what it checks: each entity's form, not the
-  schema's `WHERE` rules, global `RULE`s, `UNIQUE` or `INVERSE` constraints.
-- A complex entity whose parts have one leaf is written as the simple
-  entity of that leaf, as Part 21 requires, noted in `Report::normalized`;
-  it used to stay complex. With the latest edition's supertypes it also
-  reads as that simple entity. `Ap242Author::add_complex`
-  refuses such parts (`InvalidComplex`): the leaf's own constructor adds
-  them.
+- `read()`'s documentation says what it checks: the form of each entity, not
+  the schema's `WHERE` rules, global `RULE`s, or `UNIQUE` and `INVERSE`
+  constraints.
+- `read()` reads a complex entity whose parts have one leaf as the simple
+  entity of that leaf, as Part 21 requires, noted in `Report::normalized`; it
+  used to stay complex. An AP203 edition 1 area or volume unit in that form
+  stays complex in the model, which has no simple entity of edition 1's form,
+  and is written in its simple form (see Fixed).
 
 ### Fixed
 
@@ -49,31 +51,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An entity referencing one that fails to read is dropped as a `cascade`
   (`via-unclassified`); it used to be dropped as `unclassified`, with a
   dangling reference as its detail.
-- An AP203 edition 1 area or volume unit (`AREA_UNIT(#dims)`,
-  `VOLUME_UNIT(#dims)`, a named unit in that edition) reads, and writes back
-  in that form; it used to be dropped as a `nonstandard reference`.
-- A complex entity's attribute that a part beside it derives in every
-  edition, such as a named unit's dimensions beside `SI_UNIT`, reads as `*`
-  where the file gives a value or `$`, noted in `Report::normalized`; a
-  value used to stay in the model, and a `$` to drop the entity as
-  `unclassified`. A `*` that no part beside it derives in any edition drops
-  the entity as a `nonstandard value`. Where no part beside it derives such
-  an attribute, it reads as any other: a `$` in a required one follows the
-  rule of any required attribute, and in an OPTIONAL one (a characterized
-  object's description) reads as unset and writes back as `$`; either used
-  to drop the entity as `unclassified`. AP214 edition 3 derives a
-  conversion-based unit's dimensions, so its `*` still reads.
+- An AP203 edition 1 area or volume unit, a named unit in that edition
+  (`AREA_UNIT(#dims)`, `VOLUME_UNIT(#dims)`), reads, and writes back in that
+  form; it used to be dropped as a `nonstandard reference`.
+- An attribute of a complex entity's part that a subtype may derive is now
+  read against the parts beside it:
+  - Where a part beside it derives it in every edition, such as a named
+    unit's dimensions beside `SI_UNIT`, a value or `$` in the file reads as
+    `*`, noted in `Report::normalized`. A value used to stay in the model,
+    and a `$` to drop the entity as `unclassified`.
+  - A `*` that no part beside it derives in any edition drops the entity as a
+    `nonstandard value`. AP214 edition 3 derives a conversion-based unit's
+    dimensions, so its `*` still reads.
+  - Where no part beside it derives it, it reads as any other attribute: a
+    `$` in an OPTIONAL one (a characterized object's description) reads as
+    unset and writes back as `$`, and a `$` in a required one follows the
+    rule of any required attribute. Either used to drop the entity as
+    `unclassified`.
 - Nothing derives an attribute of a simple entity, yet `NAMED_UNIT`,
   `CHARACTERIZED_OBJECT`, `EDGE`, `SHAPE_ASPECT` and `CONNECTED_FACE_SET`
-  read one their subtypes may derive as unset where the file gives `*`, and
-  wrote an unset one as `*`. Such a `*` now drops the entity as `unclassified`,
-  as in any other attribute; an unset OPTIONAL description, which used to
-  drop the entity, reads and writes as `$`.
-- `Ap242Author` refuses (`AuthorError::DerivedAttribute`) an attribute a
-  subtype may derive given a value where a part beside it derives it, or left
-  unset where nothing does and it is not OPTIONAL: in `add_complex`, against
-  edition 4, and in the constructors of those five entities. Each wrote a
-  file edition 4 does not allow.
+  read a `*` as unset in an attribute their subtypes may derive, and wrote an
+  unset one as `*`. Such a `*` now drops the entity as `unclassified`, as in
+  any other attribute, and a `$` in the OPTIONAL description, which used to
+  drop the entity, reads as unset and writes as `$`.
+- `Ap242Author::add_complex` refuses parts with one leaf
+  (`InvalidComplex`), as Part 21 writes them as the simple entity of that
+  leaf: the leaf's own constructor adds it. It used to write them as a
+  complex entity.
+- `Ap242Author` refuses, with `AuthorError::DerivedAttribute`, an attribute a
+  subtype may derive that is given a value although a part beside it derives
+  it, or left unset although nothing derives it and it is not OPTIONAL.
+  `add_complex` checks a complex entity's parts against edition 4, and the
+  constructors of those five entities check their own attributes. Each used
+  to write a file edition 4 does not allow.
 
 ## [0.4.0] - 2026-11-26
 
