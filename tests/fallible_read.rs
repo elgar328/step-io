@@ -832,3 +832,175 @@ fn edition_1_area_and_volume_units_are_read() {
     assert!(again.normalized.is_empty(), "{:?}", again.normalized);
     assert_eq!(common::text(&again_model), text);
 }
+
+/// A complex part's attribute that a part beside it derives in every edition
+/// is `*`: a value or `$` there is reset, noted, and written as `*`.
+#[test]
+fn an_attribute_a_part_beside_derives_is_reset() {
+    let body = "#9=DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
+                #2=(LENGTH_UNIT()NAMED_UNIT(#9)SI_UNIT(.MILLI.,.METRE.));\n\
+                #3=(LENGTH_UNIT()NAMED_UNIT($)SI_UNIT($,.METRE.));\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert_eq!(
+        r.normalized,
+        [
+            (2, "derived attribute reset to *"),
+            (3, "derived attribute reset to *")
+        ]
+    );
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    assert_eq!(text.matches("NAMED_UNIT(*)").count(), 2, "{text}");
+
+    let again = read(text.as_bytes()).expect("written text parses").1;
+    assert!(again.dropped.is_empty(), "{:?}", again.dropped);
+    assert!(again.normalized.is_empty(), "{:?}", again.normalized);
+}
+
+/// AP214 edition 3 derives a conversion-based unit's dimensions, the other
+/// editions take them as a value: both read and write back unchanged.
+#[test]
+fn a_conversion_based_unit_keeps_its_dimensions_or_star() {
+    let body = "#1=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+                #2=LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#1);\n\
+                #3=(CONVERSION_BASED_UNIT('INCH',#2)LENGTH_UNIT()NAMED_UNIT(*));\n\
+                #4=DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
+                #5=(CONVERSION_BASED_UNIT('FOOT',#2)LENGTH_UNIT()NAMED_UNIT(#4));\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert!(r.normalized.is_empty(), "{:?}", r.normalized);
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    assert_eq!(text.matches("NAMED_UNIT(*)").count(), 2, "{text}");
+    let dims = id_of(&text, "DIMENSIONAL_EXPONENTS(");
+    assert!(text.contains(&format!("NAMED_UNIT({dims})")), "{text}");
+
+    let again = read(text.as_bytes()).expect("written text parses").1;
+    assert!(again.dropped.is_empty(), "{:?}", again.dropped);
+    assert!(again.normalized.is_empty(), "{:?}", again.normalized);
+}
+
+/// A `*` no part beside it derives in any edition drops the complex entity as
+/// a nonstandard value, its referrers with it.
+#[test]
+fn a_star_no_part_derives_drops_the_entity() {
+    let r = read_body(
+        "#1=(CONTEXT_DEPENDENT_UNIT('foot')LENGTH_UNIT()NAMED_UNIT(*));\n\
+         #2=LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.),#1);\n\
+         #3=(AREA_UNIT()NAMED_UNIT(*));\n\
+         #4=DERIVED_UNIT_ELEMENT(#3,1.);\n",
+    );
+    let ids: Vec<u64> = r.dropped.iter().map(|(id, _)| *id).collect();
+    assert_eq!(ids, [1, 2, 3, 4], "{:?}", r.dropped);
+    let detail = |id: u64| {
+        r.dropped
+            .iter()
+            .find(|(i, _)| *i == id)
+            .map(|(_, d)| d.detail.as_str())
+    };
+    assert_eq!(dropped_kind(&r, 1), Some(&DropKind::NonstandardValue));
+    assert_eq!(dropped_kind(&r, 3), Some(&DropKind::NonstandardValue));
+    assert_eq!(detail(2), Some("via-* for an attribute no part derives"));
+    assert_eq!(detail(4), Some("via-* for an attribute no part derives"));
+    // AP203 edition 1's area unit form stays complex, and is noted as such.
+    assert_eq!(
+        r.normalized,
+        [(
+            3,
+            "complex entity with one leaf rewritten as a simple entity"
+        )]
+    );
+}
+
+/// A part deriving both attributes of another part resets each, and a part
+/// deriving two attributes of one part (an oriented edge's start and end)
+/// resets both.
+#[test]
+fn every_attribute_a_part_beside_derives_is_reset() {
+    let body = "#1=REPRESENTATION_CONTEXT('','');\n\
+                #2=CARTESIAN_POINT('',(0.,0.,0.));\n\
+                #3=AXIS2_PLACEMENT_3D('',#2,$,$);\n\
+                #4=(CHARACTERIZED_OBJECT('n','d')CHARACTERIZED_REPRESENTATION()\
+                DRAUGHTING_MODEL()REPRESENTATION('',(#3),#1));\n\
+                #5=VERTEX_POINT('',#2);\n\
+                #6=CARTESIAN_POINT('',(1.,0.,0.));\n\
+                #7=VERTEX_POINT('',#6);\n\
+                #8=DIRECTION('',(1.,0.,0.));\n\
+                #9=VECTOR('',#8,1.);\n\
+                #10=LINE('',#2,#9);\n\
+                #11=EDGE_CURVE('',#5,#7,#10,.T.);\n\
+                #12=(EDGE(#5,#7)GEOMETRIC_REPRESENTATION_ITEM()ORIENTED_EDGE(#11,.T.)\
+                REPRESENTATION_ITEM('')TOPOLOGICAL_REPRESENTATION_ITEM());\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    let reset = "derived attribute reset to *";
+    assert_eq!(
+        r.normalized,
+        [(4, reset), (4, reset), (12, reset), (12, reset)]
+    );
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    assert!(text.contains("CHARACTERIZED_OBJECT(*,*)"), "{text}");
+    assert!(text.contains("EDGE(*,*)"), "{text}");
+
+    let again = read(text.as_bytes()).expect("written text parses").1;
+    assert!(again.dropped.is_empty(), "{:?}", again.dropped);
+    assert!(again.normalized.is_empty(), "{:?}", again.normalized);
+}
+
+/// Where nothing derives an attribute a part may derive, it is an ordinary
+/// attribute: an OPTIONAL one reads unset and writes back as `$`, a required
+/// one missing follows the rule of any required attribute. So too in a
+/// simple entity, where nothing derives anything.
+#[test]
+fn an_attribute_nothing_derives_is_ordinary() {
+    let body = "#1=DOCUMENT_TYPE('');\n\
+                #2=(CHARACTERIZED_OBJECT('n',$)DOCUMENT('d','n',$,#1)DOCUMENT_FILE()\
+                FEATURE_DEFINITION());\n\
+                #3=CHARACTERIZED_OBJECT('m',$);\n";
+    let r = read_body(body);
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+    assert!(r.normalized.is_empty(), "{:?}", r.normalized);
+    let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
+    let text = common::text(&model);
+    assert!(text.contains("CHARACTERIZED_OBJECT('n',$)"), "{text}");
+    assert!(text.contains("CHARACTERIZED_OBJECT('m',$)"), "{text}");
+    let again = read(text.as_bytes()).expect("written text parses").1;
+    assert!(again.dropped.is_empty(), "{:?}", again.dropped);
+    assert!(again.normalized.is_empty(), "{:?}", again.normalized);
+
+    let r = read_body(
+        "#1=(CONTEXT_DEPENDENT_UNIT('foot')LENGTH_UNIT()NAMED_UNIT($));\n\
+         #2=LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.),#1);\n\
+         #3=CHARACTERIZED_OBJECT(*,$);\n\
+         #4=NAMED_UNIT(*);\n",
+    );
+    let ids: Vec<u64> = r.dropped.iter().map(|(id, _)| *id).collect();
+    assert_eq!(ids, [1, 2, 3, 4], "{:?}", r.dropped);
+    let detail = |id: u64| {
+        r.dropped
+            .iter()
+            .find(|(i, _)| *i == id)
+            .map(|(_, d)| d.detail.as_str())
+    };
+    assert_eq!(dropped_kind(&r, 1), Some(&DropKind::NonstandardValue));
+    assert_eq!(detail(1), Some("required reference is missing"));
+    assert_eq!(detail(2), Some("via-required reference is missing"));
+    assert_eq!(dropped_kind(&r, 3), Some(&DropKind::Unclassified));
+    assert_eq!(dropped_kind(&r, 4), Some(&DropKind::Unclassified));
+}
+
+/// With a part the model does not read beside it, a complex entity's parts
+/// are not fitted to each other.
+#[test]
+fn a_part_not_read_leaves_the_derived_attributes_alone() {
+    let r = read_body(
+        "#9=DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
+         #1=(LENGTH_UNIT()NAMED_UNIT(#9)SI_UNIT(.MILLI.,.METRE.)UNKNOWN_PART());\n",
+    );
+    assert!(r.normalized.is_empty(), "{:?}", r.normalized);
+    let ids: Vec<u64> = r.dropped.iter().map(|(id, _)| *id).collect();
+    assert_eq!(ids, [1], "{:?}", r.dropped);
+    assert_eq!(dropped_kind(&r, 1), Some(&DropKind::Unimplemented));
+}

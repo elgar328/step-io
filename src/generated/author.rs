@@ -52,6 +52,15 @@ pub enum AuthorError {
         entity: &'static str,
         attribute: &'static str,
     },
+    /// An attribute a subtype may derive (Part 21 writes it `*`) is given a
+    /// value although a part beside it derives it (`derived`), or is left
+    /// unset although nothing derives it and it is not OPTIONAL: a complex
+    /// instance's part, or the entity itself added as a simple entity.
+    DerivedAttribute {
+        entity: &'static str,
+        attribute: &'static str,
+        derived: bool,
+    },
 }
 
 impl std::fmt::Display for AuthorError {
@@ -90,6 +99,26 @@ impl std::fmt::Display for AuthorError {
                 write!(
                     f,
                     "{entity}.{attribute}: a reference AP242 does not allow there"
+                )
+            }
+            AuthorError::DerivedAttribute {
+                entity,
+                attribute,
+                derived: true,
+            } => {
+                write!(
+                    f,
+                    "{entity}.{attribute}: a part beside it derives it; leave it unset"
+                )
+            }
+            AuthorError::DerivedAttribute {
+                entity,
+                attribute,
+                derived: false,
+            } => {
+                write!(
+                    f,
+                    "{entity}.{attribute}: nothing derives it here; give it a value"
                 )
             }
         }
@@ -3070,6 +3099,13 @@ impl Ap242Author {
         name: Option<&str>,
         description: Option<&str>,
     ) -> Result<CharacterizedObjectId, AuthorError> {
+        if name.is_none() {
+            return Err(AuthorError::DerivedAttribute {
+                entity: "CHARACTERIZED_OBJECT",
+                attribute: "name",
+                derived: false,
+            });
+        }
         let name = name.map(|v| self.text(v));
         let description = description.map(|v| self.text(v));
         Ok(CharacterizedObjectId(
@@ -3888,6 +3924,13 @@ impl Ap242Author {
         name: &str,
         cfs_faces: Option<Vec<FaceRef>>,
     ) -> Result<ConnectedFaceSetId, AuthorError> {
+        if cfs_faces.is_none() {
+            return Err(AuthorError::DerivedAttribute {
+                entity: "CONNECTED_FACE_SET",
+                attribute: "cfs_faces",
+                derived: false,
+            });
+        }
         if let Some(x) = &cfs_faces {
             if x.len() < 1 {
                 return Err(AuthorError::Cardinality {
@@ -5916,8 +5959,22 @@ impl Ap242Author {
         edge_start: Option<VertexRef>,
         edge_end: Option<VertexRef>,
     ) -> Result<EdgeId, AuthorError> {
+        if edge_start.is_none() {
+            return Err(AuthorError::DerivedAttribute {
+                entity: "EDGE",
+                attribute: "edge_start",
+                derived: false,
+            });
+        }
         if let Some(x) = &edge_start {
             check_vertex_ref(&self.model, x)?;
+        }
+        if edge_end.is_none() {
+            return Err(AuthorError::DerivedAttribute {
+                entity: "EDGE",
+                attribute: "edge_end",
+                derived: false,
+            });
         }
         if let Some(x) = &edge_end {
             check_vertex_ref(&self.model, x)?;
@@ -8330,6 +8387,13 @@ impl Ap242Author {
         &mut self,
         dimensions: Option<DimensionalExponentsRef>,
     ) -> Result<NamedUnitId, AuthorError> {
+        if dimensions.is_none() {
+            return Err(AuthorError::DerivedAttribute {
+                entity: "NAMED_UNIT",
+                attribute: "dimensions",
+                derived: false,
+            });
+        }
         if let Some(x) = &dimensions {
             check_dimensional_exponents_ref(&self.model, x)?;
         }
@@ -11640,6 +11704,13 @@ impl Ap242Author {
         product_definitional: Option<Logical>,
     ) -> Result<ShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        if product_definitional.is_none() {
+            return Err(AuthorError::DerivedAttribute {
+                entity: "SHAPE_ASPECT",
+                attribute: "product_definitional",
+                derived: false,
+            });
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -14327,7 +14398,10 @@ impl Ap242Author {
     /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
     /// subtype part beside each `ABSTRACT` part, more than one leaf: parts
     /// with one leaf are that leaf's simple entity, which its own constructor
-    /// adds), then every part's fields are checked (types, sizes, references,
+    /// adds), then each attribute a part may derive is checked against the
+    /// parts beside it (unset, `None`, where one of them derives it, and given
+    /// where none does unless it is OPTIONAL),
+    /// then every part's fields are checked (types, sizes, references,
     /// finite reals, narrowings); parts are stored in Part 21 order
     /// (alphabetical).
     pub fn add_complex(
@@ -14336,6 +14410,7 @@ impl Ap242Author {
     ) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
+        check_complex_derived(&parts)?;
         for p in &parts {
             check_partial_entity(&self.model, p)?;
         }
@@ -26442,6 +26517,105 @@ _ => return Err(AuthorError::NarrowedReference { entity: "STYLED_ITEM", attribut
                 }
             }
         }
+    }
+    Ok(())
+}
+
+/// Each part attribute a part may derive is unset (`None`) where a part
+/// beside it derives it, and given where none does unless OPTIONAL.
+fn check_complex_derived(parts: &[PartialEntity]) -> Result<(), AuthorError> {
+    let has = |ds: &[&str]| parts.iter().any(|p| ds.contains(&part_name(p)));
+    for p in parts {
+        match p {
+            PartialEntity::CharacterizedObject {
+                name, description, ..
+            } => {
+                derived_given(
+                    "CHARACTERIZED_OBJECT",
+                    "name",
+                    false,
+                    name.is_some(),
+                    has(&["CHARACTERIZED_REPRESENTATION"]),
+                )?;
+                derived_given(
+                    "CHARACTERIZED_OBJECT",
+                    "description",
+                    true,
+                    description.is_some(),
+                    has(&["CHARACTERIZED_REPRESENTATION"]),
+                )?;
+            }
+            PartialEntity::ConnectedFaceSet { cfs_faces, .. } => {
+                derived_given(
+                    "CONNECTED_FACE_SET",
+                    "cfs_faces",
+                    false,
+                    cfs_faces.is_some(),
+                    has(&["ORIENTED_CLOSED_SHELL"]),
+                )?;
+            }
+            PartialEntity::Edge {
+                edge_start,
+                edge_end,
+                ..
+            } => {
+                derived_given(
+                    "EDGE",
+                    "edge_start",
+                    false,
+                    edge_start.is_some(),
+                    has(&["ORIENTED_EDGE"]),
+                )?;
+                derived_given(
+                    "EDGE",
+                    "edge_end",
+                    false,
+                    edge_end.is_some(),
+                    has(&["ORIENTED_EDGE"]),
+                )?;
+            }
+            PartialEntity::NamedUnit { dimensions, .. } => {
+                derived_given(
+                    "NAMED_UNIT",
+                    "dimensions",
+                    false,
+                    dimensions.is_some(),
+                    has(&["SI_UNIT"]),
+                )?;
+            }
+            PartialEntity::ShapeAspect {
+                product_definitional,
+                ..
+            } => {
+                derived_given(
+                    "SHAPE_ASPECT",
+                    "product_definitional",
+                    false,
+                    product_definitional.is_some(),
+                    has(&["DEFAULT_MODEL_GEOMETRIC_VIEW"]),
+                )?;
+            }
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+/// `entity.attribute`, a part's attribute a part may derive: `given` a
+/// value, and `derived` by a part beside it.
+fn derived_given(
+    entity: &'static str,
+    attribute: &'static str,
+    optional: bool,
+    given: bool,
+    derived: bool,
+) -> Result<(), AuthorError> {
+    if given == derived && (given || !optional) {
+        return Err(AuthorError::DerivedAttribute {
+            entity,
+            attribute,
+            derived,
+        });
     }
     Ok(())
 }

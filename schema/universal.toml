@@ -6,7 +6,8 @@
 # `schemas` = source APs declaring the entity, chronological (membership data).
 # `edition_parents` = each edition's parents where they differ; `abstract_everywhere`
 # = ABSTRACT in every edition declaring it (`is_abstract`: in any); `supertype_has_and`
-# = some edition's SUPERTYPE OF holds an AND. [[oneof]] = every edition's ONEOF groups
+# = some edition's SUPERTYPE OF holds an AND; `edition_derives` = the "super.attr"
+# DERIVEs only some editions declaring it make. [[oneof]] = every edition's ONEOF groups
 # (branch = flat name set of one ONEOF child subtree), with the editions declaring each.
 
 [[oneof]]
@@ -10530,6 +10531,7 @@ derives = [
     "leaf",
     "directed_link",
 ]
+edition_derives = ["item_identified_representation_usage.used_representation"]
 schemas = [
     "ap242e1",
     "ap242e2",
@@ -10889,6 +10891,7 @@ derives = [
     "leaf",
     "directed_link",
 ]
+edition_derives = ["characterized_item_within_representation.rep"]
 schemas = [
     "ap242e1",
     "ap242e2",
@@ -13581,6 +13584,7 @@ ty = "label"
 parents = ["named_unit"]
 is_abstract = false
 is_complex_part = true
+edition_derives = ["named_unit.dimensions"]
 schemas = [
     "ap203e1",
     "ap203e2",
@@ -14663,6 +14667,14 @@ derives = [
     "low_order_kinematic_pair.r_x",
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
+]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
 ]
 schemas = [
     "ap214e3",
@@ -21834,6 +21846,14 @@ derives = [
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
 ]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
+]
 schemas = [
     "ap214e3",
     "ap242e1",
@@ -25793,6 +25813,7 @@ derives = [
     "associated_link_representations_2",
     "item_defined_transformation.name",
 ]
+edition_derives = ["item_defined_transformation.name"]
 schemas = [
     "ap214e3",
     "ap242e1",
@@ -32134,6 +32155,14 @@ derives = [
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
 ]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
+]
 schemas = [
     "ap214e3",
     "ap242e1",
@@ -34117,6 +34146,14 @@ derives = [
     "low_order_kinematic_pair.r_x",
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
+]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
 ]
 schemas = [
     "ap214e3",
@@ -37450,6 +37487,14 @@ derives = [
     "low_order_kinematic_pair.r_x",
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
+]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
 ]
 schemas = [
     "ap214e3",
@@ -41615,6 +41660,14 @@ derives = [
     "low_order_kinematic_pair.r_x",
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
+]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
 ]
 schemas = [
     "ap214e3",
@@ -46105,6 +46158,14 @@ derives = [
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
 ]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
+]
 schemas = [
     "ap214e3",
     "ap242e1",
@@ -46243,6 +46304,14 @@ derives = [
     "low_order_kinematic_pair.r_y",
     "low_order_kinematic_pair.r_z",
     "skew_angle",
+]
+edition_derives = [
+    "low_order_kinematic_pair.r_x",
+    "low_order_kinematic_pair.r_y",
+    "low_order_kinematic_pair.r_z",
+    "low_order_kinematic_pair.t_x",
+    "low_order_kinematic_pair.t_y",
+    "low_order_kinematic_pair.t_z",
 ]
 schemas = [
     "ap214e3",

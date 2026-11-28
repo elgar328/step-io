@@ -262,17 +262,15 @@ fn invalid_complex_part_sets_are_rejected() {
     ));
 
     // A dangling reference inside an otherwise valid part bag.
+    let foot = a.text("foot");
     let err = a
         .add_complex(vec![
+            m::PartialEntity::ContextDependentUnit { name: foot },
             m::PartialEntity::LengthUnit,
             m::PartialEntity::NamedUnit {
                 dimensions: Some(m::DimensionalExponentsRef::DimensionalExponents(
                     m::DimensionalExponentsId(9),
                 )),
-            },
-            m::PartialEntity::SiUnit {
-                prefix: None,
-                name: m::SiUnitName::Metre,
             },
         ])
         .expect_err("dangling part reference must be rejected");
@@ -282,6 +280,193 @@ fn invalid_complex_part_sets_are_rejected() {
             entity: "DIMENSIONAL_EXPONENTS"
         }
     ));
+}
+
+#[test]
+fn an_attribute_a_part_may_derive_follows_the_parts_beside_it() {
+    let mut a = Ap242Author::new();
+    let dims = a
+        .add_dimensional_exponents(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        .expect("dimensions");
+    let dims = m::DimensionalExponentsRef::DimensionalExponents(dims);
+
+    // SI_UNIT derives a named unit's dimensions: they stay unset.
+    let err = a
+        .add_complex(vec![
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit {
+                dimensions: Some(dims.clone()),
+            },
+            m::PartialEntity::SiUnit {
+                prefix: Some(m::SiPrefix::Milli),
+                name: m::SiUnitName::Metre,
+            },
+        ])
+        .expect_err("a derived attribute given a value must be rejected");
+    assert_eq!(
+        err,
+        AuthorError::DerivedAttribute {
+            entity: "NAMED_UNIT",
+            attribute: "dimensions",
+            derived: true
+        }
+    );
+    let mm = a
+        .add_complex(vec![
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit {
+                prefix: Some(m::SiPrefix::Milli),
+                name: m::SiUnitName::Metre,
+            },
+        ])
+        .expect("si length unit");
+
+    // A conversion-based unit takes its dimensions as a value in edition 4.
+    let length = a.text("LENGTH_MEASURE");
+    let factor = a
+        .add_length_measure_with_unit(
+            m::MeasureValue {
+                type_name: Some(length),
+                value: m::MeasureScalar::Real(25.4),
+            },
+            m::Ap242LengthUnitRef::Complex(mm),
+        )
+        .expect("conversion factor");
+    let inch = a.text("INCH");
+    let conversion = |dimensions| {
+        vec![
+            m::PartialEntity::ConversionBasedUnit {
+                name: inch,
+                conversion_factor: m::MeasureWithUnitRef::LengthMeasureWithUnit(factor),
+            },
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit { dimensions },
+        ]
+    };
+    let err = a
+        .add_complex(conversion(None))
+        .expect_err("an attribute no part derives left unset must be rejected");
+    assert_eq!(
+        err,
+        AuthorError::DerivedAttribute {
+            entity: "NAMED_UNIT",
+            attribute: "dimensions",
+            derived: false
+        }
+    );
+    a.add_complex(conversion(Some(dims)))
+        .expect("conversion-based unit with its dimensions");
+
+    let text = common::text(&a.finish());
+    let (_model, report) = read(text.as_bytes()).expect("authored text parses");
+    assert!(report.dropped.is_empty(), "{:?}", report.dropped);
+    assert!(report.normalized.is_empty(), "{:?}", report.normalized);
+}
+
+/// `CHARACTERIZED_REPRESENTATION` derives both attributes of a
+/// characterized object; where nothing derives them, the name needs a value
+/// and the OPTIONAL description may stay unset, written `$`.
+#[test]
+fn a_characterized_object_follows_the_parts_beside_it() {
+    let mut a = Ap242Author::new();
+    let ctx = a.add_representation_context("", "").expect("context");
+    let point = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let placement = a
+        .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(point), None, None)
+        .expect("placement");
+    let name = a.text("n");
+    let empty = a.text("");
+    let model = |name, description| {
+        vec![
+            m::PartialEntity::CharacterizedObject { name, description },
+            m::PartialEntity::CharacterizedRepresentation,
+            m::PartialEntity::DraughtingModel,
+            m::PartialEntity::Representation {
+                name: empty,
+                items: vec![m::RepresentationItemRef::Axis2Placement3d(placement)],
+                context_of_items: m::RepresentationContextRef::RepresentationContext(ctx),
+            },
+        ]
+    };
+    let err = a
+        .add_complex(model(Some(name), None))
+        .expect_err("a derived name given a value must be rejected");
+    assert_eq!(
+        err,
+        AuthorError::DerivedAttribute {
+            entity: "CHARACTERIZED_OBJECT",
+            attribute: "name",
+            derived: true
+        }
+    );
+    a.add_complex(model(None, None))
+        .expect("characterized draughting model");
+
+    let kind = a.add_document_type("").expect("document type");
+    let id = a.text("d");
+    let file = |name, description| {
+        vec![
+            m::PartialEntity::CharacterizedObject { name, description },
+            m::PartialEntity::Document {
+                id,
+                name: id,
+                description: None,
+                kind: m::DocumentTypeRef::DocumentType(kind),
+            },
+            m::PartialEntity::DocumentFile,
+            m::PartialEntity::FeatureDefinition,
+        ]
+    };
+    let err = a
+        .add_complex(file(None, None))
+        .expect_err("a name nothing derives left unset must be rejected");
+    assert_eq!(
+        err,
+        AuthorError::DerivedAttribute {
+            entity: "CHARACTERIZED_OBJECT",
+            attribute: "name",
+            derived: false
+        }
+    );
+    a.add_complex(file(Some(name), None))
+        .expect("document file with an unset description");
+
+    // A simple entity: nothing derives its attributes.
+    let err = a
+        .add_characterized_object(None, None)
+        .expect_err("a simple entity's name left unset must be rejected");
+    assert_eq!(
+        err,
+        AuthorError::DerivedAttribute {
+            entity: "CHARACTERIZED_OBJECT",
+            attribute: "name",
+            derived: false
+        }
+    );
+    a.add_characterized_object(Some("m"), None)
+        .expect("characterized object with an unset description");
+    let err = a
+        .add_named_unit(None)
+        .expect_err("a simple named unit's dimensions left unset must be rejected");
+    assert_eq!(
+        err,
+        AuthorError::DerivedAttribute {
+            entity: "NAMED_UNIT",
+            attribute: "dimensions",
+            derived: false
+        }
+    );
+
+    let text = common::text(&a.finish());
+    assert!(text.contains("CHARACTERIZED_OBJECT(*,*)"), "{text}");
+    assert!(text.contains("CHARACTERIZED_OBJECT('n',$)"), "{text}");
+    assert!(text.contains("CHARACTERIZED_OBJECT('m',$)"), "{text}");
+    let (_model, report) = read(text.as_bytes()).expect("authored text parses");
+    assert!(report.dropped.is_empty(), "{:?}", report.dropped);
+    assert!(report.normalized.is_empty(), "{:?}", report.normalized);
 }
 
 #[test]

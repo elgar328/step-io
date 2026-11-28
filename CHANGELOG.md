@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Such a list used to pass unnoticed; it stays in the model, since dropping
   it would drop what it belongs to (a sphere's face with no bounds, and the
   solid with it).
+- `AuthorError::DerivedAttribute` names the attribute a subtype may derive
+  that is given or left unset against what derives it (see Fixed).
 
 ### Changed
 
@@ -50,6 +52,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An AP203 edition 1 area or volume unit (`AREA_UNIT(#dims)`,
   `VOLUME_UNIT(#dims)`, a named unit in that edition) reads, and writes back
   in that form; it used to be dropped as a `nonstandard reference`.
+- A complex entity's attribute that a part beside it derives in every
+  edition, such as a named unit's dimensions beside `SI_UNIT`, reads as `*`
+  where the file gives a value or `$`, noted in `Report::normalized`; a
+  value used to stay in the model, and a `$` to drop the entity as
+  `unclassified`. A `*` that no part beside it derives in any edition drops
+  the entity as a `nonstandard value`. Where no part beside it derives such
+  an attribute, it reads as any other: a `$` in a required one follows the
+  rule of any required attribute, and in an OPTIONAL one (a characterized
+  object's description) reads as unset and writes back as `$`; either used
+  to drop the entity as `unclassified`. AP214 edition 3 derives a
+  conversion-based unit's dimensions, so its `*` still reads.
+- Nothing derives an attribute of a simple entity, yet `NAMED_UNIT`,
+  `CHARACTERIZED_OBJECT`, `EDGE`, `SHAPE_ASPECT` and `CONNECTED_FACE_SET`
+  read one their subtypes may derive as unset where the file gives `*`, and
+  wrote an unset one as `*`. Such a `*` now drops the entity as `unclassified`,
+  as in any other attribute; an unset OPTIONAL description, which used to
+  drop the entity, reads and writes as `$`.
+- `Ap242Author` refuses (`AuthorError::DerivedAttribute`) an attribute a
+  subtype may derive given a value where a part beside it derives it, or left
+  unset where nothing does and it is not OPTIONAL: in `add_complex`, against
+  edition 4, and in the constructors of those five entities. Each wrote a
+  file edition 4 does not allow.
 
 ## [0.4.0] - 2026-11-26
 

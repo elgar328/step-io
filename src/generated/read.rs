@@ -25966,12 +25966,15 @@ fn build_characterized_object_arena(
     tt: &mut TextIn<'_>,
 ) -> Result<CharacterizedObject, String> {
     Ok(CharacterizedObject {
-        name: match req(attributes, 0, "CHARACTERIZED_OBJECT.name")? {
-            Attribute::Derived => None,
-            other => Some((as_text(other, "CHARACTERIZED_OBJECT.name", tt))?),
-        },
+        name: Some(
+            (as_text(
+                req(attributes, 0, "CHARACTERIZED_OBJECT.name")?,
+                "CHARACTERIZED_OBJECT.name",
+                tt,
+            ))?,
+        ),
         description: match req(attributes, 1, "CHARACTERIZED_OBJECT.description")? {
-            Attribute::Derived => None,
+            Attribute::Unset => None,
             other => Some((as_text(other, "CHARACTERIZED_OBJECT.description", tt))?),
         },
     })
@@ -32437,10 +32440,12 @@ fn build_shape_aspect_arena(
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
         )),
-        product_definitional: match req(attributes, 3, "SHAPE_ASPECT.product_definitional")? {
-            Attribute::Derived => None,
-            other => Some((as_logical(other, "SHAPE_ASPECT.product_definitional"))?),
-        },
+        product_definitional: Some(
+            (as_logical(
+                req(attributes, 3, "SHAPE_ASPECT.product_definitional")?,
+                "SHAPE_ASPECT.product_definitional",
+            ))?,
+        ),
     })
 }
 
@@ -45600,34 +45605,29 @@ fn resolve_connected_face_set_arena(
         texts: &mut model.texts,
         dedup,
     };
-    let cfs_faces_v = {
+    let cfs_faces_v = Some({
         let a = req(attrs, 1, "CONNECTED_FACE_SET.cfs_faces")?;
-        match a {
-            Attribute::Derived => None,
-            _ => Some(
-                (match a {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| {
-                            (|| -> Result<FaceRef, String> {
-                                Ok(FaceRef::from_any(
-                                    idmap
-                                        .get(as_ref_id(e, "CONNECTED_FACE_SET.cfs_faces")?)
-                                        .ok_or_else(|| {
-                                            format!("CONNECTED_FACE_SET.cfs_faces: dangling ref")
-                                        })?,
-                                )
-                                .map_err(|e| format!("CONNECTED_FACE_SET.cfs_faces: {e}"))?)
-                            })()
-                        })
-                        .collect::<Result<Vec<_>, String>>(),
-                    o => Err(format!(
-                        "CONNECTED_FACE_SET.cfs_faces: expected ref list, got {o:?}"
-                    )),
-                })?,
-            ),
-        }
-    };
+        (match a {
+            Attribute::List(l) => l
+                .iter()
+                .map(|e| {
+                    (|| -> Result<FaceRef, String> {
+                        Ok(FaceRef::from_any(
+                            idmap
+                                .get(as_ref_id(e, "CONNECTED_FACE_SET.cfs_faces")?)
+                                .ok_or_else(|| {
+                                    format!("CONNECTED_FACE_SET.cfs_faces: dangling ref")
+                                })?,
+                        )
+                        .map_err(|e| format!("CONNECTED_FACE_SET.cfs_faces: {e}"))?)
+                    })()
+                })
+                .collect::<Result<Vec<_>, String>>(),
+            o => Err(format!(
+                "CONNECTED_FACE_SET.cfs_faces: expected ref list, got {o:?}"
+            )),
+        })?
+    });
     let it = &mut model.connected_face_set_arena.items[aid.0 as usize];
     it.cfs_faces = cfs_faces_v;
     Ok(())
@@ -48394,38 +48394,28 @@ fn resolve_edge_arena(
         texts: &mut model.texts,
         dedup,
     };
-    let edge_start_v = {
+    let edge_start_v = Some({
         let a = req(attrs, 1, "EDGE.edge_start")?;
-        match a {
-            Attribute::Derived => None,
-            _ => Some(
-                ((|| -> Result<VertexRef, String> {
-                    Ok(VertexRef::from_any(
-                        idmap
-                            .get(as_ref_id(a, "EDGE.edge_start")?)
-                            .ok_or_else(|| format!("EDGE.edge_start: dangling ref"))?,
-                    )
-                    .map_err(|e| format!("EDGE.edge_start: {e}"))?)
-                })())?,
-            ),
-        }
-    };
-    let edge_end_v = {
+        ((|| -> Result<VertexRef, String> {
+            Ok(VertexRef::from_any(
+                idmap
+                    .get(as_ref_id(a, "EDGE.edge_start")?)
+                    .ok_or_else(|| format!("EDGE.edge_start: dangling ref"))?,
+            )
+            .map_err(|e| format!("EDGE.edge_start: {e}"))?)
+        })())?
+    });
+    let edge_end_v = Some({
         let a = req(attrs, 2, "EDGE.edge_end")?;
-        match a {
-            Attribute::Derived => None,
-            _ => Some(
-                ((|| -> Result<VertexRef, String> {
-                    Ok(VertexRef::from_any(
-                        idmap
-                            .get(as_ref_id(a, "EDGE.edge_end")?)
-                            .ok_or_else(|| format!("EDGE.edge_end: dangling ref"))?,
-                    )
-                    .map_err(|e| format!("EDGE.edge_end: {e}"))?)
-                })())?,
-            ),
-        }
-    };
+        ((|| -> Result<VertexRef, String> {
+            Ok(VertexRef::from_any(
+                idmap
+                    .get(as_ref_id(a, "EDGE.edge_end")?)
+                    .ok_or_else(|| format!("EDGE.edge_end: dangling ref"))?,
+            )
+            .map_err(|e| format!("EDGE.edge_end: {e}"))?)
+        })())?
+    });
     let it = &mut model.edge_arena.items[aid.0 as usize];
     it.edge_start = edge_start_v;
     it.edge_end = edge_end_v;
@@ -51736,22 +51726,17 @@ fn resolve_named_unit_arena(
         texts: &mut model.texts,
         dedup,
     };
-    let dimensions_v = {
+    let dimensions_v = Some({
         let a = req(attrs, 0, "NAMED_UNIT.dimensions")?;
-        match a {
-            Attribute::Derived => None,
-            _ => Some(
-                ((|| -> Result<DimensionalExponentsRef, String> {
-                    Ok(DimensionalExponentsRef::from_any(
-                        idmap
-                            .get(as_ref_id(a, "NAMED_UNIT.dimensions")?)
-                            .ok_or_else(|| format!("NAMED_UNIT.dimensions: dangling ref"))?,
-                    )
-                    .map_err(|e| format!("NAMED_UNIT.dimensions: {e}"))?)
-                })())?,
-            ),
-        }
-    };
+        ((|| -> Result<DimensionalExponentsRef, String> {
+            Ok(DimensionalExponentsRef::from_any(
+                idmap
+                    .get(as_ref_id(a, "NAMED_UNIT.dimensions")?)
+                    .ok_or_else(|| format!("NAMED_UNIT.dimensions: dangling ref"))?,
+            )
+            .map_err(|e| format!("NAMED_UNIT.dimensions: {e}"))?)
+        })())?
+    });
     let it = &mut model.named_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
@@ -58336,7 +58321,7 @@ fn read_complex_parts_norefs(
         "CHARACTER_GLYPH_STYLE_OUTLINE" => PartialEntity::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
         "CHARACTER_GLYPH_STYLE_STROKE" => PartialEntity::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
         "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => PartialEntity::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "CHARACTERIZED_OBJECT" => PartialEntity::CharacterizedObject { name: match req(&p.attributes, 0, "CHARACTERIZED_OBJECT.name")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.name", tt))?) }, description: match req(&p.attributes, 1, "CHARACTERIZED_OBJECT.description")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.description", tt))?) }, },
+        "CHARACTERIZED_OBJECT" => PartialEntity::CharacterizedObject { name: match req(&p.attributes, 0, "CHARACTERIZED_OBJECT.name")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.name", tt))?) }, description: match req(&p.attributes, 1, "CHARACTERIZED_OBJECT.description")? { Attribute::Derived | Attribute::Unset => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.description", tt))?) }, },
         "CHARACTERIZED_REPRESENTATION" => PartialEntity::CharacterizedRepresentation,
         "CIRCLE" => PartialEntity::Circle { radius: (as_real(req(&p.attributes, 0, "CIRCLE.radius")?, "CIRCLE.radius"))?, },
         "CIRCULAR_RUNOUT_TOLERANCE" => PartialEntity::CircularRunoutTolerance,

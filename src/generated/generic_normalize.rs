@@ -3,6 +3,7 @@
 
 use super::read::edition_single_leaf_form;
 use crate::parser::{Attribute, RawEntity, RawEntityPart};
+use std::borrow::Cow;
 
 #[derive(Clone, Copy)]
 enum Sk {
@@ -303,21 +304,68 @@ pub fn normalize_entity(
             kept,
             &mut drop_reason,
         ),
-        RawEntity::Complex { parts, .. } => parts.iter_mut().all(|p| {
-            norm_attrs(
-                part_slots(&p.name),
-                &mut p.attributes,
-                warns,
-                kept,
-                &mut drop_reason,
-            )
-        }),
+        RawEntity::Complex { parts, .. } => {
+            let (slots, star) = slots_beside(parts);
+            let read = parts.iter_mut().zip(slots).all(|(p, s)| {
+                norm_attrs(
+                    s.as_deref(),
+                    &mut p.attributes,
+                    warns,
+                    kept,
+                    &mut drop_reason,
+                )
+            });
+            if read && star.is_some() {
+                drop_reason = star;
+            }
+            read && star.is_none()
+        }
     };
     if keep {
         Ok(())
     } else {
         Err(drop_reason.unwrap_or("unspecified"))
     }
+}
+
+/// The slots of each part (`None` for a part not read), each attribute some
+/// part may derive fitted to the parts beside it: derived (`*`) where a part
+/// deriving it in every edition is present, else an ordinary attribute,
+/// required unless OPTIONAL. Only when every part is one the model reads.
+/// Also the drop reason of a `*` no part present derives in any edition.
+fn slots_beside(
+    parts: &[RawEntityPart],
+) -> (Vec<Option<Cow<'static, [Slot]>>>, Option<&'static str>) {
+    let mut slots: Vec<Option<Cow<'static, [Slot]>>> = parts
+        .iter()
+        .map(|p| part_slots(&p.name).map(Cow::Borrowed))
+        .collect();
+    let listed = |p: &RawEntityPart| DERIVABLE_PART_SLOTS.iter().any(|r| r.0 == p.name);
+    if !parts.iter().any(listed) || slots.iter().any(Option::is_none) {
+        return (slots, None);
+    }
+    let present = |ds: &[&str]| parts.iter().any(|p| ds.contains(&p.name.as_str()));
+    let mut star = None;
+    for (p, s) in parts.iter().zip(slots.iter_mut()) {
+        for &(part, idx, always, sometimes) in DERIVABLE_PART_SLOTS {
+            if p.name != part {
+                continue;
+            }
+            let Some(slot) = s.as_mut().and_then(|s| s.to_mut().get_mut(idx)) else {
+                continue;
+            };
+            if present(always) {
+                slot.der = true;
+            } else {
+                slot.req = !slot.opt;
+                if matches!(p.attributes.get(idx), Some(Attribute::Derived)) && !present(sometimes)
+                {
+                    star = star.or(Some("* for an attribute no part derives"));
+                }
+            }
+        }
+    }
+    (slots, star)
 }
 
 /// Whether `attrs` have the shape of `slots`: as many, each reference in a
@@ -27132,3 +27180,41 @@ fn part_slots(n: &str) -> Option<&'static [Slot]> {
         _ => None,
     }
 }
+
+/// Each complex part attribute some part may derive: (part, attribute
+/// index, parts deriving it in every edition declaring them, parts
+/// deriving it in some edition).
+static DERIVABLE_PART_SLOTS: &[(&str, usize, &[&str], &[&str])] = &[
+    (
+        "CHARACTERIZED_OBJECT",
+        0,
+        &["CHARACTERIZED_REPRESENTATION"],
+        &["CHARACTERIZED_REPRESENTATION"],
+    ),
+    (
+        "CHARACTERIZED_OBJECT",
+        1,
+        &["CHARACTERIZED_REPRESENTATION"],
+        &["CHARACTERIZED_REPRESENTATION"],
+    ),
+    (
+        "CONNECTED_FACE_SET",
+        0,
+        &["ORIENTED_CLOSED_SHELL"],
+        &["ORIENTED_CLOSED_SHELL"],
+    ),
+    ("EDGE", 0, &["ORIENTED_EDGE"], &["ORIENTED_EDGE"]),
+    ("EDGE", 1, &["ORIENTED_EDGE"], &["ORIENTED_EDGE"]),
+    (
+        "NAMED_UNIT",
+        0,
+        &["SI_UNIT"],
+        &["CONVERSION_BASED_UNIT", "SI_UNIT"],
+    ),
+    (
+        "SHAPE_ASPECT",
+        3,
+        &["DEFAULT_MODEL_GEOMETRIC_VIEW"],
+        &["DEFAULT_MODEL_GEOMETRIC_VIEW"],
+    ),
+];

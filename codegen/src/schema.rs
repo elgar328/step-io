@@ -55,6 +55,10 @@ pub struct Entity {
     /// `*` slots; the hard/derivable split is computed in `main.rs`.
     #[serde(default)]
     pub derives: Vec<String>,
+    /// The `"super.attr"` DERIVE redeclarations only some editions declaring
+    /// the entity make (universal.toml), in `derives` or not.
+    #[serde(default)]
+    pub edition_derives: Vec<String>,
     /// Output profile only: attribute type restrictions the entity's WHERE
     /// rules make, holding for every subtype too.
     #[serde(default)]

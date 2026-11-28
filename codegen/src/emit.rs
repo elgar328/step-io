@@ -1283,10 +1283,13 @@ fn emit_build(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
             let ctx = format!("{}.{}", se.name, id);
             // `.get(idx).ok_or(..)?` (no raw indexing) guards arity per slot.
             let access = format!("req(attributes, {idx}, {ctx:?})?");
-            if f.derivable {
-                bind_derivable_scalar(ir, &f.kind, &access, &ctx)
+            // Nothing derives an attribute of a simple entity: one a subtype
+            // may derive reads as an ordinary attribute, held as `Option`.
+            let v = bind_scalar(ir, &f.kind, f.optional, &access, &ctx);
+            if f.derivable && !f.optional {
+                format!("Some({v})")
             } else {
-                bind_scalar(ir, &f.kind, f.optional, &access, &ctx)
+                v
             }
         };
         writeln!(s, "        {id}: {expr},").unwrap();
@@ -1295,11 +1298,23 @@ fn emit_build(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     s.push_str("    })\n}\n\n");
 }
 
-/// Bind a derivable (conditionally `*`) scalar: `*` => None, else Some(value).
-/// `access` evaluates to `&Attribute`.
-fn bind_derivable_scalar(ir: &ModelIr, k: &Kind, access: &str, ctx: &str) -> String {
+/// Bind a complex part's derivable (conditionally `*`) scalar: `*` => None
+/// (and `$` when OPTIONAL), else Some(value). `access` evaluates to
+/// `&Attribute`.
+fn bind_derivable_scalar(
+    ir: &ModelIr,
+    k: &Kind,
+    optional: bool,
+    access: &str,
+    ctx: &str,
+) -> String {
+    let none = if optional {
+        "Attribute::Derived | Attribute::Unset"
+    } else {
+        "Attribute::Derived"
+    };
     format!(
-        "match {access} {{ Attribute::Derived => None, other => Some(({})?) }}",
+        "match {access} {{ {none} => None, other => Some(({})?) }}",
         scalar_fallible(ir, k, "other", ctx)
     )
 }
@@ -1419,7 +1434,13 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
             // `.get(idx).ok_or(..)?` guards arity for ref slots too (a short
             // entity missing only a ref slot passes pass1, would panic here).
             let access = format!("req(attrs, {idx}, {ctx:?})?");
-            let expr = resolve_ref_expr(ir, &f.kind, f.optional, f.derivable, &access, &ctx);
+            // As in `emit_build`: an ordinary attribute, held as `Option`.
+            let expr = resolve_ref_expr(ir, &f.kind, f.optional, false, &access, &ctx);
+            let expr = if f.derivable && !f.optional {
+                format!("Some({expr})")
+            } else {
+                expr
+            };
             writeln!(s, "    let {id}_v = {expr};").unwrap();
         }
         idx += 1;
@@ -1495,9 +1516,12 @@ fn resolve_ref_expr(
         _ => unreachable!(),
     };
     if derivable {
-        format!(
-            "{{ let a = {access}; match a {{ Attribute::Derived => None, _ => Some(({body})?) }} }}"
-        )
+        let none = if optional {
+            "Attribute::Derived | Attribute::Unset"
+        } else {
+            "Attribute::Derived"
+        };
+        format!("{{ let a = {access}; match a {{ {none} => None, _ => Some(({body})?) }} }}")
     } else if optional {
         format!(
             "{{ let a = {access}; match a {{ Attribute::Unset => None, _ => Some(({body})?) }} }}"
@@ -1550,7 +1574,7 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
                 let ctx = format!("{}.{}", p.name, id);
                 let access = format!("req(&p.attributes, {idx}, {ctx:?})?");
                 if f.derivable {
-                    bind_derivable_scalar(ir, &f.kind, &access, &ctx)
+                    bind_derivable_scalar(ir, &f.kind, f.optional, &access, &ctx)
                 } else {
                     bind_scalar(ir, &f.kind, f.optional, &access, &ctx)
                 }
@@ -1884,11 +1908,12 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
                 parts.push("\"*\".to_string()".to_string());
                 continue;
             }
+            // Nothing derives an attribute of a simple entity: one a subtype
+            // may derive, unset, is `$` like an OPTIONAL one.
             parts.push(render_attr(
                 ir,
                 &f.kind,
-                f.optional,
-                f.derivable,
+                f.optional || f.derivable,
                 &format!("it.{id}"),
             ));
         }
@@ -1939,7 +1964,8 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
                 if f.derived {
                     rendered.push("\"*\".to_string()".to_string());
                 } else {
-                    rendered.push(render_part_attr(ir, &f.kind, f.optional, f.derivable, id));
+                    let none = part_none_token(ir, p, f);
+                    rendered.push(render_part_attr(ir, &f.kind, none.as_deref(), id));
                 }
             }
             write!(s, " let a: Vec<String> = vec![{}];", rendered.join(", ")).unwrap();
@@ -1978,8 +2004,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
 }
 
 /// Render one attribute to a `String` expression. `access` is the field
-/// accessor. An optional field renders `None` as `$`; a derivable field renders
-/// `None` as `*`.
+/// accessor. A field held as `Option` (`wrapped`) renders `None` as `$`.
 /// A `Reals3` writes like a list of reals (it reads as a slice).
 fn written_as(k: &Kind) -> std::borrow::Cow<'_, Kind> {
     match k {
@@ -1988,11 +2013,10 @@ fn written_as(k: &Kind) -> std::borrow::Cow<'_, Kind> {
     }
 }
 
-fn render_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, access: &str) -> String {
+fn render_attr(ir: &ModelIr, k: &Kind, wrapped: bool, access: &str) -> String {
     let written = written_as(k);
     let k = &*written;
-    let wrapped = optional || derivable;
-    let none_tok = if derivable { "*" } else { "$" };
+    let none_tok = "$";
     match k {
         Kind::Ref(t) => {
             let re = &ir.ref_enums[t];
@@ -2368,18 +2392,50 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
     );
 }
 
+/// The `String` expression a complex part's field held as `Option` writes
+/// for `None`: `*` where a part beside it may derive it, for an OPTIONAL one
+/// only where one of those parts is present (`$` otherwise).
+fn part_none_token(ir: &ModelIr, p: &PartEnt, f: &Field) -> Option<String> {
+    match (f.optional, f.derivable) {
+        (false, false) => None,
+        (true, false) => Some("\"$\".to_string()".into()),
+        (false, true) => Some("\"*\".to_string()".into()),
+        (true, true) => {
+            let by: Vec<String> = ir.part_derivers[&(p.name.clone(), f.name.clone())]
+                .sometimes
+                .iter()
+                .map(|n| {
+                    let part = ir.parts.iter().find(|q| &q.name == n).unwrap_or_else(|| {
+                        panic!(
+                            "{n} derives {}.{} but is not a complex part",
+                            p.name, f.name
+                        )
+                    });
+                    format!("PartialEntity::{} {{ .. }}", part.rust)
+                })
+                .collect();
+            Some(format!(
+                "String::from(if cu.parts.iter().any(|q| matches!(q, {})) {{ \"*\" }} else {{ \"$\" }})",
+                by.join(" | ")
+            ))
+        }
+    }
+}
+
 /// Render a complex part attribute (the binder `id` is a `&T` reference).
-fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id: &str) -> String {
+/// `none` is the `String` expression a field held as `Option` renders `None`
+/// as, `None` for a field that is not.
+fn render_part_attr(ir: &ModelIr, k: &Kind, none: Option<&str>, id: &str) -> String {
     let written = written_as(k);
     let k = &*written;
-    let wrapped = optional || derivable;
-    let none_tok = if derivable { "*" } else { "$" };
+    let wrapped = none.is_some();
+    let none_tok = none.unwrap_or_default();
     match k {
         Kind::Ref(t) => {
             let re = &ir.ref_enums[t];
             if wrapped {
                 format!(
-                    "match {id} {{ Some(r) => {}, None => \"{none_tok}\".to_string() }}",
+                    "match {id} {{ Some(r) => {}, None => {none_tok} }}",
                     render_ref_value(re, "r")
                 )
             } else {
@@ -2390,7 +2446,7 @@ fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id:
             let elem = render_vec_elem(ir, inner);
             if wrapped {
                 format!(
-                    "match {id} {{ Some(v) => format!(\"({{}})\", v.iter().map(|e| {elem}).collect::<Vec<_>>().join(\",\")), None => \"{none_tok}\".to_string() }}"
+                    "match {id} {{ Some(v) => format!(\"({{}})\", v.iter().map(|e| {elem}).collect::<Vec<_>>().join(\",\")), None => {none_tok} }}"
                 )
             } else {
                 format!(
@@ -2401,7 +2457,7 @@ fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id:
         scalar => {
             if wrapped {
                 format!(
-                    "match {id} {{ Some(x) => {}, None => \"{none_tok}\".to_string() }}",
+                    "match {id} {{ Some(x) => {}, None => {none_tok} }}",
                     render_scalar_ref(ir, scalar, "x")
                 )
             } else {
@@ -2574,10 +2630,9 @@ fn emit_slot_table<'a>(
                 let k = sk_variant(&f.kind);
                 // A `derivable` field is `*` only in the COMPLEX (part-bag) form,
                 // where a deriving sibling is present; in the STANDALONE (simple)
-                // form it is an explicit, required value. So in simple_slots a
-                // derivable field is required (a non-standard `$` normalizes like
-                // any required field, e.g. a required string `$`); in part_slots it stays
-                // non-required (the `*` case).
+                // form it is an ordinary attribute, required unless OPTIONAL.
+                // In part_slots it stays non-required; `slots_beside` fits it
+                // to the parts beside it.
                 let req = if simple {
                     !f.optional
                 } else {
@@ -2619,7 +2674,7 @@ fn emit_slot_table<'a>(
 pub fn emit_normalize(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
     s.push_str(&format!(
-        "use super::read::edition_single_leaf_form;\nuse {crate_path}::parser::{{Attribute, RawEntity, RawEntityPart}};\n\n"
+        "use super::read::edition_single_leaf_form;\nuse {crate_path}::parser::{{Attribute, RawEntity, RawEntityPart}};\nuse std::borrow::Cow;\n\n"
     ));
     s.push_str(
         r#"#[derive(Clone, Copy)]
@@ -2861,11 +2916,53 @@ pub fn normalize_entity(
         RawEntity::Simple { name, attributes, .. } => {
             norm_attrs(simple_slots(name), attributes, warns, kept, &mut drop_reason)
         }
-        RawEntity::Complex { parts, .. } => parts.iter_mut().all(|p| {
-            norm_attrs(part_slots(&p.name), &mut p.attributes, warns, kept, &mut drop_reason)
-        }),
+        RawEntity::Complex { parts, .. } => {
+            let (slots, star) = slots_beside(parts);
+            let read = parts.iter_mut().zip(slots).all(|(p, s)| {
+                norm_attrs(s.as_deref(), &mut p.attributes, warns, kept, &mut drop_reason)
+            });
+            if read && star.is_some() {
+                drop_reason = star;
+            }
+            read && star.is_none()
+        }
     };
     if keep { Ok(()) } else { Err(drop_reason.unwrap_or("unspecified")) }
+}
+
+/// The slots of each part (`None` for a part not read), each attribute some
+/// part may derive fitted to the parts beside it: derived (`*`) where a part
+/// deriving it in every edition is present, else an ordinary attribute,
+/// required unless OPTIONAL. Only when every part is one the model reads.
+/// Also the drop reason of a `*` no part present derives in any edition.
+fn slots_beside(parts: &[RawEntityPart]) -> (Vec<Option<Cow<'static, [Slot]>>>, Option<&'static str>) {
+    let mut slots: Vec<Option<Cow<'static, [Slot]>>> =
+        parts.iter().map(|p| part_slots(&p.name).map(Cow::Borrowed)).collect();
+    let listed = |p: &RawEntityPart| DERIVABLE_PART_SLOTS.iter().any(|r| r.0 == p.name);
+    if !parts.iter().any(listed) || slots.iter().any(Option::is_none) {
+        return (slots, None);
+    }
+    let present = |ds: &[&str]| parts.iter().any(|p| ds.contains(&p.name.as_str()));
+    let mut star = None;
+    for (p, s) in parts.iter().zip(slots.iter_mut()) {
+        for &(part, idx, always, sometimes) in DERIVABLE_PART_SLOTS {
+            if p.name != part {
+                continue;
+            }
+            let Some(slot) = s.as_mut().and_then(|s| s.to_mut().get_mut(idx)) else {
+                continue;
+            };
+            if present(always) {
+                slot.der = true;
+            } else {
+                slot.req = !slot.opt;
+                if matches!(p.attributes.get(idx), Some(Attribute::Derived)) && !present(sometimes) {
+                    star = star.or(Some("* for an attribute no part derives"));
+                }
+            }
+        }
+    }
+    (slots, star)
 }
 
 /// Whether `attrs` have the shape of `slots`: as many, each reference in a
@@ -2937,6 +3034,32 @@ pub fn edition_form_parts(name: &str, attrs: &[Attribute]) -> Option<Vec<RawEnti
         false,
         ir.parts.iter().map(|p| (&p.name, &p.fields)),
     );
+    s.push_str(
+        "/// Each complex part attribute some part may derive: (part, attribute\n\
+         /// index, parts deriving it in every edition declaring them, parts\n\
+         /// deriving it in some edition).\n\
+         static DERIVABLE_PART_SLOTS: &[(&str, usize, &[&str], &[&str])] = &[\n",
+    );
+    let list = |v: &std::collections::BTreeSet<String>| {
+        v.iter()
+            .map(|n| format!("{n:?}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    for p in &ir.parts {
+        for (idx, f) in p.fields.iter().enumerate().filter(|(_, f)| f.derivable) {
+            let d = &ir.part_derivers[&(p.name.clone(), f.name.clone())];
+            writeln!(
+                s,
+                "    ({:?}, {idx}, &[{}], &[{}]),",
+                p.name,
+                list(&d.always),
+                list(&d.sometimes)
+            )
+            .unwrap();
+        }
+    }
+    s.push_str("];\n");
     s
 }
 
@@ -3282,6 +3405,15 @@ pub enum AuthorError {
         entity: &'static str,
         attribute: &'static str,
     },
+    /// An attribute a subtype may derive (Part 21 writes it `*`) is given a
+    /// value although a part beside it derives it (`derived`), or is left
+    /// unset although nothing derives it and it is not OPTIONAL: a complex
+    /// instance's part, or the entity itself added as a simple entity.
+    DerivedAttribute {
+        entity: &'static str,
+        attribute: &'static str,
+        derived: bool,
+    },
 }
 
 impl std::fmt::Display for AuthorError {
@@ -3318,6 +3450,12 @@ impl std::fmt::Display for AuthorError {
             AuthorError::InvalidInput { reason } => write!(f, "invalid input: {reason}"),
             AuthorError::NarrowedReference { entity, attribute } => {
                 write!(f, "{entity}.{attribute}: a reference AP242 does not allow there")
+            }
+            AuthorError::DerivedAttribute { entity, attribute, derived: true } => {
+                write!(f, "{entity}.{attribute}: a part beside it derives it; leave it unset")
+            }
+            AuthorError::DerivedAttribute { entity, attribute, derived: false } => {
+                write!(f, "{entity}.{attribute}: nothing derives it here; give it a value")
             }
         }
     }
@@ -3413,6 +3551,16 @@ impl Ap242Author {
         for (ident, f) in &params {
             if f.derived {
                 continue;
+            }
+            // Nothing derives an attribute of a simple entity: a required one
+            // a subtype may derive needs a value.
+            if f.derivable && !f.optional {
+                writeln!(
+                    s,
+                    "        if {ident}.is_none() {{ return Err(AuthorError::DerivedAttribute {{ entity: {:?}, attribute: {:?}, derived: false }}); }}",
+                    se.name, f.name
+                )
+                .unwrap();
             }
             let f =
                 &with_target_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
@@ -3570,12 +3718,16 @@ impl Ap242Author {
     /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
     /// subtype part beside each `ABSTRACT` part, more than one leaf: parts
     /// with one leaf are that leaf's simple entity, which its own constructor
-    /// adds), then every part's fields are checked (types, sizes, references,
+    /// adds), then each attribute a part may derive is checked against the
+    /// parts beside it (unset, `None`, where one of them derives it, and given
+    /// where none does unless it is OPTIONAL),
+    /// then every part's fields are checked (types, sizes, references,
     /// finite reals, narrowings); parts are stored in Part 21 order
     /// (alphabetical).
     pub fn add_complex(&mut self, mut parts: Vec<PartialEntity>) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
+        check_complex_derived(&parts)?;
         for p in &parts {
             check_partial_entity(&self.model, p)?;
         }
@@ -3596,6 +3748,7 @@ impl Ap242Author {
     if ir.has_part_bag {
         emit_author_complex(ir, &legal, profile, schema, narrowing, &mut s);
         emit_complex_narrowings(ir, narrowing, &mut s);
+        emit_complex_derived(ir, &mut s);
     }
 
     // Reference checks, one per ref enum: legality is decided at generation
@@ -4062,6 +4215,64 @@ fn part_rule_check(
     } else {
         format!("        {{ let x = &{ident};\n{body}        }}\n")
     }
+}
+
+/// `check_complex_derived`: each part attribute some part may derive is unset
+/// (`None`, written `*`) where a part beside it derives it in its latest
+/// declaration, the output edition's, and given where none does unless it is
+/// OPTIONAL.
+fn emit_complex_derived(ir: &ModelIr, s: &mut String) {
+    s.push_str(
+        "/// Each part attribute a part may derive is unset (`None`) where a part\n\
+         /// beside it derives it, and given where none does unless OPTIONAL.\n\
+         fn check_complex_derived(parts: &[PartialEntity]) -> Result<(), AuthorError> {\n    \
+         let has = |ds: &[&str]| parts.iter().any(|p| ds.contains(&part_name(p)));\n    \
+         for p in parts {\n        match p {\n",
+    );
+    for p in &ir.parts {
+        let fields: Vec<(String, &Field)> = idents(&p.fields)
+            .into_iter()
+            .filter(|(_, f)| f.derivable)
+            .collect();
+        if fields.is_empty() {
+            continue;
+        }
+        let binds: Vec<&str> = fields.iter().map(|(i, _)| i.as_str()).collect();
+        writeln!(
+            s,
+            "            PartialEntity::{} {{ {}, .. }} => {{",
+            p.rust,
+            binds.join(", ")
+        )
+        .unwrap();
+        for (ident, f) in &fields {
+            let by: Vec<String> = ir.part_derivers[&(p.name.clone(), f.name.clone())]
+                .latest
+                .iter()
+                .map(|n| format!("{n:?}"))
+                .collect();
+            writeln!(
+                s,
+                "                derived_given({:?}, {:?}, {}, {ident}.is_some(), has(&[{}]))?;",
+                p.name,
+                f.name,
+                f.optional,
+                by.join(", ")
+            )
+            .unwrap();
+        }
+        s.push_str("            }\n");
+    }
+    s.push_str(
+        "            _ => {}\n        }\n    }\n    Ok(())\n}\n\n\
+         /// `entity.attribute`, a part's attribute a part may derive: `given` a\n\
+         /// value, and `derived` by a part beside it.\n\
+         fn derived_given(entity: &'static str, attribute: &'static str, optional: bool, given: bool, derived: bool) -> Result<(), AuthorError> {\n    \
+         if given == derived && (given || !optional) {\n        \
+         return Err(AuthorError::DerivedAttribute { entity, attribute, derived });\n    \
+         }\n    \
+         Ok(())\n}\n\n",
+    );
 }
 
 /// `check_complex_narrowings`: for each AP242 edition 4 narrowing of a

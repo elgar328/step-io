@@ -41,7 +41,7 @@ pub enum DropKind {
     /// rewrite: a required reference is missing, an integer field holds a
     /// fractional value, a list held inline has more than three reals, more
     /// attributes than the entity has, parts a complex entity may not
-    /// combine.
+    /// combine, a `*` in a complex part's attribute no part beside it derives.
     NonstandardValue,
     /// The entity type is not one step-io reads: not yet supported, or not a
     /// schema entity at all.
@@ -720,11 +720,13 @@ fn resolve(
 /// listed in [`Report::kept_nonstandard`].
 ///
 /// What is checked is each entity's form: its attributes' count and kinds,
-/// the types its references name, its lists' sizes, and the parts a complex
-/// entity combines. A form any edition step-io reads allows (AP203, AP214
-/// and AP242, whatever the file's `FILE_SCHEMA` names) is accepted, each rule
-/// judged on its own. The schema's `WHERE` rules, global
-/// `RULE`s, and `UNIQUE` and `INVERSE` constraints are not checked.
+/// the types its references name, its lists' sizes, the parts a complex
+/// entity combines, and which of their attributes are `*` because a part
+/// beside them derives them (nothing derives an attribute of a simple
+/// entity). A form any edition step-io reads allows (AP203, AP214 and AP242,
+/// whatever the file's `FILE_SCHEMA` names) is accepted, each rule judged on
+/// its own. The schema's `WHERE` rules, global `RULE`s, and `UNIQUE` and
+/// `INVERSE` constraints are not checked.
 ///
 /// A complex entity whose parts have one leaf reads as the simple entity of
 /// that leaf, with a note, as Part 21 (12.2.5.1) writes it. An AP203

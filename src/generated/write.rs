@@ -29616,11 +29616,11 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![
                     match &it.name {
                         Some(x) => step_str(self.model.text(*x)),
-                        None => "*".to_string(),
+                        None => "$".to_string(),
                     },
                     match &it.description {
                         Some(x) => step_str(self.model.text(*x)),
-                        None => "*".to_string(),
+                        None => "$".to_string(),
                     },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -30122,7 +30122,7 @@ impl<'a> Writer<'a> {
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
-                        None => "*".to_string(),
+                        None => "$".to_string(),
                     },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -31456,11 +31456,11 @@ impl<'a> Writer<'a> {
                     step_str(self.model.text(it.name)),
                     match &it.edge_start {
                         Some(r) => format!("#{}", self.id_of_ref_vertex(r)),
-                        None => "*".to_string(),
+                        None => "$".to_string(),
                     },
                     match &it.edge_end {
                         Some(r) => format!("#{}", self.id_of_ref_vertex(r)),
-                        None => "*".to_string(),
+                        None => "$".to_string(),
                     },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -33094,7 +33094,7 @@ impl<'a> Writer<'a> {
                 let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![match &it.dimensions {
                     Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)),
-                    None => "*".to_string(),
+                    None => "$".to_string(),
                 }];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -35248,7 +35248,7 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_product_definition_shape(&it.of_shape)),
                     match &it.product_definitional {
                         Some(x) => x.token().to_string(),
-                        None => "*".to_string(),
+                        None => "$".to_string(),
                     },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -36735,7 +36735,7 @@ impl<'a> Writer<'a> {
                 PartialEntity::CharacterGlyphStyleOutline { outline_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(outline_style))]; ("CHARACTER_GLYPH_STYLE_OUTLINE", a) },
                 PartialEntity::CharacterGlyphStyleStroke { stroke_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(stroke_style))]; ("CHARACTER_GLYPH_STYLE_STROKE", a) },
                 PartialEntity::CharacterizedItemWithinRepresentation { item, rep, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(item)), format!("#{}", self.id_of_ref_representation(rep))]; ("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION", a) },
-                PartialEntity::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![match name { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }, match description { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }]; ("CHARACTERIZED_OBJECT", a) },
+                PartialEntity::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![match name { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }, match description { Some(x) => step_str(self.model.text(*x)), None => String::from(if cu.parts.iter().any(|q| matches!(q, PartialEntity::CharacterizedRepresentation { .. })) { "*" } else { "$" }) }]; ("CHARACTERIZED_OBJECT", a) },
                 PartialEntity::CharacterizedRepresentation => ("CHARACTERIZED_REPRESENTATION", Vec::new()),
                 PartialEntity::Circle { radius, .. } => { let a: Vec<String> = vec![real(*radius)]; ("CIRCLE", a) },
                 PartialEntity::CircularRunoutTolerance => ("CIRCULAR_RUNOUT_TOLERANCE", Vec::new()),

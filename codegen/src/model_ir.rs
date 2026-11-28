@@ -42,6 +42,17 @@ pub struct SimpleEnt {
     pub fields: Vec<Field>,
 }
 
+/// The parts that derive a complex part's attribute (UPPER names, sorted).
+#[derive(Debug, Clone, Default)]
+pub struct PartDerivers {
+    /// Derive it in every edition declaring them.
+    pub always: BTreeSet<String>,
+    /// Derive it in some edition.
+    pub sometimes: BTreeSet<String>,
+    /// Derive it in their latest declaration (the output edition's).
+    pub latest: BTreeSet<String>,
+}
+
 /// A complex part entity (variant of the generic part-bag enum).
 #[derive(Debug, Clone)]
 pub struct PartEnt {
@@ -117,6 +128,9 @@ pub struct ModelIr {
     /// The bounds of each named aggregation an aggregate arm reads (`SET` or
     /// not, lower, upper), by UPPER wire name.
     pub aggregate_types: BTreeMap<String, (bool, u32, Option<u32>)>,
+    /// The parts deriving each `derivable` part field, by (UPPER part name,
+    /// field name).
+    pub part_derivers: BTreeMap<(String, String), PartDerivers>,
 }
 
 /// Build the schema closure from the domain seeds (fixed point).
@@ -513,6 +527,7 @@ impl ModelIr {
             enums,
             has_part_bag,
             aggregate_types,
+            part_derivers: BTreeMap::new(),
         }
     }
 }

@@ -62,32 +62,53 @@ fn main() {
     //    attr always (e.g. oriented_edge.edge_start) → drop field, render `*`.
     //  - conditional `derivable`: a complex-part supertype P's attr is `*` only
     //    when a deriving sibling part is present (e.g. si_unit derives
-    //    SELF\named_unit.dimensions → named_unit.dimensions). Keyed by P.
+    //    SELF\named_unit.dimensions → named_unit.dimensions), in any edition.
+    //    Keyed by P. Only in-closure derivers count: an attr only an entity
+    //    out of scope derives stays a plain field.
     let mut derived: std::collections::BTreeMap<String, Vec<String>> =
         std::collections::BTreeMap::new();
     let mut derivable: std::collections::BTreeMap<String, BTreeSet<String>> =
         std::collections::BTreeMap::new();
+    // The in-closure parts deriving each derivable (super part, attr): in
+    // every edition declaring them, in some edition (`edition_derives` adds
+    // the DERIVEs only some editions make), in their latest declaration.
+    let mut part_derivers: std::collections::BTreeMap<(String, String), model_ir::PartDerivers> =
+        std::collections::BTreeMap::new();
+    for (name, ent) in &schema.entity {
+        if !closure.contains(name) {
+            continue;
+        }
+        for d in ent.derives.iter().chain(&ent.edition_derives) {
+            let Some((sup, attr)) = d.rsplit_once('.') else {
+                continue;
+            };
+            if !complex_parts.contains(sup) {
+                continue;
+            }
+            assert!(
+                schema.entity[sup].own_attrs.iter().any(|a| a.name == attr),
+                "{name} derives {d}, which {sup} does not declare"
+            );
+            derivable
+                .entry(sup.to_string())
+                .or_default()
+                .insert(attr.to_string());
+            let latest = ent.derives.contains(d);
+            let e = part_derivers
+                .entry((sup.to_uppercase(), attr.to_string()))
+                .or_default();
+            e.sometimes.insert(name.to_uppercase());
+            if latest {
+                e.latest.insert(name.to_uppercase());
+                if !ent.edition_derives.contains(d) {
+                    e.always.insert(name.to_uppercase());
+                }
+            }
+        }
+    }
     for (name, ent) in &schema.entity {
         for d in &ent.derives {
-            let (sup, attr) = d
-                .rsplit_once('.')
-                .map_or((None, d.as_str()), |(s, a)| (Some(s), a));
-            // derivable: the SUPER part's attr is `*` only when a deriving
-            // sibling part is present (complex form). Keyed by the super part.
-            // Only count IN-CLOSURE derivers — if the only deriver is out of
-            // closure (e.g. mechanism_representation derives representation.
-            // context_of_items, but kinematics isn't in scope), the attr is NOT
-            // `*` for any in-closure instance, so it stays a plain ref (which
-            // the Null-tolerant ref read handles for a non-standard `$`).
-            if let Some(s) = sup
-                && complex_parts.contains(s)
-                && closure.contains(name)
-            {
-                derivable
-                    .entry(s.to_string())
-                    .or_default()
-                    .insert(attr.to_string());
-            }
+            let attr = d.rsplit_once('.').map_or(d.as_str(), |(_, a)| a);
             // hard derived: in E's OWN (simple) form the attr is always `*`
             // (E computes it) — applies regardless of E being a complex part too
             // (a complex part may also appear standalone). Only affects E's
@@ -100,7 +121,7 @@ fn main() {
         }
     }
 
-    let ir = ModelIr::build(
+    let mut ir = ModelIr::build(
         &schema,
         &res,
         &closure,
@@ -108,6 +129,7 @@ fn main() {
         &derived,
         &derivable,
     );
+    ir.part_derivers = part_derivers;
 
     eprintln!(
         "codegen: closure={} simple={} parts={} ref_enums={} enums={}",
